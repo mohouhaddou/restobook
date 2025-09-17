@@ -1,0 +1,43 @@
+services:
+  # Backend API
+  - type: web
+    name: restobook-api
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npm run render-build
+    startCommand: npm run render-start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASS
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: ASSET_BASE
+        # Exemple: https://restobook-api.onrender.com
+        sync: false
+      - key: CORS_ORIGIN
+        # Exemple: https://restobook.onrender.com
+        sync: false
+
+  # Frontend Static Site (Vite)
+  - type: static
+    name: restobook
+    rootDir: frontend
+    buildCommand: npm ci && npm run render-build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE
+        # Exemple: https://restobook-api.onrender.com
+        sync: false
+      - key: VITE_ASSET_BASE
+        # Exemple: https://restobook-api.onrender.com
+        sync: false

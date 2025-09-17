@@ -11,6 +11,11 @@ const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 app.use('/uploads', express.static(uploadDir)); // servir /uploads
 
+const ALLOWED = process.env.CORS_ORIGIN || '*'; // pour POC
+app.use(cors({
+  origin: ALLOWED,
+  credentials: true,
+}));
 
 const sequelize = require('./models');
 const User = require('./models/user');

@@ -1,20 +1,20 @@
 {
-  "name": "canteen-reservation-backend",
-  "version": "2.2.0",
-  "main": "index.js",
-  "type": "commonjs",
+  "name": "restobook-backend",
+  "engines": { "node": ">=18" },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "echo 'no build step for backend'",
+    "render-build": "npm run build",
+    "render-start": "node index.js",
+    "migrate": "node scripts/migrate.js" 
   },
   "dependencies": {
-    "bcrypt": "^5.1.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.0",
-    "multer": "^2.0.2",
-    "mysql2": "^3.6.0",
-    "nanoid": "^3.3.7",
-    "sequelize": "^6.37.3"
+    "express": "^4",
+    "sequelize": "^6",
+    "mysql2": "^3",
+    "cors": "^2",
+    "dotenv": "^16",
+    "jsonwebtoken": "^9",
+    "multer": "^1"
   }
 }
