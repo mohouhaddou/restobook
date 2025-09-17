@@ -1,0 +1,21 @@
+{
+  "name": "canteen-reservation-frontend",
+  "version": "2.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "html5-qrcode": "^2.3.8",
+    "jspdf": "^3.0.2",
+    "jspdf-autotable": "^5.0.2",
+    "qrcode": "^1.5.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
