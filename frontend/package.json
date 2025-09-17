@@ -7,6 +7,8 @@
     "preview": "vite preview",
     "render-build": "npm run build"
   },
-  "dependencies": { "react": "^18", "react-dom": "^18" },
+  "dependencies": { "react": "^18", "react-dom": "^18",
+"jspdf": "^2.5.1",
+  "jspdf-autotable": "^3.8.2" },
   "devDependencies": { "vite": "^5" }
 }
