@@ -1,6 +1,6 @@
 // backend/models/reservation.js
 const { DataTypes, Model } = require('sequelize');
-const sequelize = require('./index'); // conservez votre chemin d'instance Sequelize
+const sequelize = require('./db');
 
 class Reservation extends Model {}
 
@@ -21,13 +21,15 @@ Reservation.init({
                     allowNull: true },
 
   // code par item (doit être unique)
-  pickup_code:    { type: DataTypes.STRING(16), allowNull: false, unique: true },
+  pickup_code:    { type: DataTypes.STRING(16), allowNull: false },
 
   // code commun à la réservation du jour (1 code pour 1..4 lignes)
   order_code:     { type: DataTypes.STRING(64), allowNull: true },
 
   // horodatage de retrait (si scan en cantine)
   picked_at:      { type: DataTypes.DATE, allowNull: true },
+
+  organization_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
 
 }, {
   sequelize,

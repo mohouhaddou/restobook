@@ -1,122 +1,187 @@
-// routes/reservations.js
+// backend/routes/reservations.js
+'use strict';
+
 const express = require('express');
 const router = express.Router();
-
 const crypto = require('crypto');
 const { Op, fn, col } = require('sequelize');
 
-const sequelize   = require('../models');
-const Setting     = require('../models/setting');
-const User        = require('../models/user');
-const DailyMenu   = require('../models/dailyMenu');
-const DailyMenuItem = require('../models/dailyMenuItem');
-const MenuItem    = require('../models/menuItem');
-const Reservation = require('../models/reservation');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { sequelize, Setting, User, DailyMenu, DailyMenuItem, MenuItem, Reservation } = require('../models');
+const { requireAuth, requirePermission, requireOrganizationAccess, orgScope } = require('../middleware/auth');
+const { PERMISSIONS, hasAnyPermission } = require('../auth/permissions');
 
-// ---------- utils ----------
+/* ── Utils ───────────────────────────────────────────────────────────────── */
 function genCode(len = 10) {
   return crypto.randomBytes(Math.ceil(len / 2)).toString('hex').slice(0, len).toUpperCase();
 }
 function normType(v) {
   if (!v) return null;
   let s = String(v).toLowerCase();
-  try { s = s.normalize('NFC'); } catch {}
+  try { s = s.normalize('NFC'); } catch { }
   if (s === 'entree') s = 'entrée';
   return s;
 }
 function isBefore(dateStr, hhmm) {
   const [hh, mm] = (hhmm || '10:30').split(':').map(Number);
-  const dt = new Date(`${dateStr}T${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:00`);
+  const dt = new Date(`${dateStr}T${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:00`);
   return new Date() <= dt;
 }
 function hhmm(d) {
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+async function getCutoff(orgId, t) {
+  const row = await Setting.findOne({ where: { key: 'cutoff_time', organization_id: orgId }, transaction: t });
+  return row?.value || process.env.CUTOFF_TIME || '10:30';
+}
+async function getCancelLimit(orgId, t) {
+  const row = await Setting.findOne({ where: { key: 'allow_cancel_until', organization_id: orgId }, transaction: t });
+  return row?.value || process.env.ALLOW_CANCEL_UNTIL || '10:00';
 }
 
 function ensureCanReserve(req, res, next) {
-  const role = req.user?.role;
-  if (role === 'user' || role === 'admin') return next();
-  return res.status(403).json({ error: 'Accès interdit : rôle non autorisé à réserver' });
+  if (hasAnyPermission(req.user?.role, PERMISSIONS.CANTEEN_RESERVATION_CREATE)) return next();
+  return res.status(403).json({ error: 'Permission insuffisante pour réserver' });
 }
 
+function canManageCanteen(req) {
+  return hasAnyPermission(req.user?.role, [
+    PERMISSIONS.CANTEEN_RESERVATION_MANAGE,
+    PERMISSIONS.CANTEEN_PREP_MANAGE,
+  ]);
+}
 
-// ---------- créer 1 réservation unitaire (compat) ----------
-router.post('/', requireAuth, ensureCanReserve, async (req, res) => {
+/* ── Auth commun ─────────────────────────────────────────────────────────── */
+router.use(requireAuth, requireOrganizationAccess);
+
+/* ── POST /api/reservations/confirm — Créer / modifier une commande ──────── */
+router.post('/confirm', ensureCanReserve, async (req, res) => {
   const t = await sequelize.transaction();
   try {
-    const { date_jour, menu_item_id } = req.body || {};
+    const { date_jour, selections, order_code_in } = req.body || {};
     const userId = req.user?.id;
-    if (!userId || !date_jour || !menu_item_id) {
-      await t.rollback(); return res.status(400).json({ error: 'Champs manquants' });
+    const orgId  = req.user?.organization_id;
+
+    if (!userId || !date_jour || !selections || typeof selections !== 'object') {
+      await t.rollback(); return res.status(400).json({ error: 'Payload invalide' });
     }
 
-    const cutoff = (await Setting.findOne({ where: { key: 'cutoff_time' } }))?.value
-      || process.env.CUTOFF_TIME || '10:30';
-    if (!isBefore(date_jour, cutoff)) {
-      await t.rollback(); return res.status(400).json({ error: 'Heure limite dépassée' });
-    }
+    const ids = {
+      entree_id:  selections.entree_id  || null,
+      plat_id:    selections.plat_id    || null,
+      dessert_id: selections.dessert_id || null,
+      boisson_id: selections.boisson_id || null
+    };
+    const chosen = Object.values(ids).filter(Boolean);
+    if (!chosen.length) { await t.rollback(); return res.status(400).json({ error: 'Sélection vide' }); }
 
-    const user = await User.findByPk(userId, { transaction: t });
+    const cutoff = await getCutoff(orgId, t);
+    if (!isBefore(date_jour, cutoff)) { await t.rollback(); return res.status(400).json({ error: 'Heure limite dépassée' }); }
+
+    const user  = await User.findByPk(userId, { transaction: t });
     if (!user) { await t.rollback(); return res.status(404).json({ error: 'Utilisateur inconnu' }); }
 
-    const daily = await DailyMenu.findOne({ where: { date_jour }, transaction: t });
+    const daily = await DailyMenu.findOne({ where: { date_jour, organization_id: orgId }, transaction: t });
     if (!daily || daily.locked) { await t.rollback(); return res.status(400).json({ error: 'Jour non ouvert ou verrouillé' }); }
 
-    const mi = await MenuItem.findByPk(menu_item_id, { transaction: t });
-    if (!mi) { await t.rollback(); return res.status(404).json({ error: 'Plat introuvable' }); }
-    const category = normType(mi.type);
-    if (!['entrée', 'plat', 'dessert', 'boisson'].includes(category)) {
-      await t.rollback(); return res.status(400).json({ error: `Type non autorisé: ${mi.type}` });
+    const items = await MenuItem.findAll({ where: { id: chosen, organization_id: orgId }, transaction: t });
+    const byId  = new Map(items.map(mi => [Number(mi.id), mi]));
+
+    const toCreate = [];
+    for (const [, mid] of Object.entries(ids)) {
+      if (!mid) continue;
+      const mi = byId.get(Number(mid));
+      if (!mi) { await t.rollback(); return res.status(400).json({ error: `Item ${mid} introuvable` }); }
+      const cat = normType(mi.type);
+      if (!['entrée','plat','dessert','boisson'].includes(cat)) {
+        await t.rollback(); return res.status(400).json({ error: `Type non autorisé: ${mi.type}` });
+      }
+      if (toCreate.some(x => x.category === cat)) {
+        await t.rollback(); return res.status(400).json({ error: `Au plus 1 ${cat} par réservation` });
+      }
+      toCreate.push({ menu_item_id: Number(mid), category: cat, label: mi.libelle });
     }
 
-    // item planifié + quota
-    const dmi = await DailyMenuItem.findOne({
-      where: { daily_menu_id: daily.id, menu_item_id },
-      transaction: t, lock: t.LOCK.UPDATE
-    });
-    if (!dmi) { await t.rollback(); return res.status(404).json({ error: 'Plat indisponible' }); }
-    if (dmi.stock_quota !== null) {
-      const used = await Reservation.count({
-        where: { date_jour, menu_item_id, status: 'confirmed' },
-        transaction: t
-      });
-      if (used >= dmi.stock_quota) { await t.rollback(); return res.status(409).json({ error: 'Quota atteint' }); }
+    // Mode édition
+    let editing = false, ocToUse = order_code_in || null, prevRows = [];
+    if (order_code_in) {
+      editing = true;
+      prevRows = await Reservation.findAll({ where: { order_code: order_code_in, organization_id: orgId }, transaction: t, lock: t.LOCK.UPDATE });
+      if (!prevRows.length) { await t.rollback(); return res.status(404).json({ error: 'Order_code inconnu' }); }
+
+      const sameUser = prevRows.every(r => r.user_id === user.id);
+      const sameDate = prevRows.every(r => r.date_jour === date_jour);
+      if (!sameUser || !sameDate) { await t.rollback(); return res.status(403).json({ error: 'Édition interdite pour cette commande' }); }
+
+      const isManagerPlus = canManageCanteen(req);
+      const cancelLimit   = await getCancelLimit(orgId, t);
+      const today = new Date().toISOString().slice(0,10);
+      const tooLate = !isManagerPlus && date_jour === today && hhmm(new Date()) > cancelLimit;
+      if (tooLate) { await t.rollback(); return res.status(400).json({ error: `Heure limite d'annulation dépassée (${cancelLimit})` }); }
+
+      if (prevRows.some(r => !!r.picked_at)) { await t.rollback(); return res.status(400).json({ error: 'Commande déjà en partie retirée — édition impossible' }); }
     }
 
-    // pas déjà réservé pour cette catégorie à cette date
-    const exist = await Reservation.findOne({
-      where: { user_id: user.id, date_jour, category, status: 'confirmed' },
-      transaction: t
-    });
-    if (exist) { await t.rollback(); return res.status(409).json({ error: `Déjà réservé pour la catégorie ${category}` }); }
+    // Vérifier quota + doublon pour chaque item
+    for (const ent of toCreate) {
+      const dmi = await DailyMenuItem.findOne({ where: { daily_menu_id: daily.id, menu_item_id: ent.menu_item_id }, transaction: t, lock: t.LOCK.UPDATE });
+      if (!dmi) { await t.rollback(); return res.status(400).json({ error: `Non planifié: "${ent.label}"` }); }
+      if (dmi.stock_quota !== null) {
+        const whereCnt = { date_jour, menu_item_id: ent.menu_item_id, status: 'confirmed', organization_id: orgId };
+        if (editing) whereCnt.order_code = { [Op.ne]: order_code_in };
+        const used = await Reservation.count({ where: whereCnt, transaction: t });
+        if (used >= dmi.stock_quota) { await t.rollback(); return res.status(409).json({ error: `Quota atteint: "${ent.label}"` }); }
+      }
+    }
 
-    const order_code = genCode(10);            // crée un "ordre" même pour unitaire
-    const pickup_code = genCode(10);           // code par item
+    for (const ent of toCreate) {
+      const whereExist = { user_id: user.id, date_jour, category: ent.category, status: 'confirmed', organization_id: orgId };
+      if (editing) whereExist.order_code = { [Op.ne]: order_code_in };
+      const exists = await Reservation.findOne({ where: whereExist, transaction: t, lock: t.LOCK.UPDATE });
+      if (exists) { await t.rollback(); return res.status(409).json({ error: `Déjà réservé pour la catégorie ${ent.category}` }); }
+    }
 
-    const r = await Reservation.create({
-      user_id: user.id, date_jour, menu_item_id,
-      category, pickup_code, order_code, status: 'confirmed'
-    }, { transaction: t });
+    // Annuler les anciennes lignes si édition
+    if (editing) {
+      for (const r of prevRows) {
+        if (r.status !== 'confirmed' || r.picked_at) continue;
+        await Reservation.destroy({ where: { user_id: r.user_id, date_jour: r.date_jour, category: r.category, status: 'cancelled', organization_id: orgId }, transaction: t });
+        r.status = 'cancelled';
+        await r.save({ transaction: t });
+      }
+      ocToUse = order_code_in;
+    } else {
+      ocToUse = genCode(10);
+    }
+
+    const created = [];
+    for (const ent of toCreate) {
+      const pickup_code = genCode(10);
+      const r = await Reservation.create({
+        user_id: user.id, date_jour, menu_item_id: ent.menu_item_id,
+        category: ent.category, pickup_code, order_code: ocToUse,
+        status: 'confirmed', organization_id: orgId
+      }, { transaction: t });
+      created.push({ reservation_id: r.id, category: ent.category, pickup_code });
+    }
 
     await t.commit();
-    res.json({ ok: true, reservation_id: r.id, pickup_code, order_code });
+    return res.json({ ok: true, order_code: ocToUse, created, mode: editing ? 'edited' : 'created' });
   } catch (e) {
     await t.rollback(); console.error(e);
-    res.status(500).json({ error: 'Erreur création réservation' });
+    if (e?.parent?.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Conflit : déjà réservé pour cette catégorie' });
+    return res.status(500).json({ error: 'Erreur confirmation' });
   }
 });
 
-// ---------- Mes réservations (list | matrix_day) ----------
-router.get('/me', requireAuth, async (req, res) => {
+/* ── GET /api/reservations/me ────────────────────────────────────────────── */
+router.get('/me', async (req, res) => {
   try {
     const userId = req.user.id;
-    const view = (req.query.view || 'list').toLowerCase();
+    const view   = (req.query.view || 'list').toLowerCase();
 
     const rows = await Reservation.findAll({
-      where: { user_id: userId },
+      where: { user_id: userId, organization_id: req.user.organization_id },
       include: [{ model: MenuItem, as: 'menu_item', attributes: ['id', 'libelle', 'type'] }],
       order: [['date_jour', 'ASC'], ['createdAt', 'ASC']]
     });
@@ -136,9 +201,7 @@ router.get('/me', requireAuth, async (req, res) => {
     const byDate = new Map();
     for (const r of list) {
       const d = r.date_jour;
-      if (!byDate.has(d)) {
-        byDate.set(d, { date_jour: d, order_code: r.order_code || null, entree: null, plat: null, dessert: null, boisson: null });
-      }
+      if (!byDate.has(d)) byDate.set(d, { date_jour: d, order_code: r.order_code || null, entree: null, plat: null, dessert: null, boisson: null });
       const row = byDate.get(d);
       const cat = r.category === 'entree' ? 'entrée' : r.category;
       const cell = { id: r.id, label: r.menu_label, status: r.status, pickup_code: r.pickup_code };
@@ -149,106 +212,87 @@ router.get('/me', requireAuth, async (req, res) => {
       if (!row.order_code && r.order_code) row.order_code = r.order_code;
     }
     return res.json({ items: Array.from(byDate.values()) });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ error: 'Erreur lecture réservations' });
-  }
+  } catch (e) { console.error(e); return res.status(500).json({ error: 'Erreur lecture réservations' }); }
 });
 
-// ---------- Annuler une ligne ----------
-router.delete('/:id', requireAuth, ensureCanReserve, async (req, res) => {
+/* ── DELETE /api/reservations/:id — Annuler une ligne ───────────────────── */
+router.delete('/:id', ensureCanReserve, async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const userId = req.user?.id;
-    const { id } = req.params;
-    const user = await User.findByPk(userId, { transaction: t });
-    if (!user) { await t.rollback(); return res.status(404).json({ error: 'Utilisateur inconnu' }); }
-
-    const r = await Reservation.findOne({ where: { id, user_id: user.id }, transaction: t });
+    const orgId  = req.user?.organization_id;
+    const r = await Reservation.findOne({ where: { id: req.params.id, user_id: userId, organization_id: orgId }, transaction: t });
     if (!r) { await t.rollback(); return res.status(404).json({ error: 'Réservation introuvable' }); }
 
-    const allow = (await Setting.findOne({ where: { key: 'allow_cancel_until' } }))?.value
-      || process.env.ALLOW_CANCEL_UNTIL || '10:00';
-    if (!isBefore(r.date_jour, allow)) { await t.rollback(); return res.status(400).json({ error: 'Délai d’annulation dépassé' }); }
+    const allow = await getCancelLimit(orgId, t);
+    if (!isBefore(r.date_jour, allow)) { await t.rollback(); return res.status(400).json({ error: 'Délai d\'annulation dépassé' }); }
 
-    r.status = 'cancelled'; await r.save({ transaction: t });
-    await t.commit(); res.json({ ok: true });
-  } catch (e) {
-    await t.rollback(); console.error(e);
-    res.status(500).json({ error: 'Erreur annulation' });
-  }
+    r.status = 'cancelled';
+    await r.save({ transaction: t });
+    await t.commit();
+    res.json({ ok: true });
+  } catch (e) { await t.rollback(); console.error(e); res.status(500).json({ error: 'Erreur annulation' }); }
 });
 
-// ---------- Liste du jour (list | matrix) ----------
-router.get('/day', requireAuth, requireRole(['manager','admin']), async (req, res) => {
+/* ── GET /api/reservations/day — Liste du jour ───────────────────────────── */
+router.get('/day', requirePermission(PERMISSIONS.CANTEEN_RESERVATION_MANAGE), async (req, res) => {
   try {
     const date   = String(req.query.date || '').slice(0, 10);
     const status = String(req.query.status || 'confirmed');
     const view   = String(req.query.view || 'list').toLowerCase();
+    const orgId  = req.user.organization_id;
 
-    const where = { date_jour: date };
+    const where = { date_jour: date, organization_id: orgId };
     if (status !== 'all') where.status = status;
 
     const rows = await Reservation.findAll({
       where,
       include: [
-        { model: User,     as: 'user',      attributes: ['id','matricule','nom'] },
-        { model: MenuItem, as: 'menu_item', attributes: ['id','libelle','type'] }
+        { model: User, as: 'user', attributes: ['id', 'matricule', 'nom'] },
+        { model: MenuItem, as: 'menu_item', attributes: ['id', 'libelle', 'type'] }
       ],
       order: [['createdAt', 'ASC']],
     });
 
-    // liste brute (1 ligne = 1 item)
     const list = rows.map(r => ({
       id: r.id,
       user_id: r.user?.id || null,
       matricule: r.user?.matricule || '',
       nom: r.user?.nom || '',
       label: r.menu_item?.libelle || '',
-      category: (r.category || r.menu_item?.type || '').replace(/^entree$/,'entrée'),
+      category: (r.category || r.menu_item?.type || '').replace(/^entree$/, 'entrée'),
       status: r.status,
-      created_at: r.createdAt
+      created_at: r.createdAt,
+      order_code: r.order_code || null
     }));
 
-    if (view !== 'matrix') {
-      return res.json({ items: list });
-    }
+    if (view !== 'matrix') return res.json({ items: list });
 
-    // vue matrice (1 ligne = 1 personne)
     const byUser = new Map();
     for (const r of list) {
-      const key = `${r.user_id || r.matricule}`;
+      const key = String(r.user_id || r.matricule);
       if (!byUser.has(key)) {
-        byUser.set(key, {
-          user_id: r.user_id,
-          matricule: r.matricule,
-          nom: r.nom,
-          entree: '—', plat: '—', dessert: '—', boisson: '—'
-        });
+        byUser.set(key, { user_id: r.user_id, matricule: r.matricule, nom: r.nom, entree: '—', plat: '—', dessert: '—', boisson: '—' });
       }
       const row = byUser.get(key);
-      if (r.category === 'entrée')  row.entree  = r.label || '—';
-      else if (r.category === 'plat')     row.plat    = r.label || '—';
-      else if (r.category === 'dessert')  row.dessert = r.label || '—';
-      else if (r.category === 'boisson')  row.boisson = r.label || '—';
+      if (r.category === 'entrée') row.entree = r.label || '—';
+      else if (r.category === 'plat') row.plat = r.label || '—';
+      else if (r.category === 'dessert') row.dessert = r.label || '—';
+      else if (r.category === 'boisson') row.boisson = r.label || '—';
     }
-
     return res.json({ items: Array.from(byUser.values()) });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Erreur lecture jour' });
-  }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Erreur lecture jour' }); }
 });
 
-
-// ---------- Récap par catégorie ----------
-router.get('/summary', requireAuth, requireRole(['manager','admin']), async (req, res) => {
+/* ── GET /api/reservations/summary ──────────────────────────────────────── */
+router.get('/summary', requirePermission(PERMISSIONS.CANTEEN_RESERVATION_MANAGE), async (req, res) => {
   try {
-    const date = String(req.query.date || '').slice(0, 10);
+    const date  = String(req.query.date || '').slice(0, 10);
+    const orgId = req.user.organization_id;
     if (!date) return res.status(400).json({ error: 'date manquante' });
 
     const rows = await Reservation.findAll({
-      where: { date_jour: date, status: 'confirmed' },
+      where: { date_jour: date, status: 'confirmed', organization_id: orgId },
       include: [{ model: MenuItem, as: 'menu_item', attributes: [] }],
       attributes: [
         [col('reservation.category'), 'category'],
@@ -261,7 +305,7 @@ router.get('/summary', requireAuth, requireRole(['manager','admin']), async (req
     });
 
     const items = rows.map(r => ({
-      category: (r.category || '').replace(/^entree$/,'entrée'),
+      category: (r.category || '').replace(/^entree$/, 'entrée'),
       libelle: r.libelle,
       count: Number(r.count || 0)
     }));
@@ -269,148 +313,51 @@ router.get('/summary', requireAuth, requireRole(['manager','admin']), async (req
   } catch (e) { console.error(e); res.status(500).json({ error: 'Erreur summary' }); }
 });
 
-// ---------- Export CSV (laissez si utile en plus du PDF front) ----------
-router.get('/export', requireAuth, requireRole(['manager','admin']), async (req, res) => {
+/* ── GET /api/reservations/export — CSV ──────────────────────────────────── */
+router.get('/export', requirePermission(PERMISSIONS.CANTEEN_RESERVATION_MANAGE), async (req, res) => {
   try {
-    const date = req.query.date || new Date().toISOString().slice(0, 10);
+    const date   = req.query.date || new Date().toISOString().slice(0, 10);
     const status = req.query.status || 'confirmed';
-    const where = { date_jour: date };
+    const orgId  = req.user.organization_id;
+    const where  = { date_jour: date, organization_id: orgId };
     if (status !== 'all') where.status = status;
 
     const list = await Reservation.findAll({
       where,
       include: [{ model: User, as: 'user' }, { model: MenuItem, as: 'menu_item' }],
-      order: [['createdAt','ASC']]
+      order: [['createdAt', 'ASC']]
     });
 
-    const header = 'id,matricule,nom,plat,status,created_at\n';
-    const lines = list.map(r => ([
+    const header = 'id,matricule,nom,plat,categorie,status,created_at\n';
+    const lines  = list.map(r => [
       r.id,
-      (r.user?.matricule || '').replace(/,/g,' '),
-      (r.user?.nom || '').replace(/,/g,' '),
-      (r.menu_item?.libelle || '').replace(/,/g,' '),
+      (r.user?.matricule || '').replace(/,/g, ' '),
+      (r.user?.nom || '').replace(/,/g, ' '),
+      (r.menu_item?.libelle || '').replace(/,/g, ' '),
+      (r.category || '').replace(/,/g, ' '),
       r.status,
       r.createdAt.toISOString()
-    ].join(',')));
-    const csv = header + lines.join('\n');
-    res.setHeader('Content-Type','text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition',`attachment; filename="reservations_${date}.csv"`);
-    res.send(csv);
+    ].join(','));
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="reservations_${date}.csv"`);
+    res.send(header + lines.join('\n'));
   } catch (e) { console.error(e); res.status(500).json({ error: 'Erreur export CSV' }); }
 });
 
-// ---------- Valider une commande (panier) ----------
-router.post('/confirm', requireAuth, ensureCanReserve, async (req, res) => {
-  const t = await sequelize.transaction();
+/* ── GET /api/reservations/lookup-order ─────────────────────────────────── */
+router.get('/lookup-order', requirePermission(PERMISSIONS.CANTEEN_RESERVATION_MANAGE), async (req, res) => {
   try {
-    const { date_jour, selections } = req.body || {};
-    const userId = req.user?.id;
-    if (!userId || !date_jour || !selections || typeof selections !== 'object') {
-      await t.rollback(); return res.status(400).json({ error: 'Payload invalide' });
-    }
-
-    const ids = {
-      entree_id:  selections.entree_id  || null,
-      plat_id:    selections.plat_id    || null,
-      dessert_id: selections.dessert_id || null,
-      boisson_id: selections.boisson_id || null
-    };
-    const chosen = Object.values(ids).filter(Boolean);
-    if (chosen.length === 0) { await t.rollback(); return res.status(400).json({ error: 'Sélection vide : au moins un item requis' }); }
-
-    const cutoff = (await Setting.findOne({ where: { key: 'cutoff_time' } }))?.value
-      || process.env.CUTOFF_TIME || '10:30';
-    if (!isBefore(date_jour, cutoff)) { await t.rollback(); return res.status(400).json({ error: 'Heure limite dépassée' }); }
-
-    const user = await User.findByPk(userId, { transaction: t });
-    if (!user) { await t.rollback(); return res.status(404).json({ error: 'Utilisateur inconnu' }); }
-
-    const daily = await DailyMenu.findOne({ where: { date_jour }, transaction: t });
-    if (!daily || daily.locked) { await t.rollback(); return res.status(400).json({ error: 'Jour non ouvert ou verrouillé' }); }
-
-    const items = await MenuItem.findAll({ where: { id: chosen }, transaction: t });
-    const byId = new Map(items.map(mi => [mi.id, mi]));
-
-    const toCreate = [];
-    for (const [key, mid] of Object.entries(ids)) {
-      if (!mid) continue;
-      const mi = byId.get(Number(mid));
-      if (!mi) { await t.rollback(); return res.status(400).json({ error: `Item ${mid} introuvable` }); }
-      const cat = normType(mi.type);
-      if (!['entrée','plat','dessert','boisson'].includes(cat)) {
-        await t.rollback(); return res.status(400).json({ error: `Type non autorisé: ${mi.type}` });
-      }
-      if (toCreate.some(x => x.category === cat)) {
-        await t.rollback(); return res.status(400).json({ error: `Au plus 1 ${cat} par réservation` });
-      }
-      toCreate.push({ menu_item_id: Number(mid), category: cat, label: mi.libelle });
-    }
-
-    // planification + quotas
-    for (const ent of toCreate) {
-      const dmi = await DailyMenuItem.findOne({
-        where: { daily_menu_id: daily.id, menu_item_id: ent.menu_item_id },
-        transaction: t, lock: t.LOCK.UPDATE
-      });
-      if (!dmi) { await t.rollback(); return res.status(400).json({ error: `Non planifié: "${ent.label}"` }); }
-      if (dmi.stock_quota !== null) {
-        const used = await Reservation.count({
-          where: { date_jour, menu_item_id: ent.menu_item_id, status: 'confirmed' },
-          transaction: t
-        });
-        if (used >= dmi.stock_quota) { await t.rollback(); return res.status(409).json({ error: `Quota atteint: "${ent.label}"` }); }
-      }
-    }
-
-    // pas déjà réservé pour cette catégorie
-    for (const ent of toCreate) {
-      const exists = await Reservation.findOne({
-        where: { user_id: user.id, date_jour, category: ent.category, status: 'confirmed' },
-        transaction: t, lock: t.LOCK.UPDATE
-      });
-      if (exists) { await t.rollback(); return res.status(409).json({ error: `Déjà réservé pour la catégorie ${ent.category}` }); }
-    }
-
-    // création groupée
-    const order_code = genCode(10);
-    const created = [];
-    for (const ent of toCreate) {
-      const pickup_code = genCode(10);
-      const r = await Reservation.create({
-        user_id: user.id, date_jour,
-        menu_item_id: ent.menu_item_id,
-        category: ent.category,
-        pickup_code,
-        order_code,
-        status: 'confirmed'
-      }, { transaction: t });
-      created.push({ reservation_id: r.id, category: ent.category, pickup_code });
-    }
-
-    await t.commit();
-    return res.json({ ok: true, order_code, created });
-  } catch (e) {
-    await t.rollback(); console.error(e);
-    if (e?.parent?.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ error: 'Conflit : déjà réservé pour cette catégorie' });
-    }
-    return res.status(500).json({ error: 'Erreur confirmation' });
-  }
-});
-
-// ---------- Lookup / Redeem order_code ----------
-router.get('/lookup-order', requireAuth, requireRole(['manager','admin']), async (req, res) => {
-  try {
-    const oc = String(req.query.order_code || '').trim();
+    const oc    = String(req.query.order_code || '').trim();
+    const orgId = req.user.organization_id;
     if (!oc) return res.status(400).json({ error: 'order_code manquant' });
 
     const rows = await Reservation.findAll({
-      where: { order_code: oc },
+      where: { order_code: oc, organization_id: orgId },
       include: [
-        { model: User,     as: 'user',      attributes: ['matricule','nom'] },
-        { model: MenuItem, as: 'menu_item', attributes: ['libelle','type'] }
+        { model: User, as: 'user', attributes: ['matricule', 'nom'] },
+        { model: MenuItem, as: 'menu_item', attributes: ['libelle', 'type'] }
       ],
-      order: [['date_jour','ASC'], ['category','ASC']]
+      order: [['date_jour', 'ASC'], ['category', 'ASC']]
     });
     if (!rows.length) return res.status(404).json({ error: 'Réservation introuvable' });
 
@@ -431,18 +378,17 @@ router.get('/lookup-order', requireAuth, requireRole(['manager','admin']), async
   } catch (e) { console.error(e); res.status(500).json({ error: 'Erreur lookup-order' }); }
 });
 
-router.post('/redeem-order', requireAuth, requireRole(['manager','admin']), async (req, res) => {
+/* ── POST /api/reservations/redeem-order ─────────────────────────────────── */
+router.post('/redeem-order', requirePermission(PERMISSIONS.CANTEEN_PREP_MANAGE), async (req, res) => {
   const t = await sequelize.transaction();
   try {
-    const oc = String(req.body?.order_code || '').trim();
+    const oc    = String(req.body?.order_code || '').trim();
+    const orgId = req.user.organization_id;
     if (!oc) { await t.rollback(); return res.status(400).json({ error: 'order_code manquant' }); }
 
     const rows = await Reservation.findAll({
-      where: { order_code: oc },
-      include: [
-        { model: User,     as: 'user',      attributes: ['matricule','nom'] },
-        { model: MenuItem, as: 'menu_item', attributes: ['libelle','type'] }
-      ],
+      where: { order_code: oc, organization_id: orgId },
+      include: [{ model: User, as: 'user', attributes: ['matricule', 'nom'] }, { model: MenuItem, as: 'menu_item', attributes: ['libelle', 'type'] }],
       lock: t.LOCK.UPDATE, transaction: t
     });
     if (!rows.length) { await t.rollback(); return res.status(404).json({ error: 'Réservation introuvable' }); }
@@ -458,52 +404,98 @@ router.post('/redeem-order', requireAuth, requireRole(['manager','admin']), asyn
       updated++;
     }
     await t.commit();
-
     const u = rows[0].user || {};
     res.json({ ok: true, order_code: oc, date_jour: rows[0].date_jour, matricule: u.matricule || '', nom: u.nom || '', updated, already, invalid });
   } catch (e) { await t.rollback(); console.error(e); res.status(500).json({ error: 'Erreur redeem-order' }); }
 });
 
-// ---------- Annuler tout l’order_code ----------
-router.post('/cancel-order', requireAuth, async (req, res) => {
+/* ── POST /api/reservations/redeem-matricule ─────────────────────────────── */
+router.post('/redeem-matricule', requirePermission(PERMISSIONS.CANTEEN_PREP_MANAGE), async (req, res) => {
   const t = await sequelize.transaction();
   try {
-    const oc = String(req.body?.order_code || '').trim();
-    if (!oc) { await t.rollback(); return res.status(400).json({ error: 'order_code manquant' }); }
+    const matricule = String(req.body?.matricule || '').trim();
+    const date_jour = String(req.body?.date_jour || new Date().toISOString().slice(0,10)).slice(0,10);
+    const orgId     = req.user.organization_id;
+    if (!matricule) { await t.rollback(); return res.status(400).json({ error: 'matricule manquant' }); }
 
-    const rows = await Reservation.findAll({ where: { order_code: oc }, transaction: t, lock: t.LOCK.UPDATE });
-    if (!rows.length) { await t.rollback(); return res.status(404).json({ error: 'Réservation introuvable' }); }
+    const user = await User.findOne({ where: { matricule, organization_id: orgId }, transaction: t });
+    if (!user) { await t.rollback(); return res.status(404).json({ error: 'Utilisateur introuvable' }); }
 
-    const isManager = req.user?.role === 'manager' || req.user?.role === 'admin';
-    const ownerId = rows[0].user_id;
-    if (!isManager && ownerId !== req.user.id) {
-      await t.rollback(); return res.status(403).json({ error: 'Interdit' });
-    }
+    const rows = await Reservation.findAll({
+      where: { user_id: user.id, date_jour, status: 'confirmed', picked_at: { [Op.is]: null }, organization_id: orgId },
+      lock: t.LOCK.UPDATE, transaction: t
+    });
+    if (!rows.length) { await t.rollback(); return res.status(404).json({ error: 'Aucune réservation confirmée à valider' }); }
 
-    const allowCancelUntil = (await Setting.findOne({ where: { key: 'allow_cancel_until' }, transaction: t }))?.value
-      || process.env.ALLOW_CANCEL_UNTIL || '09:00';
-
-    const today = new Date().toISOString().slice(0,10);
-    const dateJour = rows[0].date_jour;
-    const tooLate = (!isManager) && (dateJour === today) && (hhmm(new Date()) > allowCancelUntil);
-    if (tooLate) { await t.rollback(); return res.status(400).json({ error: `Heure limite d’annulation dépassée (${allowCancelUntil})` }); }
-
-    const countConfirmed = rows.filter(r => r.status === 'confirmed').length;
-    const countPicked    = rows.filter(r => !!r.picked_at).length;
-    const countCancelled = rows.filter(r => r.status === 'cancelled').length;
-
-    const [affected] = await Reservation.update(
-      { status: 'cancelled' },
-      { where: { order_code: oc, status: 'confirmed', picked_at: { [Op.is]: null } }, transaction: t }
-    );
+    const now = new Date();
+    let updated = 0;
+    for (const r of rows) { r.picked_at = now; r.status = 'picked'; await r.save({ transaction: t }); updated++; }
 
     await t.commit();
-    res.json({
-      ok: true, order_code: oc, date_jour: dateJour,
-      cancelled: affected,
-      diagnostic: { total: rows.length, confirmed: countConfirmed, already_cancelled: countCancelled, already_picked: countPicked }
-    });
-  } catch (e) { await t.rollback(); console.error(e); res.status(500).json({ error: 'Erreur annulation commande' }); }
+    return res.json({ ok: true, date_jour, matricule, nom: user.nom || '', updated });
+  } catch (e) { await t.rollback(); console.error(e); return res.status(500).json({ error: 'Erreur validation par matricule' }); }
+});
+
+/* ── POST /api/reservations/cancel-order ────────────────────────────────── */
+router.post('/cancel-order', async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const oc    = String(req.body?.order_code || '').trim();
+    const orgId = req.user.organization_id;
+    if (!oc) { await t.rollback(); return res.status(400).json({ error: 'order_code manquant' }); }
+
+    const rows = await Reservation.findAll({ where: { order_code: oc, organization_id: orgId }, transaction: t, lock: t.LOCK.UPDATE });
+    if (!rows.length) { await t.rollback(); return res.status(404).json({ error: 'Réservation introuvable' }); }
+
+    const isManagerPlus = canManageCanteen(req);
+    if (!isManagerPlus && rows[0].user_id !== req.user.id) { await t.rollback(); return res.status(403).json({ error: 'Interdit' }); }
+
+    const cancelLimit = await getCancelLimit(orgId, t);
+    const today    = new Date().toISOString().slice(0,10);
+    const dateJour = rows[0].date_jour;
+    const tooLate  = !isManagerPlus && dateJour === today && hhmm(new Date()) > cancelLimit;
+    if (tooLate) { await t.rollback(); return res.status(400).json({ error: `Heure limite d'annulation dépassée (${cancelLimit})` }); }
+
+    let affected = 0, already = 0, picked = 0;
+    for (const r of rows) {
+      if (r.picked_at) { picked++; continue; }
+      if (r.status !== 'confirmed') { already++; continue; }
+      await Reservation.destroy({ where: { user_id: r.user_id, date_jour: r.date_jour, category: r.category, status: 'cancelled', organization_id: orgId }, transaction: t });
+      r.status = 'cancelled';
+      await r.save({ transaction: t });
+      affected++;
+    }
+    await t.commit();
+    return res.json({ ok: true, order_code: oc, date_jour: dateJour, cancelled: affected, diagnostic: { total: rows.length, already_cancelled: already, already_picked: picked } });
+  } catch (e) { await t.rollback(); console.error(e); return res.status(500).json({ error: 'Erreur annulation commande' }); }
+});
+
+/* ── POST /api/reservations/delete-order ────────────────────────────────── */
+router.post('/delete-order', async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const oc    = String(req.body?.order_code || '').trim();
+    const orgId = req.user.organization_id;
+    if (!oc) { await t.rollback(); return res.status(400).json({ error: 'order_code manquant' }); }
+
+    const rows = await Reservation.findAll({ where: { order_code: oc, organization_id: orgId }, transaction: t, lock: t.LOCK.UPDATE });
+    if (!rows.length) { await t.rollback(); return res.status(404).json({ error: 'Réservation introuvable' }); }
+
+    const isManagerPlus = canManageCanteen(req);
+    if (!isManagerPlus && rows[0].user_id !== req.user.id) { await t.rollback(); return res.status(403).json({ error: 'Interdit' }); }
+
+    if (rows.some(r => !!r.picked_at)) { await t.rollback(); return res.status(400).json({ error: 'Suppression refusée : un item a déjà été retiré' }); }
+
+    const cancelLimit = await getCancelLimit(orgId, t);
+    const today    = new Date().toISOString().slice(0,10);
+    const dateJour = rows[0].date_jour;
+    const tooLate  = !isManagerPlus && dateJour === today && hhmm(new Date()) > cancelLimit;
+    if (tooLate) { await t.rollback(); return res.status(400).json({ error: `Heure limite dépassée (${cancelLimit})` }); }
+
+    const deleted = await Reservation.destroy({ where: { order_code: oc, picked_at: { [Op.is]: null }, organization_id: orgId }, transaction: t });
+    await t.commit();
+    return res.json({ ok: true, order_code: oc, date_jour: dateJour, deleted });
+  } catch (e) { await t.rollback(); console.error(e); return res.status(500).json({ error: 'Erreur suppression commande' }); }
 });
 
 module.exports = router;

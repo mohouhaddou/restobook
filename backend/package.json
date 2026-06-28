@@ -1,21 +1,31 @@
 {
   "name": "restobook-backend",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "node index.js",
     "build": "echo 'no build step for backend'",
     "render-build": "npm run build",
     "render-start": "node index.js",
-    "migrate": "node scripts/migrate.js" 
+    "migrate": "node scripts/migrate.js",
+    "migrate:roles": "node scripts/migrate_roles.js",
+    "migrate:nutrition": "node scripts/migrate_nutrition.js",
+    "migrate:satisfaction": "node scripts/migrate_satisfaction.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "express": "^4",
-    "sequelize": "^6",
-    "mysql2": "^3",
+    "busboy": "^1.6.0",
     "cors": "^2",
-    "dotenv": "^16",
+    "dotenv": "^16.6.1",
+    "express": "^4",
+    "express-rate-limit": "^8.5.2",
+    "express-validator": "^7.3.2",
     "jsonwebtoken": "^9",
-    "multer": "^1"
+    "multer": "^2.0.2",
+    "mysql2": "^3",
+    "qrcode": "^1.5.4",
+    "sequelize": "^6",
+    "socket.io": "^4.8.3"
   }
 }

@@ -1,5 +1,5 @@
 const { DataTypes, Model } = require('sequelize');
-const sequelize = require('./index');
+const sequelize = require('./db');
 
 class DailyMenuItem extends Model {}
 DailyMenuItem.init({
