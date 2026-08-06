@@ -1,0 +1,1 @@
+export interface PolicyResult{readonly valid:boolean;readonly errors:readonly string[];readonly warnings:readonly string[];}export interface ConfigurablePolicy<T=unknown>{evaluate(value:T,configuration:Readonly<Record<string,unknown>>):PolicyResult;}

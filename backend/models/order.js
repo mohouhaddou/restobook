@@ -9,7 +9,7 @@ Order.init({
   organization_id:  { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
   user_id:          { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
   type: {
-    type: DataTypes.ENUM('dine_in', 'takeaway', 'click_collect', 'delivery'),
+    type: DataTypes.ENUM('dine_in', 'takeaway', 'click_collect', 'delivery', 'in_store'),
     defaultValue: 'delivery'
   },
   // order_source sépare le canal de commande du mode de fulfillment
@@ -18,6 +18,14 @@ Order.init({
     type: DataTypes.ENUM('TABLE_QR', 'ONLINE', 'STAFF'),
     defaultValue: 'ONLINE'
   },
+  // source distingue l'origine métier de la commande (POS = vente en caisse)
+  source: {
+    type: DataTypes.ENUM('MARKETPLACE', 'POS', 'ADMIN'),
+    defaultValue: 'MARKETPLACE'
+  },
+  cashier_id:               { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+  cash_register_session_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+  tax_amount:               { type: DataTypes.DECIMAL(8, 2), allowNull: true, defaultValue: 0 },
   status: {
     type: DataTypes.ENUM('pending','confirmed','preparing','ready','picked_up','on_the_way','delivered','cancelled'),
     defaultValue: 'pending'
@@ -32,6 +40,8 @@ Order.init({
 
   // ── Delivery fields ───────────────────────────────────────────────────────
   delivery_address:  { type: DataTypes.TEXT, allowNull: true },
+  delivery_lat:      { type: DataTypes.DECIMAL(10, 7), allowNull: true },
+  delivery_lng:      { type: DataTypes.DECIMAL(10, 7), allowNull: true },
   delivery_fee:      { type: DataTypes.DECIMAL(6, 2), defaultValue: 0 },
   service_fee:       { type: DataTypes.DECIMAL(6, 2), defaultValue: 0 },
   discount_amount:   { type: DataTypes.DECIMAL(6, 2), defaultValue: 0 },
@@ -39,7 +49,7 @@ Order.init({
 
   // ── Payment fields ────────────────────────────────────────────────────────
   payment_method: {
-    type: DataTypes.ENUM('cash', 'card', 'wallet', 'online'),
+    type: DataTypes.ENUM('cash', 'card', 'wallet', 'online', 'credit'),
     defaultValue: 'cash'
   },
   payment_status: {

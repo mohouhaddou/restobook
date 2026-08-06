@@ -1,0 +1,219 @@
+/*
+ * StoryBook — véritable lecteur de livre illustré premium (BookTime / Apple Books / Kindle Kids),
+ * jamais une page web. Chaque écran est une double page : une illustration qui occupe TOUJOURS
+ * 100% de sa zone, et le texte qui l'accompagne, toujours aligné en haut (jamais centré
+ * verticalement, jamais de grande zone vide). Le mode (paysage = côte à côte / portrait = empilé)
+ * est décidé par StoryLayoutEngine (JS) selon la taille RÉELLE du cadre lecteur, pas par des media
+ * queries ici : ce fichier ne fait que styliser ce qui a déjà été décidé.
+ */
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* isolation: isolate crée une frontière de contexte d'empilement propre : garantit que
+ * .storybook-chrome-bottom (voir plus bas) reste TOUJOURS au-dessus de tout ce qui vit dans
+ * .storybook-viewport, quel que soit le z-index interne posé par framer-motion pendant les
+ * transitions de page (AnimatePresence mode="popLayout" peut élever temporairement le z-index de
+ * l'écran sortant/entrant). */
+.storybook-root { position: relative; isolation: isolate; display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; background: #16130f; }
+
+/* Pas de padding ici : StoryLayoutEngine mesure exactement cet élément pour calculer la taille
+ * d'un écran (voir StoryLayoutEngine.ts) — le moindre padding creuserait un écart entre la taille
+ * mesurée et la taille réellement disponible, et ferait déborder le contenu pourtant mesuré comme
+ * tenant. La respiration visuelle vient du padding de `.scene-text` (calculé en JS, voir
+ * ScenePage.tsx/StoryPaginator.textZonePaddingFor) et des flèches flottantes (position absolute). */
+.storybook-viewport { flex: 1 1 auto; min-height: 0; position: relative; display: flex; overflow: hidden; }
+
+/* Lecture plein écran façon lecteur vidéo : ce bloc (barre de narration) est un overlay en
+ * position absolute, PAS un flex sibling qui réserverait de la hauteur — le livre
+ * (.storybook-viewport, flex: 1 1 auto) occupe donc toujours 100% de .storybook-root, chrome
+ * visible ou non. Il s'efface après quelques secondes d'inactivité (voir useIdleVisibility.ts), et
+ * n'existe même pas dans le DOM sur la couverture (voir BookReader.tsx) : une vraie couverture de
+ * livre n'a pas de contrôles de lecture superposés. */
+.storybook-chrome-bottom {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 100;
+  display: flex; flex-direction: column;
+  background: linear-gradient(to top, color-mix(in srgb, var(--portal-bg) 92%, transparent) 60%, transparent);
+  transition: opacity .3s ease, transform .3s ease;
+}
+.storybook-chrome-bottom.storybook-chrome-hidden { opacity: 0; transform: translateY(18px); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .storybook-chrome-bottom { transition: none; } }
+
+.storybook-frame { position: relative; flex: 1; min-height: 0; display: flex; }
+.storybook-pages { flex: 1; min-height: 0; touch-action: pan-y; cursor: grab; }
+.storybook-pages:active { cursor: grabbing; }
+.storybook-screen { height: 100%; width: 100%; display: flex; }
+
+/* ── Navigation — flèches translucides, discrètes, jamais de gros bouton plein ──────────────── */
+.storybook-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 20;
+  width: clamp(36px, 4.2vw, 46px); height: clamp(36px, 4.2vw, 46px); border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 16, 12, 0.32); color: #fff; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  transition: background .18s ease, opacity .18s ease, transform .18s ease;
+}
+.storybook-nav:hover:not(:disabled) { background: rgba(20, 16, 12, 0.5); transform: translateY(-50%) scale(1.05); }
+.storybook-nav:disabled { opacity: .2; cursor: not-allowed; }
+.storybook-nav--prev { left: clamp(6px, 1.4vw, 18px); }
+.storybook-nav--next { right: clamp(6px, 1.4vw, 18px); }
+
+/* ── La page — une double page, jamais une carte flottante ──────────────────────────────────── */
+.story-page { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative; background: #FAF6EC; overflow: hidden; }
+.story-page--cover { background: #000; }
+
+/* Petit numéro de page, discret, en bas — jamais de gros indicateur. */
+.story-page-number {
+  position: absolute; left: 0; right: 0; bottom: clamp(8px, 1.6%, 16px);
+  text-align: center; font-size: 12px; font-weight: 600; letter-spacing: .03em;
+  color: rgba(28, 22, 16, 0.4); font-variant-numeric: tabular-nums; pointer-events: none;
+}
+
+/* ── Couverture — une vraie couverture de livre ─────────────────────────────────────────────── */
+.cover-page { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.cover-page-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Voile sombre en dégradé : transparent en haut, sombre en bas — garantit la lisibilité du titre
+ * superposé quelle que soit l'illustration, sans jamais assombrir toute l'image. */
+.cover-page-veil {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10, 8, 6, 0.82) 0%, rgba(10, 8, 6, 0.38) 42%, rgba(10, 8, 6, 0) 72%);
+}
+.cover-page-content {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px;
+  padding: 6% 8% 8%; color: #fff;
+}
+.cover-page-title {
+  margin: 0; font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+  font-weight: 700; font-size: clamp(30px, 5.2vw, 62px); line-height: 1.15; text-wrap: balance;
+  /* color explicite : un reset global (base Tailwind sur h1) gagnerait sinon sur la couleur
+   * héritée de .cover-page-content, laissant le titre illisible (bug constaté en vérification live). */
+  color: #fff; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+.cover-page-subtitle {
+  margin: 0; max-width: 56ch; font-size: clamp(14px, 1.6vw, 18px); font-weight: 400;
+  color: #fff; opacity: .88; line-height: 1.5;
+}
+.cover-page-start {
+  margin-top: 10px; padding: 13px 40px; border: none; border-radius: 999px; cursor: pointer;
+  background: #fff; color: #1c1712; font-family: Georgia, serif; font-weight: 700; font-size: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); transition: transform .18s ease, box-shadow .18s ease;
+}
+.cover-page-start:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45); }
+.cover-page-start:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+/* ── Scène — illustration 100% + texte aligné en haut ───────────────────────────────────────── */
+/* direction: ltr FORCÉ, quel que soit `dir` sur `.story-page` ancêtre : `.scene` est un conteneur
+ * flex qui place image/texte CÔTE À CÔTE — un `direction: rtl` hérité y inverserait l'ordre visuel
+ * de ses enfants et annulerait (ou doublerait) le `row-reverse` posé juste en dessous, remettant
+ * l'image du mauvais côté en arabe (bug constaté en vérification live). Le texte reste correct :
+ * `.scene-text` reçoit son PROPRE `dir` explicite (voir ScenePage.tsx), indépendant de celui-ci. */
+.scene { flex: 1; min-height: 0; display: flex; direction: ltr; }
+.scene--row { flex-direction: row; }
+.scene--column { flex-direction: column; }
+/* L'image passe du côté physique OPPOSÉ quand elle doit être à droite (RTLLayoutManager.imageSideFor) — sans jamais tester `direction` ici. */
+.scene--row.scene--image-right { flex-direction: row-reverse; }
+
+.scene-image { flex: 1 1 50%; min-height: 0; min-width: 0; overflow: hidden; background: #000; }
+/* 44% — DOIT rester identique à PORTRAIT_IMAGE_HEIGHT_RATIO (StoryPaginator.ts) : c'est la part de
+ * hauteur que le paginateur suppose pour l'illustration en portrait. */
+.scene--column .scene-image { flex: 0 0 44%; }
+.scene-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Le padding réel (haut/bas/gauche/droite) est posé en style inline par ScenePage.tsx, calculé en
+ * JS à partir des mêmes ratios que StoryPaginator.textZonePaddingFor — jamais aligné verticalement
+ * au centre (justify-content: flex-start), le texte commence toujours immédiatement en haut. */
+.scene-text { flex: 1 1 50%; min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-start; }
+.scene--column .scene-text { flex: 1; }
+
+/* Classe PARTAGÉE avec le mesureur hors-écran (voir SCENE_TEXT_CLASS, StoryPaginator.ts) : la
+ * typographie doit être identique en mesure et en rendu réel, sous peine de désynchronisation
+ * (piège déjà rencontré dans ce chantier). Largeur de lecture confortable (60-70 caractères,
+ * TEXT_MAX_WIDTH_PX) centrée dans sa colonne. */
+.scene-text-inner {
+  width: 100%; margin: 0 auto;
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+  font-size: calc(var(--story-font-scale, 1) * clamp(16px, 1.65vw, 21px));
+  line-height: 1.7; color: #201a13;
+}
+
+/* Titre de CHAPITRE — rendu par ScenePage.tsx directement (pas via MarkdownRenderer), jamais seul
+ * sur sa page (garanti en amont par ChapterLayoutManager) : le texte s'enchaîne immédiatement. */
+.scene-chapter-title {
+  margin: 0 0 .55em; font-family: inherit; font-weight: 700; color: #1c1712;
+  font-size: clamp(22px, 2.6vw, 32px); line-height: 1.25; text-wrap: balance;
+}
+
+/* Remplace intégralement l'habillage "pastille dégradée" du thème Kids par une typographie de
+ * livre sobre — scopé au StoryBook uniquement (`.portal-kids .scene-text-inner`, plus spécifique
+ * que `.portal-kids .md-kids`, gagne quel que soit l'ordre des feuilles de style) : les pages
+ * Discover/Sports qui partagent le même MarkdownRenderer/thème Kids restent inchangées. */
+.portal-kids .scene-text-inner.md-kids,
+.portal-kids .scene-text-inner .md-kids { font-family: inherit; font-size: inherit; line-height: inherit; color: inherit; }
+.portal-kids .scene-text-inner .md-kids-h1,
+.portal-kids .scene-text-inner .md-kids-h2,
+.portal-kids .scene-text-inner .md-kids-h3 {
+  display: block; background: none; box-shadow: none; padding: 0; border-radius: 0;
+  color: #1c1712; font-family: inherit; font-weight: 700; font-size: 1.25em; margin: 0 0 .6em;
+}
+.portal-kids .scene-text-inner .md-kids-p { margin: 0 0 1em; }
+.portal-kids .scene-text-inner .md-kids-list { margin: 0 0 1em; padding-left: 4px; }
+.portal-kids .scene-text-inner .md-kids-list li { padding-left: 24px; }
+.portal-kids .scene-text-inner .md-kids-list li::before { content: '—'; color: #8a7a5c; }
+.portal-kids .scene-text-inner .md-kids-quote {
+  font-style: italic; border-left: 3px solid #cbb894; padding-left: 16px; margin: 0 0 1em; background: none; color: inherit;
+}
+
+/* ── Barre de narration ─────────────────────────────────────────────────── */
+.storybook-narration {
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px;
+  padding: 10px clamp(10px, 2vw, 22px); border-top: 1px solid var(--portal-border);
+  background: color-mix(in srgb, var(--portal-surface) 96%, transparent);
+}
+.storybook-narration-field { display: flex; align-items: center; gap: 6px; color: var(--portal-muted); }
+.storybook-narration-field select { border: 1px solid var(--portal-border); border-radius: 10px; padding: 6px 8px; background: var(--portal-surface); color: var(--portal-text); font: inherit; font-size: 13px; max-width: 130px; }
+.storybook-narration-voice select { max-width: 150px; }
+.storybook-narration-btn {
+  display: flex; align-items: center; gap: 3px; border: none; border-radius: 999px; cursor: pointer;
+  padding: 8px 12px; background: var(--portal-surface); border: 1px solid var(--portal-border); color: var(--portal-text); font-size: 11px; font-weight: 700;
+}
+.storybook-narration-play {
+  padding: 10px; background: var(--portal-primary); color: #fff; border: none;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--portal-primary) 40%, transparent);
+}
+.storybook-narration-font { gap: 8px; }
+.storybook-narration-font button { border: 1px solid var(--portal-border); background: var(--portal-surface); border-radius: 8px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--portal-text); }
+.storybook-narration-auto { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--portal-muted); }
+.storybook-narration-main { padding: 10px 18px; gap: 8px; font-size: 13px; }
+.storybook-narration-resume select { max-width: 170px; }
+.storybook-narration-provider {
+  display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700;
+  color: var(--portal-muted); white-space: nowrap;
+}
+
+/* ── Surlignage phrase par phrase (narration active) ───────────────────── */
+.narration-sentence { transition: background-color 0.15s ease, color 0.15s ease; border-radius: 4px; }
+.narration-sentence-active {
+  background: color-mix(in srgb, var(--portal-primary) 22%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--portal-primary) 22%, transparent);
+}
+.narration-sentence-dialogue { font-style: italic; }
+
+@media (prefers-reduced-motion: reduce) {
+  .storybook-nav, .storybook-screen, .cover-page-start { transition: none !important; animation: none !important; }
+}
+
+/* Capture PDF (Chromium headless piloté par PdfGenerator.js, voir backend/src/modules/
+ * digitalProducts/generators/) — masque tout le chrome interactif (barre de narration, flèches de
+ * navigation) : un livre imprimé n'a pas de contrôles de lecture superposés à l'image. Purement
+ * additif, l'expérience de lecture interactive elle-même n'est jamais concernée.
+ *
+ * `@page` avec une taille explicite est nécessaire : sans elle, la chaîne de hauteurs relatives au
+ * viewport (100vh/100% depuis la racine jusqu'à .storybook-viewport/.scene-image) s'effondre sous
+ * le moteur de mise en page impression de Chromium (constaté : couverture et illustrations
+ * invisibles dans le PDF généré alors qu'elles s'affichent normalement à l'écran) — donner une
+ * page de taille fixe redonne un cadre de référence concret à cette chaîne. Doit rester cohérent
+ * avec VIEWPORT dans PdfGenerator.js (1280×800). */
+@media print {
+  @page { size: 1280px 800px; margin: 0; }
+  html, body, #root { height: 800px !important; }
+  .storybook-chrome-bottom, .storybook-nav { display: none !important; }
+}

@@ -1,0 +1,21 @@
+
+.premium-icon-badge {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: .75rem;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: currentColor;
+}
+
+.premium-inline-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.premium-inline-icon svg {
+  flex-shrink: 0;
+}

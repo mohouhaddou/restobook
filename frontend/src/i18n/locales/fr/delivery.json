@@ -1,0 +1,19 @@
+{
+  "fulfillment.type.delivery": "Livraison à domicile",
+  "fulfillment.type.pickup": "Retrait sur place",
+  "fulfillment.type.click_collect": "Click & Collect",
+  "fulfillment.type.takeaway": "À emporter",
+  "fulfillment.type.dine_in": "Sur place",
+  "delivery.history.proposed": "Recherche d'un livreur",
+  "delivery.history.assigned": "Livreur assigné",
+  "delivery.history.picking_up": "Livreur en route vers le commerce",
+  "delivery.history.picked_up": "Commande récupérée",
+  "delivery.history.on_the_way": "En route vers vous",
+  "delivery.history.delivered": "Commande livrée",
+  "delivery.history.rejected": "Recherche d'un autre livreur",
+  "delivery.courier.generic": "Livreur",
+  "delivery.courier.onTheWay": "Votre livreur est en route",
+  "delivery.courier.namedOnTheWay": "{{name}} est en route",
+  "delivery.distanceFromStore": "à {{distance}} du commerce",
+  "delivery.courier.liveBadge": "🛵 {{name}} en direct{{distance}} · reçu il y a {{time}}"
+}

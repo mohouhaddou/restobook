@@ -1,0 +1,1 @@
+export class PriorityScheduler<T>{private readonly x:{value:T;priority:number}[]=[];enqueue(value:T,priority:number){this.x.push({value,priority});this.x.sort((a,b)=>b.priority-a.priority);}next(){return this.x.shift()?.value;}}

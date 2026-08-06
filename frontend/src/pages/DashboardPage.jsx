@@ -1,9 +1,56 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { useAuth } from '../contexts/AuthContext';
 import { ASSET } from '../api';
-import { QrModal } from '../components/reservation/QrModal';
+import { QrModal } from '../modules/resto/components/QrModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { PERMISSIONS } from '../modules/core/permissions';
+import { DashboardIcon } from '../shared/components/ui/DashboardIcon';
+import { PremiumIcon, PremiumIconBadge } from '../shared/components/ui/PremiumIcon';
+
+// Raccourcis opérationnels — chacun n'apparaît que si l'utilisateur a la
+// permission correspondante (POS/caisse pour un caissier, stats pour un
+// gérant, etc.), donc le volet peut varier — voire disparaître — selon le rôle.
+const QUICK_ACCESS_ITEMS = [
+  { to: '/pos',                label: 'POS — Vente',   icon: '🧾', perm: PERMISSIONS.POS_SELL },
+  { to: '/pos/session',        label: 'Caisse',         icon: '💰', perm: [PERMISSIONS.POS_SESSION_OPEN, PERMISSIONS.POS_SESSION_CLOSE] },
+  { to: '/pos/history',        label: 'Historique POS', icon: '📜', perm: PERMISSIONS.POS_HISTORY_VIEW },
+  { to: '/orders',             label: 'Commandes',      icon: '📋', perm: PERMISSIONS.RESTAURANT_ORDER_MANAGE },
+  { to: '/items',              label: 'Menu & produits',icon: '🍽️', perm: [PERMISSIONS.CANTEEN_MENU_MANAGE, PERMISSIONS.RESTAURANT_MENU_MANAGE] },
+  { to: '/tables',             label: 'Tables & QR',    icon: '🪑', perm: PERMISSIONS.RESTAURANT_TABLES_MANAGE },
+  { to: '/business-dashboard', label: 'Statistiques',   icon: '📊', perm: [PERMISSIONS.CANTEEN_STATS_VIEW, PERMISSIONS.RESTAURANT_STATS_VIEW] },
+  { to: '/delivery',           label: 'Livraisons',     icon: '🚚', perm: PERMISSIONS.DELIVERY_MANAGE },
+  { to: '/loyalty/settings',   label: 'Fidélité',       icon: '🎁', perm: PERMISSIONS.LOYALTY_MANAGE },
+];
+
+function QuickAccessGrid({ hasPermission, hasAnyPermission }) {
+  const items = QUICK_ACCESS_ITEMS.filter(item =>
+    Array.isArray(item.perm) ? hasAnyPermission(item.perm) : hasPermission(item.perm)
+  );
+  if (items.length === 0) return null;
+
+  return (
+    <div className="card p-0" style={{ overflow: 'hidden' }}>
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--rb-border)' }}>
+        <h4 className="section-title">Accès rapide</h4>
+      </div>
+      <div style={{ padding: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
+        {items.map(item => (
+          <Link key={item.to} to={item.to} className="quick-access-tile" style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+            padding: '16px 10px', borderRadius: 12, border: '1px solid var(--rb-border)',
+            background: 'var(--rb-surface)', textDecoration: 'none', color: 'var(--rb-text)',
+            fontSize: 12, fontWeight: 600, textAlign: 'center', transition: 'transform .15s, box-shadow .15s, border-color .15s',
+          }}>
+            <DashboardIcon icon={item.icon} size={24} />
+            {item.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // Images Unsplash open-source par catégorie de plat
 const FOOD_FALLBACKS = {
@@ -37,7 +84,7 @@ function StatCard({ value, label, icon, color }) {
   return (
     <div className="stat-card">
       <div className="stat-card__icon" style={{background:color+'20'}}>
-        <span style={{fontSize:20}}>{icon}</span>
+        <DashboardIcon icon={icon} size={20} />
       </div>
       <div className="stat-card__value" style={{color}}>{value ?? '—'}</div>
       <div className="stat-card__label">{label}</div>
@@ -47,7 +94,7 @@ function StatCard({ value, label, icon, color }) {
 
 export default function DashboardPage() {
   const { get, post } = useApi();
-  const { user, isManager } = useAuth();
+  const { user, isManager, hasPermission, hasAnyPermission } = useAuth();
   const [date, setDate]   = useState(today());
   const [menu, setMenu]   = useState({ items: [], locked: false });
   const [myOrders, setMyOrders] = useState([]);
@@ -131,6 +178,9 @@ export default function DashboardPage() {
 
   return (
     <>
+      {/* ── Accès rapide ── */}
+      <QuickAccessGrid hasPermission={hasPermission} hasAnyPermission={hasAnyPermission} />
+
       {/* ── Dashboard manager KPIs ── */}
       {isManager && dashboard && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
@@ -182,7 +232,7 @@ export default function DashboardPage() {
         <div style={{padding:'18px 20px'}}>
           {totalItems === 0 ? (
             <div className="empty-state">
-              <div className="empty-state__icon">🍽️</div>
+              <div className="empty-state__icon"><PremiumIconBadge name="utensils" size={30} /></div>
               <div className="empty-state__title">Aucun menu planifié pour ce jour</div>
               <div style={{fontSize:13, marginTop:4}}>Le gestionnaire n'a pas encore planifié les plats.</div>
             </div>
@@ -261,7 +311,7 @@ export default function DashboardPage() {
               {cartMsg.text && (
                 <div className={`alert mt-2 mb-0 py-2 ${cartMsg.kind === 'success' ? 'alert-success' : 'alert-danger'}`}
                   style={{fontSize:13}}>
-                  {cartMsg.kind === 'success' ? '✅ ' : '❌ '}{cartMsg.text}
+                  {cartMsg.kind === 'success' ? <PremiumIcon name="check" size={14} /> : <PremiumIcon name="close" size={14} />} {cartMsg.text}
                 </div>
               )}
             </>
@@ -278,7 +328,7 @@ export default function DashboardPage() {
         <div style={{padding:16}}>
           {myOrders.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state__icon">📭</div>
+              <div className="empty-state__icon"><PremiumIconBadge name="inbox" size={30} /></div>
               <div className="empty-state__title">Aucune commande</div>
               <div style={{fontSize:13, marginTop:4}}>Réservez votre repas ci-dessus.</div>
             </div>
@@ -291,7 +341,7 @@ export default function DashboardPage() {
                       <div style={{
                         width:34, height:34, borderRadius:8,
                         background:'var(--rb-orange-light)', display:'grid', placeItems:'center', fontSize:16, flexShrink:0
-                      }}>🍽️</div>
+                      }}><PremiumIcon name="utensils" size={18} /></div>
                       <div>
                         <div style={{display:'flex', alignItems:'center', gap:8, flexWrap:'wrap'}}>
                           <code style={{fontSize:12, background:'var(--rb-surface)', padding:'2px 7px', borderRadius:4}}>
@@ -311,7 +361,7 @@ export default function DashboardPage() {
                         onClick={() => setQrOrder(order)}
                         title="Voir le QR code"
                       >
-                        📷 QR
+                        <PremiumIcon name="camera" size={14} /> QR
                       </button>
                       <button
                         className="btn btn-outline-danger btn-sm"

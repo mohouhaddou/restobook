@@ -1,0 +1,21 @@
+export const I18N_GLOSSARY_KEYS = [
+  'glossary.marketplace',
+  'glossary.dashboard',
+  'glossary.store',
+  'glossary.merchant',
+  'glossary.product',
+  'glossary.service',
+  'glossary.order',
+  'glossary.delivery',
+  'glossary.pickup',
+  'glossary.reservation',
+  'glossary.promotion',
+  'glossary.payment',
+  'glossary.subscription',
+  'glossary.customer',
+  'glossary.employee',
+  'glossary.superadmin',
+  'glossary.stock',
+  'glossary.category',
+  'glossary.validation'
+];

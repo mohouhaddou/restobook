@@ -1,0 +1,2 @@
+import type { BasePlugin } from "./BasePlugin";
+export class PluginRegistry { private readonly items=new Map<string,BasePlugin>(); register(x:BasePlugin){if(this.items.has(x.manifest.id))throw new Error("Plugin dupliqué");this.items.set(x.manifest.id,x);} get(id:string){const x=this.items.get(id);if(!x)throw new Error("Plugin absent");return x;} list(){return [...this.items.values()];} unregister(id:string){return this.items.delete(id);} }

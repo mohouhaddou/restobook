@@ -1,0 +1,28 @@
+{
+  "cards": [
+    {
+      "front": "Fraction",
+      "back": "Une ou plusieurs parts égales d’un tout."
+    },
+    {
+      "front": "Numérateur",
+      "back": "Nombre du haut : parts choisies."
+    },
+    {
+      "front": "Dénominateur",
+      "back": "Nombre du bas : parts égales au total."
+    },
+    {
+      "front": "Fraction unitaire",
+      "back": "Fraction dont le numérateur est 1."
+    },
+    {
+      "front": "Fractions équivalentes",
+      "back": "Écritures différentes d’une même quantité."
+    },
+    {
+      "front": "4/4",
+      "back": "Un tout."
+    }
+  ]
+}

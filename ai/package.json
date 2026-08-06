@@ -1,0 +1,16 @@
+{
+  "name": "@ifilino/ai-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Contrats et moteurs génériques de la rédaction IA iFilino.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && esbuild bridge/index.ts workflow-engine/index.ts publisher/index.ts content-manager/index.ts filesystem/index.ts integration/index.ts adapters/index.ts orchestrator/index.ts jobs/index.ts bootstrap/index.ts demo/index.ts os/index.ts modules/index.ts plugins/index.ts providers/index.ts models/index.ts editor-registry/index.ts policies/index.ts dashboard/index.ts audit/index.ts permissions/index.ts scheduler/index.ts extensions/index.ts scripts/start-ai.ts scripts/stop-ai.ts scripts/validate-ai.ts scripts/health-ai.ts scripts/demo-ai.ts scripts/cleanup-ai.ts ../backend/src/modules/ai-publisher/index.ts ../backend/src/modules/ai-import/index.ts --bundle --platform=node --external:@aws-sdk/client-s3 --format=cjs --outdir=.build",
+    "test": "esbuild tests/*.test.ts --bundle --platform=node --format=cjs --external:ajv/* --outdir=.test-dist && esbuild ../backend/src/modules/ai-publisher/tests/*.test.ts --bundle --platform=node --format=cjs --outdir=.test-dist/ai-publisher && esbuild ../backend/src/modules/ai-import/tests/*.test.ts --bundle --platform=node --format=cjs --external:@aws-sdk/client-s3 --outdir=.test-dist/ai-import && NODE_PATH=../backend/node_modules node --test .test-dist/*.test.js .test-dist/ai-publisher/*.test.js .test-dist/ai-import/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "ajv": "8.12.0",
+    "esbuild": "0.21.5",
+    "typescript": "5.6.3"
+  }
+}

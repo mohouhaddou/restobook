@@ -1,0 +1,8 @@
+.discovery-card{display:flex;gap:14px;align-items:flex-start;margin:22px 0;padding:20px;border-radius:22px;border:1.5px solid color-mix(in srgb, var(--adv-accent, #7c3aed) 28%, transparent);background:var(--adv-accent-soft, #ede9fe);box-shadow:0 8px 0 color-mix(in srgb, var(--adv-accent, #7c3aed) 12%, #fff)}
+.discovery-card-icon{flex:0 0 auto;width:42px;height:42px;display:grid;place-items:center;border-radius:14px;color:#fff;background:var(--adv-accent, #7c3aed);box-shadow:0 6px 14px color-mix(in srgb, var(--adv-accent, #7c3aed) 40%, transparent)}
+.discovery-card-body{min-width:0}
+.discovery-card-body>strong{display:block;margin-bottom:6px;color:var(--adv-accent-deep, #5b21b6);font-size:13px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+.discovery-card-body>div{color:#3f3450;font-size:16px;line-height:1.65}
+.discovery-card-body p{margin:0}
+.discovery-card--note{background:color-mix(in srgb, var(--adv-accent-soft, #ede9fe) 70%, #fff)}
+@media (prefers-reduced-motion: reduce){.discovery-card{transition:none}}

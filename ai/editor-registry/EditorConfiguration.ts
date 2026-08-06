@@ -1,0 +1,1 @@
+export interface EditorConfiguration{readonly manifestId:string;readonly categories:readonly string[];readonly featureFlags:Readonly<Record<string,boolean>>;readonly settings:Readonly<Record<string,unknown>>;}

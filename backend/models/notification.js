@@ -21,11 +21,17 @@ Notification.init({
   priority:        { type: DataTypes.ENUM('low','normal','high','urgent'), allowNull: false, defaultValue: 'normal' },
   data:            { type: DataTypes.JSON, allowNull: true },
   read_at:         { type: DataTypes.DATE, allowNull: true },
+  expires_at:      { type: DataTypes.DATE, allowNull: true },
+  dedup_key:       { type: DataTypes.STRING(191), allowNull: true },
 }, {
   sequelize,
   tableName: 'notifications',
   underscored: true,
   timestamps: true,
+  indexes: [
+    { fields: ['dedup_key'] },
+    { fields: ['expires_at'] },
+  ],
 });
 
 module.exports = Notification;

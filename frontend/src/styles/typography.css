@@ -1,0 +1,155 @@
+/* ═══════════════════════════════════════════════════
+   IFIGHAK — Typography System
+═══════════════════════════════════════════════════ */
+
+/* ── Base ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--il-font);
+  font-size: 14px;
+  font-weight: var(--il-fw-regular);
+  line-height: 1.6;
+  color: var(--il-text);
+  background: var(--il-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Type Scale ──────────────────────────────────── */
+
+/* Display (hero, landing) */
+.if-display-xl {
+  font-family: var(--il-font-display);
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: var(--il-fw-black);
+  line-height: 1.0;
+  letter-spacing: -3px;
+}
+.if-display-lg {
+  font-family: var(--il-font-display);
+  font-size: clamp(36px, 6vw, 72px);
+  font-weight: var(--il-fw-extrabold);
+  line-height: 1.05;
+  letter-spacing: -2px;
+}
+.if-display-md {
+  font-family: var(--il-font-display);
+  font-size: clamp(28px, 4.5vw, 52px);
+  font-weight: var(--il-fw-extrabold);
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+}
+
+/* Headings */
+h1, .if-h1 {
+  font-family: var(--il-font-display);
+  font-size: clamp(24px, 3.5vw, 40px);
+  font-weight: var(--il-fw-extrabold);
+  line-height: 1.15;
+  letter-spacing: -0.8px;
+  color: var(--il-text);
+  margin: 0 0 16px;
+}
+h2, .if-h2 {
+  font-family: var(--il-font-display);
+  font-size: clamp(20px, 2.8vw, 32px);
+  font-weight: var(--il-fw-bold);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: var(--il-text);
+  margin: 0 0 12px;
+}
+h3, .if-h3 {
+  font-size: clamp(17px, 2.2vw, 24px);
+  font-weight: var(--il-fw-bold);
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+  color: var(--il-text);
+  margin: 0 0 10px;
+}
+h4, .if-h4 {
+  font-size: clamp(15px, 1.8vw, 20px);
+  font-weight: var(--il-fw-semibold);
+  line-height: 1.4;
+  color: var(--il-text);
+  margin: 0 0 8px;
+}
+h5, .if-h5 {
+  font-size: 16px;
+  font-weight: var(--il-fw-semibold);
+  color: var(--il-text);
+  margin: 0 0 6px;
+}
+h6, .if-h6 {
+  font-size: 14px;
+  font-weight: var(--il-fw-semibold);
+  color: var(--il-muted);
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* Body */
+.if-body-lg  { font-size: 17px; line-height: 1.65; }
+.if-body     { font-size: 15px; line-height: 1.6; }
+.if-body-sm  { font-size: 13px; line-height: 1.55; }
+.if-caption  { font-size: 12px; line-height: 1.5; color: var(--il-muted); }
+
+/* Gradient text utility */
+.if-gradient-text {
+  background: var(--il-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline;
+}
+.if-gradient-text-warm {
+  background: var(--il-gradient-warm);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline;
+}
+
+/* Section badge */
+.if-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: var(--il-radius-full);
+  background: var(--il-primary-lighter);
+  border: 1px solid var(--il-primary-light);
+  color: var(--il-primary-dark);
+  font-size: 12px;
+  font-weight: var(--il-fw-semibold);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* Monospace */
+code, kbd, pre {
+  font-family: var(--il-font-mono);
+  font-size: 13px;
+}
+code {
+  background: var(--il-bg2);
+  padding: 2px 6px;
+  border-radius: var(--il-radius-xs);
+  color: var(--il-navy);
+}
+
+/* Focus visible (accessibility) */
+:focus-visible {
+  outline: 2px solid var(--il-primary);
+  outline-offset: 2px;
+  border-radius: var(--il-radius-xs);
+}

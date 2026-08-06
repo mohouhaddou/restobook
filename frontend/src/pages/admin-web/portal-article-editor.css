@@ -1,0 +1,151 @@
+.portal-article-editor-page {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.portal-admin-editor-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  align-items: start;
+  gap: 20px;
+  min-width: 0;
+}
+
+.portal-admin-editor-main,
+.portal-admin-editor-sidebar,
+.portal-admin-editor-sidebar > *,
+.portal-admin-panel,
+.portal-admin-fields,
+.portal-admin-panel .form-label {
+  min-width: 0;
+}
+
+.portal-admin-editor-sidebar {
+  align-self: start;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.portal-admin-editor-sidebar .portal-admin-panel {
+  width: 100%;
+  padding: 18px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.portal-admin-editor-sidebar .form-control,
+.portal-admin-editor-sidebar .form-select,
+.portal-admin-editor-sidebar textarea,
+.portal-admin-editor-sidebar input[type="file"] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.portal-admin-editor-sidebar input[type="file"] {
+  min-height: 44px;
+  padding: 6px;
+  border: 1px solid var(--rb-border, #dbe2ea);
+  border-radius: 10px;
+  color: var(--rb-muted, #64748b);
+  background: var(--rb-card, #fff);
+  font-size: .82rem;
+}
+
+.portal-admin-editor-sidebar input[type="file"]::file-selector-button {
+  min-height: 32px;
+  margin-inline-end: 8px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--rb-primary, #1e40af);
+  background: color-mix(in srgb, var(--rb-primary, #1e40af) 10%, transparent);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.portal-admin-cover {
+  display: block;
+  max-width: 100%;
+  background: var(--rb-bg, #f8fafc);
+}
+
+.portal-admin-check {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--rb-border, #e2e8f0);
+  border-radius: 10px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.portal-admin-check input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.portal-admin-editor-main textarea,
+.portal-admin-editor-sidebar textarea {
+  resize: vertical;
+}
+
+.portal-admin-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.portal-admin-product-list,
+.portal-admin-product-form {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.portal-admin-product-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px !important;
+  min-width: 0;
+}
+
+.portal-admin-product-row > div { min-width: 0; }
+.portal-admin-product-row strong { overflow-wrap: anywhere; }
+.portal-admin-product-row > .btn { grid-row: 1; }
+.portal-admin-product-status { grid-column: 1 / -1; grid-row: 2; width: 100% !important; }
+.portal-admin-product-pricing { display: grid !important; grid-template-columns: minmax(0, 1fr) 82px; }
+.portal-admin-product-pricing .form-control { width: 100% !important; }
+
+@media (max-width: 1200px) {
+  .portal-admin-editor-grid { grid-template-columns: minmax(0, 1fr); }
+  .portal-admin-editor-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portal-admin-editor-sidebar .portal-admin-panel:last-child { grid-column: auto; }
+  .portal-admin-editor-seo,
+  .portal-admin-digital-panel { grid-column: 1 / -1 !important; }
+}
+
+@media (max-width: 760px) {
+  .portal-article-editor-page { padding-inline: 12px; }
+  .portal-article-editor-page .page-header { align-items: stretch; }
+  .portal-admin-editor-actions { width: 100%; justify-content: stretch; }
+  .portal-admin-editor-actions .btn { flex: 1 1 140px; justify-content: center; min-height: 44px; }
+  .portal-admin-editor-sidebar { grid-template-columns: minmax(0, 1fr); }
+  .portal-admin-editor-seo,
+  .portal-admin-digital-panel { grid-column: auto !important; }
+  .portal-admin-language-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 12px; }
+  .portal-admin-language-tabs .btn { flex: 0 0 auto; min-height: 44px; }
+}
+
+@media (max-width: 520px) {
+  .portal-article-editor-page { padding-inline: 8px; }
+  .portal-admin-editor-grid { gap: 14px; }
+  .portal-admin-editor-main,
+  .portal-admin-editor-sidebar .portal-admin-panel { padding: 14px; }
+  .portal-admin-editor-actions { display: grid; grid-template-columns: 1fr; }
+  .portal-admin-editor-actions .btn { width: 100%; }
+  .portal-admin-product-row { grid-template-columns: minmax(0, 1fr) 44px 44px; }
+}

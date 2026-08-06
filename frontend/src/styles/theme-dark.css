@@ -1,0 +1,86 @@
+/* ═══════════════════════════════════════════════════
+   IFILINO — Dark Theme
+   Applied via [data-theme="dark"] on <html> or <body>
+═══════════════════════════════════════════════════ */
+
+[data-theme="dark"],
+.il-dark {
+  /* Backgrounds */
+  --il-bg:               #08111F;
+  --il-bg2:              #0D1A2E;
+  --il-bg3:              #122240;
+  --il-surface:          #0F1E33;
+  --il-card:             #111827;
+
+  /* Text */
+  --il-text:             #F1F5F9;
+  --il-text2:            #CBD5E1;
+  --il-muted:            #64748B;
+  --il-subtle:           #475569;
+  --il-placeholder:      #334155;
+
+  /* Borders */
+  --il-border:           rgba(255,255,255,.08);
+  --il-border2:          rgba(255,255,255,.04);
+
+  /* Shadows — more pronounced on dark */
+  --il-shadow-xs:        0 1px 3px rgba(0,0,0,.3);
+  --il-shadow:           0 4px 16px rgba(0,0,0,.4);
+  --il-shadow-md:        0 8px 32px rgba(0,0,0,.5);
+  --il-shadow-lg:        0 16px 64px rgba(0,0,0,.6);
+
+  /* Primary — slightly warmer on dark */
+  --il-primary:          #FFAA33;
+  --il-primary-dark:     #FF8A00;
+  --il-primary-light:    rgba(255,138,0,.2);
+  --il-primary-lighter:  rgba(255,138,0,.10);
+
+  /* Semantic — keep vivid on dark */
+  --il-success:          #22C55E;
+  --il-warning:          #F59E0B;
+  --il-danger:           #EF4444;
+  --il-info:             #06B6D4;
+
+  /* BS overrides */
+  --bs-body-bg:          #08111F;
+  --bs-body-color:       #F1F5F9;
+  --bs-border-color:     rgba(255,255,255,.08);
+}
+
+/* ── Glassmorphism dark ───────────────────────────── */
+[data-theme="dark"] .il-glass,
+.il-dark .il-glass {
+  background: rgba(8,17,31,.75);
+  border-color: rgba(255,255,255,.1);
+}
+
+/* ── Cards dark ──────────────────────────────────── */
+[data-theme="dark"] .il-card,
+.il-dark .il-card {
+  border-color: var(--il-border);
+}
+
+/* ── Inputs dark ─────────────────────────────────── */
+[data-theme="dark"] .il-input,
+.il-dark .il-input,
+[data-theme="dark"] .form-control,
+.il-dark .form-control {
+  background: var(--il-bg2) !important;
+  border-color: var(--il-border) !important;
+  color: var(--il-text) !important;
+}
+
+/* ── Dropdown dark ───────────────────────────────── */
+[data-theme="dark"] .dropdown-menu,
+.il-dark .dropdown-menu {
+  background: var(--il-card) !important;
+  border-color: var(--il-border) !important;
+}
+[data-theme="dark"] .dropdown-item,
+.il-dark .dropdown-item {
+  color: var(--il-text2) !important;
+}
+[data-theme="dark"] .dropdown-item:hover,
+.il-dark .dropdown-item:hover {
+  background: var(--il-primary-lighter) !important;
+}

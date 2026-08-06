@@ -16,6 +16,17 @@ Coupon.init({
   valid_from:      { type: DataTypes.DATEONLY, allowNull: true },
   valid_until:     { type: DataTypes.DATEONLY, allowNull: true },
   active:          { type: DataTypes.BOOLEAN, defaultValue: true },
+  // Colonnes ajoutées via migrate_loyalty.js mais jamais déclarées ici — rattrapage.
+  description:     { type: DataTypes.STRING(255), allowNull: true },
+  user_id:         { type: DataTypes.INTEGER.UNSIGNED, allowNull: true }, // coupon ciblé/personnel (null = générique)
+  target_segment: {
+    type: DataTypes.ENUM('all', 'new', 'regular', 'loyal', 'vip', 'inactive', 'at_risk'),
+    defaultValue: 'all',
+  },
+  auto_type: {
+    type: DataTypes.ENUM('manual', 'birthday', 'inactivity', 'levelup', 'welcome'),
+    defaultValue: 'manual',
+  },
 }, {
   sequelize,
   modelName: 'coupon',

@@ -1,0 +1,88 @@
+/* Palette dérivée des logos officiels /brand/ifilino_sports.png et
+   /brand/ifilino_kids.png. Cette couche surcharge uniquement les tokens
+   visuels : la structure partagée des deux portails reste inchangée. */
+.portal-sports {
+  --portal-primary: #008fe8;
+  --portal-primary-strong: #003d91;
+  --portal-secondary: #68a800;
+  --portal-accent: #00a9ef;
+  --portal-bg: #f2f9fd;
+  --portal-surface: #fff;
+  --portal-text: #172e35;
+  --portal-muted: #536f78;
+  --portal-border: #d4e9f3;
+}
+
+.portal-kids {
+  --portal-primary: #7b27d3;
+  --portal-primary-strong: #5614ad;
+  --portal-secondary: #ed3f8c;
+  --portal-accent: #00bfd3;
+  --portal-highlight: #f4c430;
+  --portal-bg: #fcf8ff;
+  --portal-surface: #fff;
+  --portal-text: #32203f;
+  --portal-muted: #705e7b;
+  --portal-border: #eadcf4;
+}
+
+.portal-brand {
+  width: 184px;
+  height: 68px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.portal-brand-logo {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px color-mix(in srgb, var(--portal-primary) 15%, transparent));
+}
+
+.portal-sports .portal-hero {
+  background:
+    radial-gradient(circle at 88% 14%, color-mix(in srgb, var(--portal-accent) 30%, transparent) 0 12%, transparent 38%),
+    linear-gradient(125deg, var(--portal-primary-strong), color-mix(in srgb, var(--portal-primary) 78%, #071421) 58%, color-mix(in srgb, var(--portal-secondary) 78%, #071421));
+}
+
+.portal-kids .portal-hero {
+  background:
+    radial-gradient(circle at 86% 18%, color-mix(in srgb, var(--portal-highlight) 48%, transparent) 0 8%, transparent 30%),
+    radial-gradient(circle at 72% 74%, color-mix(in srgb, var(--portal-accent) 34%, transparent) 0 10%, transparent 35%),
+    linear-gradient(125deg, var(--portal-primary-strong), var(--portal-primary) 54%, var(--portal-secondary));
+}
+
+.portal-sports .portal-card-placeholder {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--portal-primary) 18%, #fff), color-mix(in srgb, var(--portal-secondary) 30%, #fff));
+}
+
+.portal-kids .portal-card-placeholder {
+  background:
+    radial-gradient(circle at 75% 25%, color-mix(in srgb, var(--portal-highlight) 58%, transparent), transparent 24%),
+    linear-gradient(135deg, color-mix(in srgb, var(--portal-primary) 20%, #fff), color-mix(in srgb, var(--portal-secondary) 26%, #fff), color-mix(in srgb, var(--portal-accent) 24%, #fff));
+}
+
+.portal-kids .portal-card-type {
+  background: var(--portal-secondary);
+}
+
+.portal-kids .portal-topics a:nth-child(3n + 2) svg {
+  color: var(--portal-secondary);
+}
+
+.portal-kids .portal-topics a:nth-child(3n) svg {
+  color: var(--portal-accent);
+}
+
+@media (max-width: 600px) {
+  .portal-brand {
+    width: 154px;
+    height: 58px;
+  }
+}

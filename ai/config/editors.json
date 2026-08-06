@@ -1,0 +1,55 @@
+{
+  "$schemaVersion": "1.0.0",
+  "editors": [
+    {
+      "id": "discover",
+      "name": "iFilino Discover",
+      "channel": "discover",
+      "enabled": false,
+      "directory": "editors/discover",
+      "workflow": "workflows/discover.md",
+      "promptDirectory": "prompts/discover",
+      "templateDirectory": "templates/discover"
+    },
+    {
+      "id": "sports",
+      "name": "iFilino Sports",
+      "channel": "sports",
+      "enabled": false,
+      "directory": "editors/sports",
+      "workflow": "workflows/sports.md",
+      "promptDirectory": "prompts/sports",
+      "templateDirectory": "templates/sports"
+    },
+    {
+      "id": "kids",
+      "name": "iFilino Kids",
+      "channel": "kids",
+      "enabled": false,
+      "directory": "editors/kids",
+      "workflow": "workflows/kids.md",
+      "promptDirectory": "prompts/kids",
+      "templateDirectory": "templates/kids"
+    },
+    {
+      "id": "stories",
+      "name": "iFilino Stories",
+      "channel": "stories",
+      "enabled": false,
+      "directory": "editors/stories",
+      "workflow": "workflows/stories.md",
+      "promptDirectory": "prompts/stories",
+      "templateDirectory": "templates/stories"
+    },
+    {
+      "id": "gaming",
+      "name": "iFilino GamingHub",
+      "channel": "gaming",
+      "enabled": false,
+      "directory": "editors/gaming",
+      "workflow": "workflows/gaming.md",
+      "promptDirectory": "prompts/gaming",
+      "templateDirectory": "templates/gaming"
+    }
+  ]
+}

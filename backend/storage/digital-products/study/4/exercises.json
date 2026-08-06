@@ -1,0 +1,75 @@
+{
+  "lesson_slug": "decouvrir-les-fractions",
+  "exercises": [
+    {
+      "id": "e1",
+      "type": "multiple_choice",
+      "prompt": "Dans 3/7, quel est le dénominateur ?",
+      "options": [
+        "3",
+        "7",
+        "10"
+      ]
+    },
+    {
+      "id": "e2",
+      "type": "true_false",
+      "prompt": "Dans 2/3, deux parts sont choisies."
+    },
+    {
+      "id": "e3",
+      "type": "fill_blank",
+      "prompt": "Le nombre du haut s’appelle le ____."
+    },
+    {
+      "id": "e4",
+      "type": "matching",
+      "prompt": "Associe.",
+      "pairs": [
+        [
+          "1/2",
+          "une moitié"
+        ],
+        [
+          "1/4",
+          "un quart"
+        ],
+        [
+          "3/4",
+          "trois quarts"
+        ]
+      ]
+    },
+    {
+      "id": "e5",
+      "type": "ordering",
+      "prompt": "Range du plus petit au plus grand.",
+      "items": [
+        "3/8",
+        "1/8",
+        "6/8"
+      ]
+    },
+    {
+      "id": "e6",
+      "type": "drawing",
+      "prompt": "Dessine 4/6 dans un rectangle."
+    },
+    {
+      "id": "e7",
+      "type": "calculation",
+      "prompt": "Deux craies sur huit sont bleues. Écris la fraction."
+    },
+    {
+      "id": "e8",
+      "type": "classification",
+      "prompt": "Classe selon « inférieur à 1 » ou « égal à 1 ».",
+      "items": [
+        "2/3",
+        "4/4",
+        "5/5",
+        "3/8"
+      ]
+    }
+  ]
+}

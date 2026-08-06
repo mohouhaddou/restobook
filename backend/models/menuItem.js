@@ -24,8 +24,14 @@ MenuItem.init({
   prix:            { type: DataTypes.DECIMAL(8, 2), allowNull: true },
   organization_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
   category_id:     { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+  // SEO — page produit publique /produits/:slug (voir scripts/migrate_seo_menu_item_slugs.js)
+  slug:            { type: DataTypes.STRING(191), allowNull: true, unique: true },
   sort_order:      { type: DataTypes.INTEGER, defaultValue: 0 },
   is_available:    { type: DataTypes.BOOLEAN, defaultValue: true },
+  sku:             { type: DataTypes.STRING(64), allowNull: true },
+  // Stock (même sémantique que HanoutProduct : null = illimité)
+  stock_quantity:  { type: DataTypes.INTEGER,  allowNull: true },
+  track_stock:     { type: DataTypes.BOOLEAN,  defaultValue: false },
 }, {
   sequelize,
   modelName: 'menu_item',

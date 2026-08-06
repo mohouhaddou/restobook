@@ -1,0 +1,14 @@
+{
+  "settings.canteen_title": "Paramètres de la cantine",
+  "settings.reservation_cutoff": "Heure limite de réservation (HH:MM)",
+  "settings.cancel_cutoff": "Heure limite d'annulation (HH:MM)",
+  "settings.visual_identity": "Identité visuelle",
+  "settings.display_name": "Nom affiché",
+  "settings.save_visual": "Sauvegarder",
+  "settings.logo_updated": "Logo mis à jour",
+  "settings.upload_logo": "Uploader le logo",
+  "settings.hero_image": "Image héro",
+  "settings.hero_updated": "Image héro mise à jour",
+  "settings.language_help": "Cette préférence s'applique à la marketplace, aux dashboards, aux notifications et aux emails transactionnels.",
+  "settings.language_saved": "Langue mise à jour"
+}

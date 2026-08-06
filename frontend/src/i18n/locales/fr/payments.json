@@ -1,0 +1,7 @@
+{
+  "status.payment.cash": "Espèces",
+  "status.payment.online": "Paiement en ligne",
+  "status.payment.card": "Carte bancaire",
+  "status.payment.cod": "Paiement à la livraison",
+  "status.payment.partially_refunded": "Partiellement remboursé"
+}

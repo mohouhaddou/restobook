@@ -1,0 +1,1 @@
+import{R as e}from"./index-CQq_IZJ_.js";function r({children:a,className:n="",variant:s="default"}){return e.createElement("div",{className:`play-ui-responsive ${s} ${n}`},e.createElement("div",{className:"play-ui-responsive-inner"},a))}export{r as R};

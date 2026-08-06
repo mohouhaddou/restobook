@@ -118,12 +118,10 @@ openssl rand -hex 32
 ```bash
 cd /var/www/restobook/frontend
 
-# Build de production
-npm run build
-
-# Le build est dans frontend/dist/
-# Copier vers le dossier servi par Nginx (ou pm2 serve)
-cp -r dist/* /var/www/restobook/backend/public/
+# Build, vérification du graphe des chunks et publication sûre.
+# Les assets fingerprintés sont publiés avant index.html afin qu'un navigateur
+# ne puisse jamais recevoir un index qui référence un chunk encore absent.
+npm run deploy:production
 
 # Ou configurer Nginx pour servir frontend/dist/ directement
 ```

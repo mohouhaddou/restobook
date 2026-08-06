@@ -1,0 +1,1 @@
+import type{OperatingSystemConfiguration}from"./OperatingSystemConfiguration";export interface OperatingSystemContext{readonly configuration:OperatingSystemConfiguration;readonly startedAt:string;readonly siteId?:string;}

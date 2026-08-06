@@ -1,0 +1,14 @@
+{
+  "settings.canteen_title": "إعدادات المقصف",
+  "settings.reservation_cutoff": "آخر وقت للحجز (HH:MM)",
+  "settings.cancel_cutoff": "آخر وقت للإلغاء (HH:MM)",
+  "settings.visual_identity": "الهوية البصرية",
+  "settings.display_name": "الاسم المعروض",
+  "settings.save_visual": "حفظ",
+  "settings.logo_updated": "تم تحديث الشعار",
+  "settings.upload_logo": "رفع الشعار",
+  "settings.hero_image": "صورة الواجهة",
+  "settings.hero_updated": "تم تحديث صورة الواجهة",
+  "settings.language_help": "تنطبق هذه اللغة على السوق ولوحات التحكم والإشعارات ورسائل البريد الإلكترونية.",
+  "settings.language_saved": "تم تحديث اللغة"
+}

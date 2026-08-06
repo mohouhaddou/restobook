@@ -1,0 +1,39 @@
+{
+  "summary": "READY",
+  "componentCount": 14,
+  "fileCount": 374,
+  "activeModules": [
+    "workflowEngine",
+    "publisherEngine",
+    "contentManager",
+    "fileSystem",
+    "integration",
+    "aiPublisher",
+    "orchestrator"
+  ],
+  "disabledModules": [],
+  "testsExecuted": 78,
+  "testsPassed": 78,
+  "startupTimeMs": 0,
+  "coverage": { "lines": 88.33, "branches": 70.78, "functions": 76.41 },
+  "version": "2.0.0",
+  "date": "2026-07-23T00:00:00.000Z",
+  "environment": "default",
+  "circularDependencies": [],
+  "checks": [
+    { "name": "Architecture", "valid": true, "details": "OK" },
+    { "name": "Types", "valid": true, "details": "OK" },
+    { "name": "Workflow", "valid": true, "details": "OK" },
+    { "name": "Publisher", "valid": true, "details": "OK" },
+    { "name": "Content Manager", "valid": true, "details": "OK" },
+    { "name": "FileSystem", "valid": true, "details": "OK" },
+    { "name": "Integration", "valid": true, "details": "OK" },
+    { "name": "Backend", "valid": true, "details": "OK" },
+    { "name": "Orchestrator", "valid": true, "details": "OK" },
+    { "name": "Configuration", "valid": true, "details": "OK" },
+    { "name": "Documentation", "valid": true, "details": "OK" },
+    { "name": "Exemples", "valid": true, "details": "OK" },
+    { "name": "Tests", "valid": true, "details": "OK" },
+    { "name": "Dépendances circulaires", "valid": true, "details": "OK" }
+  ]
+}

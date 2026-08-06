@@ -1,0 +1,4 @@
+import assert from"node:assert/strict";import test from"node:test";import{MarkdownProcessor}from"../MarkdownProcessor";test("MarkdownProcessor réécrit toutes les images",()=>{const result=new MarkdownProcessor().rewrite("![](cover.webp)\n<img src='image01.webp'>",new Map([["cover.webp","/uploads/discover/a.webp"],["image01.webp","/uploads/discover/b.webp"]]));assert.match(result,/\/uploads\/discover\/a\.webp/);assert.match(result,/\/uploads\/discover\/b\.webp/);});
+
+
+test("MarkdownProcessor réécrit les images relatives depuis un dossier de langue",()=>{const result=new MarkdownProcessor().rewrite("![one](../image01.webp)\n![two](../images/image02.webp)",new Map([["../image01.webp","/uploads/kids/a.webp"],["../images/image02.webp","/uploads/kids/b.webp"]]));assert.match(result,/\/uploads\/kids\/a\.webp/);assert.match(result,/\/uploads\/kids\/b\.webp/);});

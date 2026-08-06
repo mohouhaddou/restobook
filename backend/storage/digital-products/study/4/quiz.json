@@ -1,0 +1,59 @@
+{
+  "title": "Mini-quiz — Les fractions",
+  "passing_score": 4,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "multiple_choice",
+      "question": "Dans 4/9, que représente 9 ?",
+      "options": [
+        "Les parts choisies",
+        "Les parts égales au total",
+        "Le nombre de touts"
+      ],
+      "answer": 1,
+      "explanation": "Le dénominateur indique le nombre total de parts égales."
+    },
+    {
+      "id": "q2",
+      "type": "multiple_choice",
+      "question": "Quelle fraction est la plus grande ?",
+      "options": [
+        "2/5",
+        "4/5",
+        "Elles sont égales"
+      ],
+      "answer": 1,
+      "explanation": "Le dénominateur est identique ; 4 parts sont plus nombreuses que 2."
+    },
+    {
+      "id": "q3",
+      "type": "fill_blank",
+      "question": "3/3 = ___ tout.",
+      "accepted_answers": [
+        "1",
+        "un"
+      ],
+      "explanation": "Toutes les trois parts sont réunies."
+    },
+    {
+      "id": "q4",
+      "type": "true_false",
+      "question": "Pour le même gâteau, 1/6 est plus grand que 1/3.",
+      "answer": false,
+      "explanation": "En six parts, chaque part est plus petite qu’en trois parts."
+    },
+    {
+      "id": "q5",
+      "type": "short_answer",
+      "question": "Donne un exemple quotidien de fraction.",
+      "accepted_examples": [
+        "recette",
+        "heure",
+        "mesure",
+        "partage"
+      ],
+      "manual_review": true
+    }
+  ]
+}

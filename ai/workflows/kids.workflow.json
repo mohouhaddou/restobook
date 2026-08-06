@@ -1,0 +1,15 @@
+{
+  "id": "kids-default",
+  "name": "Kids default workflow",
+  "version": "1.0.0",
+  "steps": [
+    { "id": "validate-input", "name": "Validate input", "type": "ValidateInput", "order": 1 },
+    { "id": "prepare-workspace", "name": "Prepare workspace", "type": "PrepareWorkspace", "order": 2 },
+    { "id": "validate-package", "name": "Validate package", "type": "ValidatePackage", "order": 3 },
+    { "id": "generate-images", "name": "Generate images", "type": "GenerateImages", "order": 4 },
+    { "id": "validate-images", "name": "Validate images", "type": "ValidateImages", "order": 5 },
+    { "id": "generate-markdown", "name": "Generate Markdown", "type": "GenerateMarkdown", "order": 6 },
+    { "id": "validate-markdown", "name": "Validate Markdown", "type": "ValidateMarkdown", "order": 7 },
+    { "id": "finalize", "name": "Finalize", "type": "Finalize", "order": 8 }
+  ]
+}

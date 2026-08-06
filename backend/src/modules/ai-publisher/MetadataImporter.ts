@@ -1,0 +1,1 @@
+export class MetadataImporter{excerpt(markdown:string,provided?:string){if(provided?.trim())return provided.trim().slice(0,500);return markdown.replace(/[#*_>`\[\]()!-]/g," ").replace(/\s+/g," ").trim().slice(0,240);}statistics(markdown:string){const words=markdown.trim()?markdown.trim().split(/\s+/).length:0;return{wordCount:words,readingTime:Math.max(1,Math.ceil(words/200))};}}

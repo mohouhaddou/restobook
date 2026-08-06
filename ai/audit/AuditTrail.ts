@@ -1,0 +1,1 @@
+import type{AuditEvent}from"./AuditEvent";export class AuditTrail{private readonly x:AuditEvent[]=[];append(e:AuditEvent){this.x.push(structuredClone(e));}list(){return this.x.map(e=>structuredClone(e));}}

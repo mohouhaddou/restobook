@@ -1,0 +1,1 @@
+export class MarkdownProcessor{rewrite(markdown:string,assets:ReadonlyMap<string,string>){let result=markdown;for(const[source,target]of assets)result=result.replace(new RegExp(`(?<=\\(|src=["'])${source.replace(/[.*+?^${}()|[\\]\\]/g,"\\$&")}(?=\\)|["'])`,"g"),target);return result;}}

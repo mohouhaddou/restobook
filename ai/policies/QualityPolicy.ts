@@ -1,0 +1,1 @@
+import type{ConfigurablePolicy,PolicyResult}from"./ValidationPolicy";export class QualityPolicy implements ConfigurablePolicy<string>{evaluate(v:string,c:Readonly<Record<string,unknown>>):PolicyResult{const min=Number(c.minLength??1),valid=v.trim().length>=min;return{valid,errors:valid?[]:["Qualité insuffisante"],warnings:[]};}}

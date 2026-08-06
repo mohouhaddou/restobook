@@ -1,0 +1,1 @@
+import type{EditorCapabilities}from"./EditorCapabilities";export interface EditorManifest{readonly id:string;readonly name:string;readonly siteId:string;readonly workflowId:string;readonly providerId:string;readonly modelId:string;readonly capabilities:EditorCapabilities;readonly enabled:boolean;}

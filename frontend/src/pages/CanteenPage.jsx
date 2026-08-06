@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { Toast } from '../components/ui/Toast';
-import { CanteenKpiCard } from '../components/canteen/CanteenKpiCard';
-import { WeeklyMenuSummary } from '../components/canteen/WeeklyMenuSummary';
-import { MealHistoryTable } from '../components/canteen/MealHistoryTable';
+import { CanteenKpiCard } from '../modules/cantine/components/CanteenKpiCard';
+import { WeeklyMenuSummary } from '../modules/cantine/components/WeeklyMenuSummary';
+import { BRAND } from '../config/branding';
+import { MealHistoryTable } from '../modules/cantine/components/MealHistoryTable';
 
 function today() {
   return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -85,7 +86,7 @@ export default function CanteenPage() {
       <div className="card p-3">
         <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
           <div>
-            <h4 className="section-title mb-0">Restobook Canteen</h4>
+            <h4 className="section-title mb-0">{BRAND.APP_NAME} Canteen</h4>
             <div style={{ fontSize: 13, color: 'var(--rb-muted)', marginTop: 2 }}>
               Entreprises, écoles et administrations · semaine {weekStart} → {weekEnd}
             </div>

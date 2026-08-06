@@ -1,0 +1,4 @@
+{
+  "validation.required": "Ce champ est obligatoire.",
+  "validation.invalid_language": "Langue non prise en charge."
+}

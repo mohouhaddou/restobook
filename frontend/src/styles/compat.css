@@ -1,0 +1,137 @@
+/* ═══════════════════════════════════════════════════
+   IFIGHAK — Compatibility Bridge
+   Maps legacy --rb-* tokens → new --il-* tokens
+   Also overrides Bootstrap CSS variables
+═══════════════════════════════════════════════════ */
+
+:root {
+  /* ── Restobook → Ifilino mapping ──────────────── */
+  --rb-orange:           var(--il-primary);
+  --rb-orange-hover:     var(--il-primary-dark);
+  --rb-orange-light:     var(--il-primary-light);
+  --rb-orange-muted:     var(--il-primary-lighter);
+  --rb-deep-orange:      var(--il-secondary);
+  --rb-gradient:         var(--il-gradient);
+  --rb-green:            var(--il-success);
+  --rb-blue:             var(--il-info);
+  --rb-blue-s:           var(--il-secondary);
+
+  /* Layout */
+  --rb-sidebar-w:        var(--il-sidebar-w);
+  --rb-navbar-h:         var(--il-navbar-h);
+
+  /* Backgrounds */
+  --rb-bg:               var(--il-bg);
+  --rb-bg2:              var(--il-bg2);
+  --rb-surface:          var(--il-surface);
+  --rb-card:             var(--il-card);
+
+  /* Text */
+  --rb-text:             var(--il-text);
+  --rb-text2:            var(--il-text2);
+  --rb-muted:            var(--il-muted);
+  --rb-muted-2:          var(--il-subtle);
+  --rb-placeholder:      var(--il-placeholder);
+
+  /* Borders */
+  --rb-border:           var(--il-border);
+  --rb-border2:          var(--il-border2);
+
+  /* Radius */
+  --rb-radius-xs:        var(--il-radius-xs);
+  --rb-radius-sm:        var(--il-radius-sm);
+  --rb-radius:           var(--il-radius);
+  --rb-radius-lg:        var(--il-radius-lg);
+  --rb-radius-xl:        var(--il-radius-xl);
+
+  /* Shadows */
+  --rb-shadow:           var(--il-shadow);
+  --rb-shadow-md:        var(--il-shadow-md);
+  --rb-shadow-lg:        var(--il-shadow-lg);
+
+  /* Semantic */
+  --rb-success:          var(--il-success);
+  --rb-warning:          var(--il-warning);
+  --rb-danger:           var(--il-danger);
+  --rb-info:             var(--il-info);
+
+  /* Transition */
+  --rb-transition:       var(--il-transition);
+
+  /* ── Bootstrap 5 overrides ───────────────────── */
+  --bs-primary:          var(--il-primary);
+  --bs-primary-rgb:      var(--il-primary-rgb);
+  --bs-success:          var(--il-success);
+  --bs-info:             var(--il-info);
+  --bs-warning:          var(--il-warning);
+  --bs-danger:           var(--il-danger);
+  --bs-body-font-family: var(--il-font);
+  --bs-body-color:       var(--il-text);
+  --bs-body-bg:          var(--il-bg);
+  --bs-border-color:     var(--il-border);
+  --bs-border-radius:    var(--il-radius-sm);
+  --bs-border-radius-sm: var(--il-radius-xs);
+  --bs-border-radius-lg: var(--il-radius);
+  --bs-link-color:       var(--il-primary);
+  --bs-link-hover-color: var(--il-primary-dark);
+
+  /* Landing page tokens → Ifilino */
+  --lp-orange:           var(--il-primary);
+  --lp-orange2:          var(--il-secondary);
+  --lp-accent:           var(--il-accent);
+
+  /* Marketplace tokens → Ifilino */
+  --mk-orange:           var(--il-primary);
+}
+
+/* ── Bootstrap btn-primary ───────────────────────── */
+.btn-primary {
+  background: var(--il-gradient) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  font-weight: var(--il-fw-semibold);
+  box-shadow: var(--il-shadow-primary);
+  transition: all var(--il-transition-md);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background: linear-gradient(135deg, var(--il-primary-dark), var(--il-secondary-dark)) !important;
+  box-shadow: 0 8px 24px rgba(var(--il-primary-rgb), .40) !important;
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-outline-primary {
+  border-color: var(--il-primary) !important;
+  color: var(--il-primary) !important;
+}
+.btn-outline-primary:hover {
+  background: var(--il-primary) !important;
+  color: #fff !important;
+}
+
+.btn-outline-secondary {
+  border-color: var(--il-border) !important;
+  color: var(--il-muted) !important;
+  background: var(--il-surface) !important;
+}
+.btn-outline-secondary:hover {
+  border-color: var(--il-primary) !important;
+  color: var(--il-primary) !important;
+  background: var(--il-primary-lighter) !important;
+}
+
+/* ── Badge overwrites ────────────────────────────── */
+.badge.bg-primary { background: var(--il-gradient) !important; }
+.badge.bg-success { background: var(--il-success) !important; }
+
+/* ── Accent color utility ────────────────────────── */
+.text-primary   { color: var(--il-primary) !important; }
+.bg-primary     { background: var(--il-primary) !important; }
+.border-primary { border-color: var(--il-primary) !important; }
+
+/* ── Link ────────────────────────────────────────── */
+a { color: var(--il-primary); transition: color var(--il-transition); }
+a:hover { color: var(--il-primary-dark); }

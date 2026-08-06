@@ -21,6 +21,27 @@ User.init({
   email_verified:              { type: DataTypes.BOOLEAN, defaultValue: false },
   email_verification_token:    { type: DataTypes.STRING(255), allowNull: true },
   email_verification_expires:  { type: DataTypes.DATE, allowNull: true },
+  // Auth Google (Google Identity Services) — voir migrate_google_auth.js.
+  google_id:                   { type: DataTypes.STRING(255), allowNull: true, unique: true },
+  auth_provider: {
+    type: DataTypes.ENUM('local', 'google'),
+    allowNull: false,
+    defaultValue: 'local',
+  },
+  last_login_at:               { type: DataTypes.DATE, allowNull: true },
+  // Colonnes ajoutées historiquement via migrations brutes (migrate_loyalty.js,
+  // migrate_v4.js) mais jamais déclarées ici — rattrapage, aucun changement de schéma.
+  birthday:        { type: DataTypes.DATEONLY, allowNull: true },
+  segment: {
+    type: DataTypes.ENUM('new', 'regular', 'loyal', 'vip', 'inactive', 'at_risk'),
+    defaultValue: 'new',
+  },
+  preferred_language: { type: DataTypes.STRING(5), allowNull: false, defaultValue: 'en' },
+  loyalty_points:      { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  onboarding_done:     { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+  // Map { [notification_type_or_category]: ['push','in_app',...] } — null = tout par défaut
+  // (voir NotificationService.effectiveChannels pour les valeurs par défaut).
+  notification_prefs: { type: DataTypes.JSON, allowNull: true },
 }, {
   sequelize,
   modelName: 'user',

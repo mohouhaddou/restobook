@@ -1,0 +1,1 @@
+import{r as t,R as n}from"./index-4zm2_zXy.js";const i=t.forwardRef(function({children:e,label:a="Zone de jeu interactive"},r){return n.createElement("div",{ref:r,className:"play-phaser-canvas",role:"application","aria-label":a,dir:"ltr"},e)});export{i as P};

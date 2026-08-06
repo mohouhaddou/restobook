@@ -1,0 +1,1 @@
+export class SlugGenerator{generate(value:string){return value.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim().replace(/[^a-z0-9\u0600-\u06ff]+/g,"-").replace(/^-+|-+$/g,"").slice(0,191).normalize("NFC")||"article";}}

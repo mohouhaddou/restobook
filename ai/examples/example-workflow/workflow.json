@@ -1,0 +1,8 @@
+{
+  "id": "example-workflow",
+  "version": "1.0.0",
+  "steps": [
+    { "id": "validate", "type": "validation", "order": 1 },
+    { "id": "publish", "type": "publish", "order": 2 }
+  ]
+}

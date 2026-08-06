@@ -3,6 +3,7 @@ import { useApi } from '../hooks/useApi';
 import { EmptyState } from '../components/ui/EmptyState';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { BRAND } from '../config/branding';
 import { API } from '../api';
 
 function today() {
@@ -66,7 +67,7 @@ export default function PrepPage() {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(18);
       doc.setTextColor('#FF8A00');
-      doc.text('RestoBook', 40, y);
+      doc.text(BRAND.APP_NAME, 40, y);
       doc.setTextColor('#1C1917');
       doc.setFontSize(13);
       doc.text(`Préparation du ${date}`, 40, y + 22);

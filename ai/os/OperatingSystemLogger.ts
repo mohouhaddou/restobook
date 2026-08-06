@@ -1,0 +1,1 @@
+import type{OperatingSystemEvent}from"./OperatingSystemEvents";export class OperatingSystemLogger{private readonly x:OperatingSystemEvent[]=[];log(e:OperatingSystemEvent){this.x.push({...e});}list(){return this.x.map(e=>({...e}));}}

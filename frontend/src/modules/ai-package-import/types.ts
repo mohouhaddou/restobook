@@ -1,0 +1,3 @@
+export type ImportStatus="Waiting"|"Uploading"|"Uploaded"|"Extracting"|"Validating"|"Ready"|"Publishing"|"Published"|"Cleaning"|"Completed"|"Failed";
+export interface ImportRecord{readonly id:string;readonly filename:string;module?:string;title?:string;status:ImportStatus;progress:number;startedAt?:string;finishedAt?:string;duration?:number;logs:readonly{timestamp:string;level:string;message:string}[];errors:readonly string[];}
+export interface ImportHistory{readonly date:string;readonly filename:string;readonly module:string;readonly title:string;readonly duration:number;readonly result:"Completed"|"Failed";readonly errors:readonly string[];}

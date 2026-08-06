@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: "restobook-api",
+    name: "index",
     script: "./index.js",
     exec_mode: "fork",
     instances: 1,

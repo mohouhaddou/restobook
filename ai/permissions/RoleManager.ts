@@ -1,0 +1,1 @@
+export type SystemRole="SuperAdmin"|"Editor"|"Reviewer"|"Publisher"|"Observer"|"AI Agent";export class RoleManager{private readonly x=new Map<string,Set<SystemRole>>();assign(user:string,role:SystemRole){const s=this.x.get(user)??new Set<SystemRole>();s.add(role);this.x.set(user,s);}roles(user:string){return[...(this.x.get(user)??[])];}}

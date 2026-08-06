@@ -1,0 +1,146 @@
+/* ═══════════════════════════════════════════════════
+   IFILINO — Design Tokens (Single Source of Truth)
+   « Vos commerces, vos envies, tout près de vous. »
+═══════════════════════════════════════════════════ */
+
+:root {
+  /* ── Brand Colors ──────────────────────────────── */
+  --il-primary:          #FF8A00;
+  --il-primary-dark:     #E67200;
+  --il-primary-darker:   #CC6400;
+  --il-primary-light:    rgba(255, 138, 0, 0.12);
+  --il-primary-lighter:  rgba(255, 138, 0, 0.07);
+  --il-primary-rgb:      255, 138, 0;
+
+  --il-secondary:        #FF6A00;
+  --il-secondary-dark:   #E55E00;
+  --il-secondary-darker: #C95300;
+  --il-secondary-light:  rgba(255, 106, 0, 0.12);
+  --il-secondary-lighter:rgba(255, 106, 0, 0.07);
+  --il-secondary-rgb:    255, 106, 0;
+
+  --il-dark:             #08111F;
+  --il-dark-mid:         #0D1C30;
+  --il-dark-light:       #1A2C42;
+  --il-dark-lighter:     rgba(8, 17, 31, 0.08);
+  --il-dark-rgb:         8, 17, 31;
+  --il-navy:             var(--il-dark);
+  --il-navy-rgb:         var(--il-dark-rgb);
+
+  --il-accent:           #FF3B30;
+  --il-accent-dark:      #E0321F;
+  --il-accent-light:     rgba(255, 59, 48, 0.12);
+  --il-accent-rgb:       255, 59, 48;
+
+  /* ── Gradients ─────────────────────────────────── */
+  --il-gradient:         linear-gradient(135deg, #FF8A00 0%, #FF3B30 100%);
+  --il-gradient-rev:     linear-gradient(135deg, #FF6A00 0%, #FF8A00 100%);
+  --il-gradient-dark:    linear-gradient(160deg, #08111F 0%, #111F35 100%);
+  --il-gradient-navy:    var(--il-gradient-dark);
+  --il-gradient-warm:    linear-gradient(135deg, #FF8A00 0%, #FF3B30 100%);
+  --il-gradient-brand:   linear-gradient(135deg, #08111F 0%, #FF6A00 50%, #FF8A00 100%);
+  --il-gradient-hero:    linear-gradient(160deg, #08111F 0%, #0D1C30 40%, #1A2C42 100%);
+
+  /* ── Semantic Colors ───────────────────────────── */
+  --il-success:          #22C55E;
+  --il-success-light:    rgba(34, 197, 94, 0.12);
+  --il-warning:          #F59E0B;
+  --il-warning-light:    rgba(245, 158, 11, 0.12);
+  --il-danger:           #EF4444;
+  --il-danger-light:     rgba(239, 68, 68, 0.12);
+  --il-info:             #06B6D4;
+  --il-info-light:       rgba(6, 182, 212, 0.12);
+
+  /* ── Background ────────────────────────────────── */
+  --il-bg:               #F9FAFB;
+  --il-bg2:              #F3F4F6;
+  --il-bg3:              #E5E7EB;
+  --il-surface:          #FFFFFF;
+  --il-card:             #FFFFFF;
+
+  /* ── Text ──────────────────────────────────────── */
+  --il-text:             #0F172A;
+  --il-text2:            #334155;
+  --il-muted:            #64748B;
+  --il-subtle:           #94A3B8;
+  --il-placeholder:      #CBD5E1;
+
+  /* ── Border ────────────────────────────────────── */
+  --il-border:           #E2E8F0;
+  --il-border2:          #F1F5F9;
+  --il-border-focus:     var(--il-primary);
+
+  /* ── Border Radius ─────────────────────────────── */
+  --il-radius-xs:        6px;
+  --il-radius-sm:        10px;
+  --il-radius:           14px;
+  --il-radius-md:        16px;
+  --il-radius-lg:        20px;
+  --il-radius-xl:        28px;
+  --il-radius-2xl:       36px;
+  --il-radius-full:      9999px;
+
+  /* ── Shadows ───────────────────────────────────── */
+  --il-shadow-xs:        0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --il-shadow:           0 4px 16px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
+  --il-shadow-md:        0 8px 32px rgba(0,0,0,.09), 0 4px 8px rgba(0,0,0,.04);
+  --il-shadow-lg:        0 16px 64px rgba(0,0,0,.10), 0 8px 16px rgba(0,0,0,.06);
+  --il-shadow-xl:        0 24px 80px rgba(0,0,0,.12), 0 12px 24px rgba(0,0,0,.07);
+  --il-shadow-primary:   0 8px 32px rgba(255,138,0,.30);
+  --il-shadow-secondary: 0 8px 32px rgba(255,106,0,.25);
+  --il-shadow-dark:      0 8px 32px rgba(8,17,31,.25);
+  --il-shadow-inner:     inset 0 2px 8px rgba(0,0,0,.06);
+
+  /* ── Transitions ───────────────────────────────── */
+  --il-ease:             cubic-bezier(0.4, 0, 0.2, 1);
+  --il-ease-bounce:      cubic-bezier(0.34, 1.56, 0.64, 1);
+  --il-ease-out:         cubic-bezier(0, 0, 0.2, 1);
+  --il-ease-in:          cubic-bezier(0.4, 0, 1, 1);
+  --il-transition:       150ms var(--il-ease);
+  --il-transition-md:    250ms var(--il-ease);
+  --il-transition-lg:    400ms var(--il-ease);
+  --il-transition-xl:    600ms var(--il-ease);
+
+  /* ── Typography ────────────────────────────────── */
+  --il-font:             'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --il-font-display:     'Poppins', var(--il-font);
+  --il-font-mono:        'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* ── Font Weights ──────────────────────────────── */
+  --il-fw-regular:       400;
+  --il-fw-medium:        500;
+  --il-fw-semibold:      600;
+  --il-fw-bold:          700;
+  --il-fw-extrabold:     800;
+  --il-fw-black:         900;
+
+  /* ── Spacing ───────────────────────────────────── */
+  --il-space-1:          4px;
+  --il-space-2:          8px;
+  --il-space-3:          12px;
+  --il-space-4:          16px;
+  --il-space-5:          20px;
+  --il-space-6:          24px;
+  --il-space-8:          32px;
+  --il-space-10:         40px;
+  --il-space-12:         48px;
+  --il-space-16:         64px;
+  --il-space-20:         80px;
+  --il-space-24:         96px;
+
+  /* ── Layout ────────────────────────────────────── */
+  --il-sidebar-w:        260px;
+  --il-navbar-h:         64px;
+  --il-container:        1280px;
+  --il-container-sm:     960px;
+
+  /* ── Z-Index ───────────────────────────────────── */
+  --il-z-dropdown:       200;
+  --il-z-sticky:         300;
+  --il-z-fixed:          400;
+  --il-z-modal-backdrop: 500;
+  --il-z-modal:          600;
+  --il-z-popover:        700;
+  --il-z-toast:          800;
+  --il-z-tooltip:        900;
+}

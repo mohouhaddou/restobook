@@ -1,0 +1,10 @@
+export { MealIcon } from './MealIcon';
+export { MeatIcon } from './MeatIcon';
+export { DairyIcon } from './DairyIcon';
+export { ProduceIcon } from './ProduceIcon';
+export { BreadIcon } from './BreadIcon';
+export { DrinkIcon } from './DrinkIcon';
+export { DessertIcon } from './DessertIcon';
+export { PharmacyIcon } from './PharmacyIcon';
+export { HygieneIcon } from './HygieneIcon';
+export { PetIcon } from './PetIcon';

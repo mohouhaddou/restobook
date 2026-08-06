@@ -73,7 +73,7 @@ export default function OrgsPage() {
               onChange={e => setForm(f=>({...f,name:e.target.value}))} /></div>
           <div className="col-6 col-sm-2"><label className="form-label small">Type</label>
             <select className="form-select form-select-sm" value={form.type} onChange={e => setForm(f=>({...f,type:e.target.value}))}>
-              <option value="canteen">Cantine</option><option value="restaurant">Restaurant</option></select></div>
+              <option value="canteen">Cantine</option><option value="restaurant">Restaurant</option><option value="hanout">Hanout</option><option value="pharmacie">Pharmacie</option><option value="cafe">Café</option></select></div>
           <div className="col-6 col-sm-2"><label className="form-label small">Plan</label>
             <select className="form-select form-select-sm" value={form.plan} onChange={e => setForm(f=>({...f,plan:e.target.value}))}>
               {['trial','starter','pro','enterprise'].map(p=><option key={p} value={p}>{p}</option>)}</select></div>

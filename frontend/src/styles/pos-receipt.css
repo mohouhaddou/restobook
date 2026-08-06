@@ -1,0 +1,33 @@
+/* Ticket POS imprimable — format 58mm/80mm, extensible vers thermique plus tard */
+
+.pos-receipt {
+  display: none;
+}
+
+@media print {
+  body * { visibility: hidden; }
+  .pos-receipt, .pos-receipt * { visibility: visible; }
+  .pos-receipt {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80mm;
+    padding: 4mm;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #000;
+  }
+  .pos-receipt[data-width="58mm"] { width: 58mm; font-size: 10px; }
+}
+
+.pos-receipt__logo { display: block; max-width: 100%; max-height: 60px; margin: 0 auto 6px; }
+.pos-receipt__title { text-align: center; font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+.pos-receipt__sub { text-align: center; font-size: 10px; margin-bottom: 6px; }
+.pos-receipt hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+.pos-receipt__meta { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px; }
+.pos-receipt table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+.pos-receipt th, .pos-receipt td { text-align: left; font-size: 10px; padding: 1px 0; }
+.pos-receipt th:last-child, .pos-receipt td:last-child { text-align: right; }
+.pos-receipt__total { display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; margin-top: 6px; }
+.pos-receipt__footer { text-align: center; font-size: 10px; margin-top: 10px; }

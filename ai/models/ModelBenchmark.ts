@@ -1,0 +1,1 @@
+export interface ModelBenchmarkResult{readonly modelId:string;readonly quality:number;readonly latency:number;readonly cost:number;}export class ModelBenchmark{rank(x:readonly ModelBenchmarkResult[]){return[...x].sort((a,b)=>b.quality-a.quality||a.latency-b.latency||a.cost-b.cost);}}

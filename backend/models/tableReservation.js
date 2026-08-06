@@ -7,6 +7,7 @@ class TableReservation extends Model {}
 TableReservation.init({
   id:              { type: DataTypes.INTEGER.UNSIGNED, primaryKey: true, autoIncrement: true },
   organization_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+  user_id:         { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
   guest_name:      { type: DataTypes.STRING(191), allowNull: false },
   guest_phone:     { type: DataTypes.STRING(32), allowNull: true },
   guest_email:     { type: DataTypes.STRING(191), allowNull: true },

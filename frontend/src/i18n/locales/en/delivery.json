@@ -1,0 +1,19 @@
+{
+  "fulfillment.type.delivery": "Home delivery",
+  "fulfillment.type.pickup": "Pickup",
+  "fulfillment.type.click_collect": "Click & Collect",
+  "fulfillment.type.takeaway": "Takeaway",
+  "fulfillment.type.dine_in": "Dine in",
+  "delivery.history.proposed": "Looking for a courier",
+  "delivery.history.assigned": "Courier assigned",
+  "delivery.history.picking_up": "Courier heading to the store",
+  "delivery.history.picked_up": "Order picked up",
+  "delivery.history.on_the_way": "On the way to you",
+  "delivery.history.delivered": "Order delivered",
+  "delivery.history.rejected": "Looking for another courier",
+  "delivery.courier.generic": "Courier",
+  "delivery.courier.onTheWay": "Your courier is on the way",
+  "delivery.courier.namedOnTheWay": "{{name}} is on the way",
+  "delivery.distanceFromStore": "{{distance}} from the store",
+  "delivery.courier.liveBadge": "🛵 {{name}} live{{distance}} · received {{time}} ago"
+}

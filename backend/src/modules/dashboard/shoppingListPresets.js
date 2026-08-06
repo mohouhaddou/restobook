@@ -1,0 +1,155 @@
+'use strict';
+
+/**
+ * Présets curés à la main pour "✨ Générer une liste" — décision verrouillée :
+ * pas de génération par IA/LLM (aucun n'existe dans ce codebase), du contenu
+ * éditorial statique. Les quantités sont indicatives pour ~4-6 personnes.
+ */
+const PRESETS = {
+  ramadan: {
+    name: 'Ramadan', icon: '🌙',
+    items: [
+      { name: 'Dattes', quantity: '1 kg' },
+      { name: 'Lait', quantity: '2 L' },
+      { name: 'Harira (ingrédients)', quantity: '1 paquet' },
+      { name: 'Farine', quantity: '2 kg' },
+      { name: 'Semoule', quantity: '1 kg' },
+      { name: 'Oeufs', quantity: '1 boîte' },
+      { name: 'Miel', quantity: '1 pot' },
+      { name: 'Chebakia', quantity: '500 g' },
+      { name: 'Jus de fruits', quantity: '2 L' },
+      { name: 'Huile d\'olive', quantity: '1 L' },
+      { name: 'Viande hachée', quantity: '1 kg' },
+      { name: 'Poulet', quantity: '1.5 kg' },
+      { name: 'Tomates', quantity: '2 kg' },
+      { name: 'Oignons', quantity: '1 kg' },
+      { name: 'Persil et coriandre', quantity: '1 botte' },
+      { name: 'Pain', quantity: '1 sachet' },
+      { name: 'Eau minérale', quantity: '6 bouteilles' },
+    ],
+  },
+  bbq: {
+    name: 'BBQ / Grillades', icon: '🍖',
+    items: [
+      { name: 'Brochettes de boeuf', quantity: '1.5 kg' },
+      { name: 'Merguez', quantity: '1 kg' },
+      { name: 'Poulet mariné', quantity: '1 kg' },
+      { name: 'Charbon de bois', quantity: '1 sac' },
+      { name: 'Pain à hot-dog/burger', quantity: '1 sachet' },
+      { name: 'Salade', quantity: '2 pièces' },
+      { name: 'Tomates', quantity: '1 kg' },
+      { name: 'Oignons', quantity: '500 g' },
+      { name: 'Sauce ketchup', quantity: '1 bouteille' },
+      { name: 'Sauce mayonnaise', quantity: '1 bouteille' },
+      { name: 'Frites surgelées', quantity: '1 kg' },
+      { name: 'Boissons gazeuses', quantity: '6 bouteilles' },
+      { name: 'Charbon allume-feu', quantity: '1 paquet' },
+      { name: 'Assiettes/couverts jetables', quantity: '1 pack' },
+    ],
+  },
+  couscous: {
+    name: 'Couscous du vendredi', icon: '🍲',
+    items: [
+      { name: 'Semoule à couscous', quantity: '1 kg' },
+      { name: 'Viande d\'agneau', quantity: '1 kg' },
+      { name: 'Poulet', quantity: '1 kg' },
+      { name: 'Courgettes', quantity: '1 kg' },
+      { name: 'Carottes', quantity: '1 kg' },
+      { name: 'Navets', quantity: '500 g' },
+      { name: 'Potiron', quantity: '1 kg' },
+      { name: 'Pois chiches', quantity: '500 g' },
+      { name: 'Oignons', quantity: '500 g' },
+      { name: 'Tomates', quantity: '1 kg' },
+      { name: 'Raisins secs', quantity: '250 g' },
+      { name: 'Beurre', quantity: '1 pièce' },
+      { name: 'Épices à couscous', quantity: '1 sachet' },
+      { name: 'Coriandre et persil', quantity: '1 botte' },
+    ],
+  },
+  pizza: {
+    name: 'Soirée pizza maison', icon: '🍕',
+    items: [
+      { name: 'Farine', quantity: '1 kg' },
+      { name: 'Levure boulangère', quantity: '1 sachet' },
+      { name: 'Sauce tomate', quantity: '2 boîtes' },
+      { name: 'Mozzarella', quantity: '500 g' },
+      { name: 'Jambon de dinde', quantity: '250 g' },
+      { name: 'Champignons', quantity: '250 g' },
+      { name: 'Olives', quantity: '1 pot' },
+      { name: 'Poivrons', quantity: '500 g' },
+      { name: 'Origan', quantity: '1 sachet' },
+      { name: 'Huile d\'olive', quantity: '1 L' },
+      { name: 'Boissons gazeuses', quantity: '4 bouteilles' },
+    ],
+  },
+  anniversaire: {
+    name: 'Anniversaire', icon: '🎂',
+    items: [
+      { name: 'Gâteau d\'anniversaire', quantity: '1 pièce' },
+      { name: 'Bougies', quantity: '1 paquet' },
+      { name: 'Bonbons assortis', quantity: '1 kg' },
+      { name: 'Chips', quantity: '3 paquets' },
+      { name: 'Jus de fruits', quantity: '3 L' },
+      { name: 'Boissons gazeuses', quantity: '6 bouteilles' },
+      { name: 'Ballons de baudruche', quantity: '1 paquet' },
+      { name: 'Assiettes en carton', quantity: '1 pack' },
+      { name: 'Gobelets jetables', quantity: '1 pack' },
+      { name: 'Serviettes en papier', quantity: '1 pack' },
+      { name: 'Pizza traiteur', quantity: '4 pièces' },
+    ],
+  },
+  mariage: {
+    name: 'Petite réception mariage', icon: '💍',
+    items: [
+      { name: 'Cornes de gazelle', quantity: '2 kg' },
+      { name: 'Chebakia', quantity: '2 kg' },
+      { name: 'Thé', quantity: '500 g' },
+      { name: 'Sucre en pain', quantity: '2 kg' },
+      { name: 'Menthe fraîche', quantity: '5 bottes' },
+      { name: 'Amandes', quantity: '1 kg' },
+      { name: 'Dattes', quantity: '2 kg' },
+      { name: 'Lait', quantity: '4 L' },
+      { name: 'Jus de fruits', quantity: '6 L' },
+      { name: 'Eau minérale', quantity: '24 bouteilles' },
+      { name: 'Nappes et serviettes', quantity: '1 lot' },
+    ],
+  },
+  bebe: {
+    name: 'Arrivée de bébé', icon: '🍼',
+    items: [
+      { name: 'Couches nouveau-né', quantity: '2 paquets' },
+      { name: 'Lait infantile', quantity: '2 boîtes' },
+      { name: 'Lingettes bébé', quantity: '4 paquets' },
+      { name: 'Coton', quantity: '1 paquet' },
+      { name: 'Sérum physiologique', quantity: '1 boîte' },
+      { name: 'Savon bébé', quantity: '1 pièce' },
+      { name: 'Crème change', quantity: '1 tube' },
+      { name: 'Biberons', quantity: '2 pièces' },
+      { name: 'Body bébé', quantity: '3 pièces' },
+      { name: 'Gigoteuse', quantity: '1 pièce' },
+    ],
+  },
+  etudiant: {
+    name: 'Panier étudiant', icon: '🎓',
+    items: [
+      { name: 'Pâtes', quantity: '2 kg' },
+      { name: 'Riz', quantity: '2 kg' },
+      { name: 'Oeufs', quantity: '1 boîte' },
+      { name: 'Thon en boîte', quantity: '4 boîtes' },
+      { name: 'Sauce tomate', quantity: '2 boîtes' },
+      { name: 'Pain de mie', quantity: '1 paquet' },
+      { name: 'Fromage', quantity: '1 pièce' },
+      { name: 'Café soluble', quantity: '1 pot' },
+      { name: 'Lait', quantity: '2 L' },
+      { name: 'Biscuits', quantity: '2 paquets' },
+      { name: 'Eau minérale', quantity: '6 bouteilles' },
+      { name: 'Fruits de saison', quantity: '1 kg' },
+    ],
+  },
+};
+
+const PRESET_META = Object.entries(PRESETS).map(([key, p]) => ({
+  key, name: p.name, icon: p.icon, items_count: p.items.length,
+}));
+
+module.exports = { PRESETS, PRESET_META };

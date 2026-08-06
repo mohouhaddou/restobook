@@ -1,0 +1,94 @@
+{
+  "id": "stories-2026-001",
+  "editor": "stories",
+  "category": "portrait",
+  "language": "fr",
+  "createdAt": "2026-07-23T12:00:00.000Z",
+  "updatedAt": "2026-07-23T12:25:00.000Z",
+  "articleMarkdown": "# Le carnet du relieur\n\n## Un atelier silencieux\n\nChaque matin, l'artisan ouvre son atelier avant l'arrivée des visiteurs.",
+  "sections": [
+    {
+      "heading": "Un atelier silencieux",
+      "level": 2,
+      "content": "Chaque matin, l'artisan ouvre son atelier avant l'arrivée des visiteurs.",
+      "imageReference": "stories-cover"
+    }
+  ],
+  "metadata": {
+    "title": "Le carnet du relieur",
+    "slug": "le-carnet-du-relieur",
+    "excerpt": "Le portrait narratif fictif d'un artisan et de son atelier.",
+    "description": "Exemple de récit court structuré pour iFilino Stories.",
+    "keywords": ["artisan", "atelier", "récit"],
+    "tags": ["portrait", "story"],
+    "author": {
+      "name": "Rédaction iFilino Stories",
+      "type": "ai-editor",
+      "id": "stories"
+    },
+    "category": "portrait",
+    "language": "fr",
+    "readingTime": 6,
+    "difficulty": "intermediate",
+    "sources": [
+      {
+        "title": "Source documentaire fictive Stories",
+        "url": "https://example.invalid/stories-source",
+        "publisher": "Exemple documentaire",
+        "accessedAt": "2026-07-23T11:30:00.000Z"
+      }
+    ],
+    "license": {
+      "name": "Tous droits réservés",
+      "attribution": "iFilino Stories"
+    }
+  },
+  "images": [
+    {
+      "id": "stories-cover",
+      "filename": "stories-relieur-cover.jpeg",
+      "alt": "Établi en bois dans un atelier de reliure",
+      "caption": "Un atelier consacré aux livres.",
+      "role": "cover",
+      "width": 1600,
+      "height": 900,
+      "format": "jpeg",
+      "relativePath": "stories/2026/stories-relieur-cover.jpeg",
+      "generated": false
+    }
+  ],
+  "seo": {
+    "title": "Le carnet du relieur | iFilino Stories",
+    "description": "Un portrait narratif fictif préparé pour iFilino Stories.",
+    "canonical": "https://www.ifilino.com/stories/le-carnet-du-relieur",
+    "robots": "noindex,follow",
+    "openGraph": {
+      "title": "Le carnet du relieur",
+      "description": "Un portrait narratif fictif préparé pour iFilino Stories.",
+      "type": "article",
+      "image": "stories/2026/stories-relieur-cover.jpeg",
+      "siteName": "iFilino Stories"
+    },
+    "twitter": {
+      "card": "summary_large_image",
+      "title": "Le carnet du relieur",
+      "description": "Un portrait narratif fictif préparé pour iFilino Stories.",
+      "image": "stories/2026/stories-relieur-cover.jpeg"
+    }
+  },
+  "workflow": {
+    "editor": "stories",
+    "steps": [
+      {
+        "id": "narrative-review",
+        "name": "Revue narrative",
+        "order": 1,
+        "status": "completed",
+        "requiresHumanReview": true
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "version": "1.0.0",
+  "status": "review"
+}

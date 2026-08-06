@@ -1,0 +1,1 @@
+export interface OperatingSystemConfiguration{readonly version:string;readonly siteIds:readonly string[];readonly modules:readonly string[];readonly plugins:readonly string[];readonly providers:readonly string[];readonly editors:readonly string[];readonly featureFlags:Readonly<Record<string,boolean>>;}

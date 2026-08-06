@@ -1,0 +1,4 @@
+import type{PublishModule}from"./PublishConfig";
+export interface ImportJob{readonly id:string;readonly validated:true;readonly module:PublishModule;readonly workspace:string;readonly files:readonly string[];readonly markdown:string;readonly manifest:Readonly<Record<string,unknown>>;readonly publisher:Readonly<Record<string,unknown>>;readonly metadata:{readonly title:string;readonly language?:string;readonly slug?:string;readonly excerpt?:string;readonly description?:string;readonly category?:string;readonly tags?:readonly string[];};}
+export interface PublishOutcome{readonly code:"PUBLISHED"|"ALREADY_EXISTS"|"FAILED";readonly publishId:string;readonly articleId?:string;readonly slug:string;readonly durationMs:number;readonly images:readonly string[];readonly errors:readonly string[];}
+export interface Publisher{publish(job:ImportJob):Promise<PublishOutcome>;}

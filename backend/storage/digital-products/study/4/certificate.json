@@ -1,0 +1,8 @@
+{
+  "template": "Certificat de réussite",
+  "recipient_placeholder": "{{child_name}}",
+  "lesson": "Les fractions : partager un tout en parts égales",
+  "achievement": "a compris et représenté des fractions simples",
+  "date_placeholder": "{{completion_date}}",
+  "issuer": "iFilino Kids"
+}

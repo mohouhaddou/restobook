@@ -1,0 +1,27 @@
+{
+  "e1": "7",
+  "e2": true,
+  "e3": "numérateur",
+  "e4": {
+    "1/2": "une moitié",
+    "1/4": "un quart",
+    "3/4": "trois quarts"
+  },
+  "e5": [
+    "1/8",
+    "3/8",
+    "6/8"
+  ],
+  "e6": "4 parts colorées sur 6 parts égales",
+  "e7": "2/8, équivalent à 1/4",
+  "e8": {
+    "inférieur à 1": [
+      "2/3",
+      "3/8"
+    ],
+    "égal à 1": [
+      "4/4",
+      "5/5"
+    ]
+  }
+}

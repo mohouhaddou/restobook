@@ -1,0 +1,58 @@
+/*
+ * Thème Sports du moteur Markdown partagé. Scopé par le conteneur `.portal-sports`
+ * déjà posé par PortalDetailPage.jsx — réutilise les tokens --portal-* déjà
+ * définis dans portal-brand-theme.css (aucune nouvelle palette inventée ici).
+ */
+
+.portal-sports .md-sports { font-size: 16px; line-height: 1.75; color: var(--portal-text); }
+
+.portal-sports .md-sports-h1,
+.portal-sports .md-sports-h2 {
+  font-family: 'Poppins', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px;
+  color: var(--portal-primary-strong, var(--portal-primary));
+  margin: 32px 0 14px; padding-bottom: 8px; border-bottom: 3px solid var(--portal-accent);
+}
+.portal-sports .md-sports-h3 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 17px; margin: 22px 0 10px; color: var(--portal-primary-strong, var(--portal-primary)); }
+.portal-sports .md-sports-p { margin: 0 0 14px; }
+.portal-sports .md-sports-list { margin: 0 0 14px; padding-left: 22px; }
+.portal-sports .md-sports-list li { margin-bottom: 6px; }
+
+/* Images "mises en avant" — cadre premium + légère entrée en fondu. */
+.portal-sports .md-sports-figure { margin: 18px 0; }
+.portal-sports .md-sports-figure img {
+  width: 100%; border-radius: 16px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
+  animation: md-sports-fade-in 0.5s ease-out both;
+}
+.portal-sports .md-sports-figure figcaption { margin-top: 8px; font-size: 13px; color: var(--portal-muted); text-align: center; }
+@keyframes md-sports-fade-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* Tableaux -> "score cards". */
+.portal-sports .md-sports-table-wrapper { overflow-x: auto; margin: 22px 0; border-radius: 16px; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.1); }
+.portal-sports .md-sports-table { width: 100%; border-collapse: collapse; background: var(--portal-surface); font-size: 14px; }
+.portal-sports .md-sports-table th { background: var(--portal-primary); color: #fff; padding: 12px 16px; text-transform: uppercase; font-size: 12px; letter-spacing: 0.4px; }
+.portal-sports .md-sports-table td { padding: 12px 16px; border-bottom: 1px solid var(--portal-border); font-weight: 600; }
+.portal-sports .md-sports-table tr:nth-child(even) td { background: rgba(0, 143, 232, 0.05); }
+
+/* Citations -> "cartes joueur". */
+.portal-sports .md-sports-quote {
+  position: relative; margin: 22px 0; padding: 20px 24px 20px 48px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--portal-primary), var(--portal-primary-strong, var(--portal-primary)));
+  color: #fff; font-weight: 600; font-size: 15px; box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+}
+.portal-sports .md-sports-quote::before { content: '"'; position: absolute; left: 16px; top: 6px; font-size: 40px; font-family: Georgia, serif; opacity: 0.5; }
+
+/* Callouts -> bandeaux stat. */
+.portal-sports .md-sports-callout {
+  margin: 20px 0; padding: 16px 20px; border-radius: 14px; display: flex; flex-direction: column; gap: 6px;
+  background: var(--portal-surface); border-left: 6px solid var(--portal-accent);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08); animation: md-sports-fade-in 0.4s ease-out both;
+}
+.portal-sports .md-sports-callout-header { display: flex; align-items: center; gap: 8px; color: var(--portal-primary-strong, var(--portal-primary)); font-weight: 800; text-transform: uppercase; font-size: 13px; }
+.portal-sports .md-sports-callout--warning { border-left-color: #e11d48; }
+.portal-sports .md-sports-callout--info { border-left-color: var(--portal-secondary); }
+
+.portal-sports .md-sports-code { margin: 16px 0; padding: 16px; border-radius: 12px; background: #0b1220; color: #e2e8f0; overflow-x: auto; font-size: 13px; }
+
+.portal-sports .md-sports-faq h2 { color: var(--portal-primary-strong, var(--portal-primary)); }
+.portal-sports .md-sports-faq-item { border-bottom: 1px solid var(--portal-border); padding: 12px 0; }
+.portal-sports .md-sports-faq-question { font-weight: 700; cursor: pointer; }

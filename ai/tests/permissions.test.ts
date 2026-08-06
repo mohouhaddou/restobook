@@ -1,0 +1,2 @@
+import assert from"node:assert/strict";import test from"node:test";import{PermissionManager,RoleManager}from"../permissions";
+test("rôles et permissions configurables",()=>{const roles=new RoleManager();roles.assign("u","Publisher");const p=new PermissionManager({SuperAdmin:["*"],Editor:[],Reviewer:[],Publisher:["publish"],Observer:[],"AI Agent":[]});assert.equal(p.allows(roles.roles("u"),"publish"),true);});

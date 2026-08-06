@@ -1,0 +1,2 @@
+import assert from"node:assert/strict";import test from"node:test";import{mkdtemp,access}from"node:fs/promises";import{join}from"node:path";import{tmpdir}from"node:os";import{AIImportCleanup}from"../AIImportCleanup";
+test("cleanup supprime entièrement le workspace",async()=>{const path=await mkdtemp(join(tmpdir(),"cleanup-"));await new AIImportCleanup().clean(path);await assert.rejects(access(path));});

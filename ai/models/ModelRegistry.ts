@@ -1,0 +1,1 @@
+import type{AIModelManifest}from"./ModelCapabilities";export class ModelRegistry{private readonly x=new Map<string,AIModelManifest>();register(m:AIModelManifest){this.x.set(m.id,m);}get(id:string){const m=this.x.get(id);if(!m)throw new Error("Modèle absent");return m;}list(){return[...this.x.values()];}}

@@ -1,0 +1,24 @@
+{
+  "terms": [
+    {
+      "term": "fraction",
+      "definition": "Nombre représentant une ou plusieurs parts égales d’un tout."
+    },
+    {
+      "term": "tout",
+      "definition": "Objet, quantité ou longueur complète."
+    },
+    {
+      "term": "numérateur",
+      "definition": "Nombre du haut qui compte les parts choisies."
+    },
+    {
+      "term": "dénominateur",
+      "definition": "Nombre du bas qui compte toutes les parts égales."
+    },
+    {
+      "term": "équivalent",
+      "definition": "Qui représente la même quantité."
+    }
+  ]
+}

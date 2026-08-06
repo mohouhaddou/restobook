@@ -60,7 +60,7 @@ export default function ProfilePage() {
           ].map(([field, label]) => (
             <div key={field} className="col-12">
               <label className="form-label small">{label}</label>
-              <input type="password" className="form-control" value={pwdForm[field]}
+              <input type="password" autoComplete={field === 'current_password' ? 'current-password' : 'new-password'} className="form-control" value={pwdForm[field]}
                 onChange={e => setPwdForm(f => ({...f, [field]: e.target.value}))} required />
             </div>
           ))}

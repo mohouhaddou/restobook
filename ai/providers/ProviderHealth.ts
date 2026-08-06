@@ -1,0 +1,1 @@
+import type{AIProvider}from"./AIProvider";export class ProviderHealth{async check(ps:readonly AIProvider[]){const entries=await Promise.all(ps.map(async p=>[p.id,await p.health()]as const));return Object.fromEntries(entries)as Readonly<Record<string,boolean>>;}}

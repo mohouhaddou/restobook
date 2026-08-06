@@ -1,0 +1,8 @@
+/* Coquille du lecteur Encyclopedia sur AdventureBookEngine — voir le plan "Unify the Educational
+   Reader with the Storybook engine". Remplace l'ancien encyclopedia-reader.css (mise en page
+   défilante, conservée sur disque pour référence mais plus importée — voir §Step 3 du plan avant
+   suppression définitive). Un seul rôle ici : transmettre la hauteur 100% de .story-reader-body
+   jusqu'à .storybook-root (voir AdventureBookEngine.tsx), comme le faisait BookReader directement
+   pour Stories (pas de wrapper intermédiaire côté Stories, un seul ici pour aussi héberger
+   CompletionCelebration en frère du moteur de lecture). */
+.encyclopedia-reader-shell{height:100%;display:flex;flex-direction:column;min-height:0}

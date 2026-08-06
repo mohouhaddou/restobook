@@ -1,0 +1,1 @@
+import type{ArticleRecord,DatabaseTransaction}from"./PublishTransaction";export class ArticleImporter{create(transaction:DatabaseTransaction,record:ArticleRecord){return transaction.createArticle(record);}}

@@ -1,0 +1,1 @@
+export class OperatingSystemRegistry{private readonly x=new Map<string,unknown>();register(id:string,value:unknown){if(this.x.has(id))throw new Error("Composant dupliqué");this.x.set(id,value);}get<T>(id:string):T{if(!this.x.has(id))throw new Error("Composant absent");return this.x.get(id)as T;}list(){return[...this.x.keys()].sort();}}

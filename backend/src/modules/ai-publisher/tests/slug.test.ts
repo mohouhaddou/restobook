@@ -1,0 +1,1 @@
+import assert from"node:assert/strict";import test from"node:test";import{SlugGenerator}from"../SlugGenerator";test("SlugGenerator normalise FR EN et AR",()=>{const s=new SlugGenerator();assert.equal(s.generate("Été à Casablanca !"),"ete-a-casablanca");assert.equal(s.generate("Gaming News"),"gaming-news");assert.equal(s.generate("أخبار المغرب"),"أخبار-المغرب");});

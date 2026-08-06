@@ -1,0 +1,1 @@
+import type{PublishFileSystem}from"./ImageImporter";import type{DatabaseTransaction}from"./PublishTransaction";export class PublishRollback{constructor(private readonly fs:PublishFileSystem){}async execute(transaction:DatabaseTransaction|undefined,assets:readonly string[]){await transaction?.rollback().catch(()=>{});await Promise.allSettled(assets.map(x=>this.fs.remove(x)));}}

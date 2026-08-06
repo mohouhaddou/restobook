@@ -1,0 +1,27 @@
+/*
+ * Styles additifs pour le thème Discover du moteur Markdown partagé.
+ * H1/H2/H3/paragraphes/images/listes/citations restent stylés par les règles
+ * historiques `.ifm-body ...` (frontend/index.html) — inchangées, elles
+ * s'appliquent automatiquement puisque MarkdownRenderer rend les mêmes balises
+ * HTML dans le même conteneur `.ifm-body`. Tableaux/callouts/code n'avaient
+ * aucun style avant ce moteur : ce fichier ne fait qu'ajouter une présentation
+ * sobre, il ne modifie aucune règle existante.
+ */
+
+.ifm-body-figure { margin: 0; }
+
+.ifm-body-table-wrapper { overflow-x: auto; margin: 20px 0; border-radius: 12px; border: 1px solid rgba(15, 23, 42, 0.08); }
+.ifm-body-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ifm-body-table th, .ifm-body-table td { padding: 10px 14px; border-bottom: 1px solid rgba(15, 23, 42, 0.08); text-align: left; }
+.ifm-body-table th { background: rgba(255, 138, 0, 0.08); font-weight: 700; color: var(--mk-text); }
+.ifm-body-table tr:last-child td { border-bottom: none; }
+
+.ifm-body-callout { margin: 20px 0; padding: 16px 18px; border-radius: 14px; background: rgba(255, 138, 0, 0.06); border: 1px solid rgba(255, 138, 0, 0.18); }
+.ifm-body-callout-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; color: var(--mk-orange); }
+.ifm-body-callout--warning { background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.2); }
+.ifm-body-callout--warning .ifm-body-callout-header { color: #ef4444; }
+.ifm-body-callout--info { background: rgba(59, 130, 246, 0.06); border-color: rgba(59, 130, 246, 0.2); }
+.ifm-body-callout--info .ifm-body-callout-header { color: #3b82f6; }
+
+.ifm-body-code { position: relative; margin: 16px 0; padding: 16px; border-radius: 12px; background: #0f172a; color: #e2e8f0; overflow-x: auto; font-size: 13px; }
+.ifm-body-code-lang { position: absolute; top: 8px; right: 12px; font-size: 11px; text-transform: uppercase; opacity: 0.6; }

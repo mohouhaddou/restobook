@@ -1,0 +1,1 @@
+import type{DashboardMetrics}from"./DashboardMetrics";import type{DashboardHealth}from"./DashboardHealth";export class DashboardService{public constructor(private readonly metrics:()=>DashboardMetrics,private readonly health:()=>Promise<DashboardHealth>){}snapshot(){return this.metrics();}status(){return this.health();}}

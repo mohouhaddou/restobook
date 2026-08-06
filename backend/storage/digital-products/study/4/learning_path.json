@@ -1,0 +1,22 @@
+{
+  "current": {
+    "slug": "decouvrir-les-fractions",
+    "title": "Les fractions : partager un tout en parts égales"
+  },
+  "prerequisites": [
+    {
+      "slug": "partager-en-groupes-egaux",
+      "title": "Partager en groupes égaux"
+    }
+  ],
+  "next": [
+    {
+      "slug": "fractions-equivalentes",
+      "title": "Fractions équivalentes"
+    },
+    {
+      "slug": "comparer-les-fractions",
+      "title": "Comparer les fractions"
+    }
+  ]
+}

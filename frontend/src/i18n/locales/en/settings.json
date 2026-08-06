@@ -1,0 +1,14 @@
+{
+  "settings.canteen_title": "Canteen settings",
+  "settings.reservation_cutoff": "Reservation cutoff time (HH:MM)",
+  "settings.cancel_cutoff": "Cancellation cutoff time (HH:MM)",
+  "settings.visual_identity": "Visual identity",
+  "settings.display_name": "Display name",
+  "settings.save_visual": "Save",
+  "settings.logo_updated": "Logo updated",
+  "settings.upload_logo": "Upload logo",
+  "settings.hero_image": "Hero image",
+  "settings.hero_updated": "Hero image updated",
+  "settings.language_help": "This preference applies to the marketplace, dashboards, notifications and transactional emails.",
+  "settings.language_saved": "Language updated"
+}

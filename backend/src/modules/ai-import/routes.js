@@ -1,0 +1,11 @@
+'use strict';
+const path=require('node:path');
+const express=require('express');const{requireAuth,requireSuperAdmin}=require('../../middleware/auth');const{createAIImportRouter}=require('../../../../ai/.build/backend/src/modules/ai-import/index.js');const{createProductionPublisher}=require('../ai-publisher/runtime');const{enrichStudyLesson}=require('../ai-publisher/studyEnrichment');
+const router=express.Router();const notify=(event,payload)=>{if(global.io)global.io.to('superadmin:ai-import').emit(event,payload);};const publisher=createProductionPublisher(event=>notify(event.name,event));
+router.use(requireAuth,requireSuperAdmin);router.use(createAIImportRouter({publisher:{async publish(pkg){const workspace=path.join(pkg.workspace,'package');const outcome=await publisher.publish({id:String(pkg.manifest.id||pkg.contentPackage.id),validated:true,module:pkg.contentPackage.editor,workspace,files:pkg.files,markdown:pkg.articleMarkdown,manifest:pkg.manifest,publisher:pkg.publisher,metadata:{title:pkg.contentPackage.metadata.title,language:pkg.contentPackage.metadata.language,slug:pkg.contentPackage.metadata.slug,excerpt:pkg.contentPackage.metadata.excerpt,description:pkg.contentPackage.metadata.description,category:pkg.contentPackage.metadata.category,tags:pkg.contentPackage.metadata.tags}});if(outcome.code!=='PUBLISHED')throw new Error(outcome.code==='ALREADY_EXISTS'?'ALREADY_EXISTS':outcome.errors.join(' | '));
+// Study : les champs structurés (subject/grade/objectifs/prérequis...) et les ressources
+// optionnelles (quiz.json, teacher_notes.md...) ne font pas partie du contrat Metadata partagé
+// par tous les modules — cet enrichissement post-publish best-effort les lit directement depuis
+// le paquet brut. Ne fait jamais échouer un import déjà publié avec succès.
+if(pkg.contentPackage.editor==='study'){try{await enrichStudyLesson({lessonId:Number(outcome.articleId),language:pkg.contentPackage.metadata.language,metadata:pkg.metadata,publisher:pkg.publisher,workspace,files:pkg.files});}catch(error){console.error('[study] Enrichissement post-publish échoué :',error.message);}}
+return outcome;},releaseAssets(pkg){publisher.releaseAssets(path.join(pkg.workspace,'package'));}},eventEmitter:notify}));module.exports=router;

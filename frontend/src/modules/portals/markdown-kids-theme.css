@@ -1,0 +1,57 @@
+/*
+ * Thème Kids du moteur Markdown partagé. Scopé par `.portal-kids` (déjà posé
+ * par PortalDetailPage.jsx), réutilise les tokens --portal-* de
+ * portal-brand-theme.css (dont --portal-highlight, propre à Kids).
+ * Univers volontairement joyeux : gros titres arrondis, bulles colorées,
+ * grandes images, typographie très lisible.
+ */
+
+.portal-kids .md-kids {
+  font-family: 'Baloo 2', 'Poppins', 'Comic Sans MS', system-ui, sans-serif;
+  font-size: 18px; line-height: 1.9; color: var(--portal-text);
+}
+
+.portal-kids .md-kids-h1,
+.portal-kids .md-kids-h2 {
+  font-weight: 800; font-size: 26px; margin: 30px 0 16px; color: var(--portal-primary);
+  display: inline-block; padding: 6px 18px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--portal-highlight, var(--portal-accent)), var(--portal-secondary));
+  color: #fff; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+.portal-kids .md-kids-h3 { font-weight: 700; font-size: 20px; margin: 22px 0 10px; color: var(--portal-secondary); }
+.portal-kids .md-kids-p { margin: 0 0 18px; }
+.portal-kids .md-kids-list { margin: 0 0 18px; padding-left: 8px; list-style: none; }
+.portal-kids .md-kids-list li { margin-bottom: 10px; padding-left: 30px; position: relative; }
+.portal-kids .md-kids-list li::before { content: '⭐'; position: absolute; left: 0; top: 0; }
+
+/* Grandes illustrations généreuses, coins très arrondis. */
+.portal-kids .md-kids-figure { margin: 22px 0; text-align: center; }
+.portal-kids .md-kids-figure img { width: 100%; max-width: 640px; border-radius: 28px; box-shadow: 0 12px 26px rgba(123, 39, 211, 0.18); }
+.portal-kids .md-kids-figure figcaption { margin-top: 10px; font-size: 15px; color: var(--portal-secondary); font-weight: 600; }
+
+.portal-kids .md-kids-table-wrapper { overflow-x: auto; margin: 20px 0; border-radius: 20px; }
+.portal-kids .md-kids-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+.portal-kids .md-kids-table th { background: var(--portal-secondary); color: #fff; padding: 10px 16px; border-radius: 12px 12px 0 0; }
+.portal-kids .md-kids-table td { padding: 12px 16px; background: var(--portal-surface); font-weight: 600; }
+
+/* Citations -> bulle de dialogue ronde et colorée. */
+.portal-kids .md-kids-quote {
+  margin: 22px 0; padding: 18px 24px; border-radius: 24px; background: var(--portal-surface);
+  border: 3px dashed var(--portal-accent); font-weight: 600; font-size: 17px;
+}
+
+/* Callouts -> grosses bulles avec icône, très visibles pour un enfant. */
+.portal-kids .md-kids-callout {
+  margin: 22px 0; padding: 18px 22px; border-radius: 26px;
+  background: linear-gradient(135deg, rgba(123, 39, 211, 0.1), rgba(237, 63, 140, 0.1));
+  border: 2px solid var(--portal-accent);
+}
+.portal-kids .md-kids-callout-header { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 800; color: var(--portal-primary); margin-bottom: 6px; }
+.portal-kids .md-kids-callout--warning { border-color: #ff8a65; background: rgba(255, 138, 101, 0.12); }
+.portal-kids .md-kids-callout--info { border-color: var(--portal-secondary); }
+
+.portal-kids .md-kids-code { margin: 16px 0; padding: 16px; border-radius: 18px; background: #241b3a; color: #f4c430; overflow-x: auto; font-size: 14px; }
+
+.portal-kids .md-kids-faq h2 { color: var(--portal-primary); }
+.portal-kids .md-kids-faq-item { border-radius: 16px; background: var(--portal-surface); padding: 12px 16px; margin-bottom: 10px; }
+.portal-kids .md-kids-faq-question { font-weight: 700; cursor: pointer; }

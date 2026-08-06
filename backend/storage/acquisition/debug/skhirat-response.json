@@ -1,0 +1,190 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-07-11T14:07:58Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+    {
+      "type": "node",
+      "id": 3562871813,
+      "lat": 33.8681168,
+      "lon": -7.0566164,
+      "tags": {
+        "amenity": "restaurant",
+        "cuisine": "regional"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4290912302,
+      "lat": 33.8509915,
+      "lon": -7.0390128,
+      "tags": {
+        "addr:city": "Skhirat",
+        "addr:postcode": "12050",
+        "amenity": "cafe",
+        "internet_access": "wlan",
+        "name": "2 Rivieres"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4290912305,
+      "lat": 33.8511563,
+      "lon": -7.0388138,
+      "tags": {
+        "amenity": "cafe",
+        "internet_access": "wlan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4308440798,
+      "lat": 33.8487582,
+      "lon": -7.0422761,
+      "tags": {
+        "amenity": "restaurant"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4308440800,
+      "lat": 33.8487578,
+      "lon": -7.0414676,
+      "tags": {
+        "amenity": "cafe",
+        "internet_access": "yes",
+        "internet_access:fee": "no",
+        "name": "Queens Land",
+        "outdoor_seating": "yes",
+        "phone": "+212 5 37 74 27 51"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4308440802,
+      "lat": 33.85027,
+      "lon": -7.0383406,
+      "tags": {
+        "amenity": "cafe"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4577814289,
+      "lat": 33.8489617,
+      "lon": -7.0418844,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Roma",
+        "name:fr": "Roma"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9064209417,
+      "lat": 33.8684555,
+      "lon": -7.0584334,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Tacos"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9064265818,
+      "lat": 33.8684766,
+      "lon": -7.0627496,
+      "tags": {
+        "amenity": "restaurant"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9849571040,
+      "lat": 33.8675078,
+      "lon": -7.0574257,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Chez Mustapha"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9993840608,
+      "lat": 33.8356315,
+      "lon": -7.0590766,
+      "tags": {
+        "amenity": "cafe",
+        "internet_access": "wlan",
+        "internet_access:fee": "no",
+        "name": "cafe El Fath"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9993864477,
+      "lat": 33.8463711,
+      "lon": -7.0440889,
+      "tags": {
+        "amenity": "cafe"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9993864478,
+      "lat": 33.84621,
+      "lon": -7.0442535,
+      "tags": {
+        "amenity": "restaurant",
+        "cuisine": "turkish"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10067088417,
+      "lat": 33.8463591,
+      "lon": -7.0450151,
+      "tags": {
+        "amenity": "cafe",
+        "name:en": "cafe Borsa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10245171509,
+      "lat": 33.8613183,
+      "lon": -7.0518634,
+      "tags": {
+        "amenity": "cafe",
+        "name:en": "Let’s meet club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13713798709,
+      "lat": 33.8684725,
+      "lon": -7.0591341,
+      "tags": {
+        "amenity": "restaurant",
+        "cuisine": "fish",
+        "name": "مطعم السمك",
+        "opening_hours": "Mo-Su 11:00-19:00"
+      }
+    },
+    {
+      "type": "way",
+      "id": 350561758,
+      "center": {
+        "lat": 33.8690835,
+        "lon": -7.0561865
+      },
+      "tags": {
+        "amenity": "restaurant",
+        "building": "yes"
+      }
+    }
+  ]
+}

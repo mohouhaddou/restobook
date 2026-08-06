@@ -1,0 +1,94 @@
+{
+  "id": "discover-2026-001",
+  "editor": "discover",
+  "category": "guide-local",
+  "language": "fr",
+  "createdAt": "2026-07-23T09:00:00.000Z",
+  "updatedAt": "2026-07-23T09:15:00.000Z",
+  "articleMarkdown": "# Découvrir les jardins urbains\n\n## Une respiration en ville\n\nLes jardins urbains offrent des espaces calmes et accessibles.",
+  "sections": [
+    {
+      "heading": "Une respiration en ville",
+      "level": 2,
+      "content": "Les jardins urbains offrent des espaces calmes et accessibles.",
+      "imageReference": "discover-cover"
+    }
+  ],
+  "metadata": {
+    "title": "Découvrir les jardins urbains",
+    "slug": "decouvrir-les-jardins-urbains",
+    "excerpt": "Un guide éditorial consacré aux jardins urbains.",
+    "description": "Présentation structurée de jardins urbains et de leur intérêt local.",
+    "keywords": ["jardins urbains", "guide local"],
+    "tags": ["découverte", "ville"],
+    "author": {
+      "name": "Rédaction iFilino Discover",
+      "type": "ai-editor",
+      "id": "discover"
+    },
+    "category": "guide-local",
+    "language": "fr",
+    "readingTime": 4,
+    "difficulty": "beginner",
+    "sources": [
+      {
+        "title": "Source documentaire fictive Discover",
+        "url": "https://example.invalid/discover-source",
+        "publisher": "Exemple documentaire",
+        "accessedAt": "2026-07-23T08:30:00.000Z"
+      }
+    ],
+    "license": {
+      "name": "Tous droits réservés",
+      "attribution": "iFilino Discover"
+    }
+  },
+  "images": [
+    {
+      "id": "discover-cover",
+      "filename": "discover-jardins-cover.webp",
+      "alt": "Allée arborée dans un jardin urbain",
+      "caption": "Un espace vert au cœur de la ville.",
+      "role": "cover",
+      "width": 1600,
+      "height": 900,
+      "format": "webp",
+      "relativePath": "discover/2026/discover-jardins-cover.webp",
+      "generated": false
+    }
+  ],
+  "seo": {
+    "title": "Découvrir les jardins urbains | iFilino",
+    "description": "Guide iFilino consacré aux jardins urbains.",
+    "canonical": "https://www.ifilino.com/discover/fr/article/decouvrir-les-jardins-urbains",
+    "robots": "noindex,follow",
+    "openGraph": {
+      "title": "Découvrir les jardins urbains",
+      "description": "Guide iFilino consacré aux jardins urbains.",
+      "type": "article",
+      "image": "discover/2026/discover-jardins-cover.webp",
+      "siteName": "iFilino Discover"
+    },
+    "twitter": {
+      "card": "summary_large_image",
+      "title": "Découvrir les jardins urbains",
+      "description": "Guide iFilino consacré aux jardins urbains.",
+      "image": "discover/2026/discover-jardins-cover.webp"
+    }
+  },
+  "workflow": {
+    "editor": "discover",
+    "steps": [
+      {
+        "id": "editorial-review",
+        "name": "Revue éditoriale",
+        "order": 1,
+        "status": "completed",
+        "requiresHumanReview": true
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "version": "1.0.0",
+  "status": "review"
+}

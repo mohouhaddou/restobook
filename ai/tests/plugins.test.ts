@@ -1,0 +1,2 @@
+import assert from"node:assert/strict";import test from"node:test";import{BasePlugin,PluginManager}from"../plugins";
+class P extends BasePlugin{active=false;async activate(){this.active=true;}async deactivate(){this.active=false;}}test("plugins ajoutent des contributions sans noyau",async()=>{const p=new P({id:"p",version:"1",contributions:["editor"],permissions:["edit"],entryPoint:"x"}),m=new PluginManager();await m.install(p,{siteId:"s",configuration:{},featureFlags:{}},["edit"]);assert.equal(p.active,true);});

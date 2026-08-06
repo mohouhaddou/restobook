@@ -1,0 +1,2 @@
+import assert from"node:assert/strict";import test from"node:test";import{AIImportHistory}from"../AIImportHistory";
+test("history conserve au maximum 500 entrées et se vide",()=>{const history=new AIImportHistory(500);for(let index=0;index<510;index++)history.add({date:"x",filename:`${index}.zip`,module:"discover",title:"T",duration:1,result:"Completed",errors:[]});assert.equal(history.list().length,500);history.clear();assert.equal(history.list().length,0);});

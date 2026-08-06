@@ -1,0 +1,10 @@
+.explorer-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;background:var(--adv-accent-soft,#ede9fe)}
+.explorer-badge-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;color:#fff;background:linear-gradient(135deg,var(--adv-accent,#7c3aed),#ec4899)}
+.explorer-badge-count{color:var(--adv-accent-deep,#5b21b6);font-weight:900;font-size:15px}
+.explorer-badge--fresh{box-shadow:0 0 0 3px color-mix(in srgb, var(--adv-accent, #7c3aed) 35%, transparent)}
+.knowledge-meter{display:flex;flex-direction:column;align-items:center;gap:4px}
+.knowledge-meter-ring{width:56px;height:56px;display:grid;place-items:center;border-radius:50%;background:conic-gradient(var(--adv-accent,#7c3aed) var(--km-progress,0%),#eee7f7 0)}
+.knowledge-meter-ring:before{content:"";position:absolute}
+.knowledge-meter-ring strong{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:#fff;color:var(--adv-accent-deep,#5b21b6);font-size:14px}
+.knowledge-meter-label{color:#6b5c78;font-size:11px;font-weight:800;text-align:center}
+@media (prefers-reduced-motion: reduce){.explorer-badge,.knowledge-meter-ring{transition:none}}

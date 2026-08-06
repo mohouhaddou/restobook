@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
 import { API, ASSET } from '../api';
+import { BRAND } from '../config/branding';
+import { useCustomerAuth } from '../contexts/CustomerAuthContext';
 import './TableReservationPage.css';
 
 /* ═══ CONSTANTS ══════════════════════════════════════════════════════════ */
@@ -227,6 +229,7 @@ export default function TableReservationPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { authHeader } = useCustomerAuth();
 
   /* ── Restaurant data ── */
   const [org, setOrg]       = useState(location.state?.org || null);
@@ -405,7 +408,10 @@ export default function TableReservationPage() {
       };
       const res = await fetch(API(`/marketplace/restaurants/${slug}/table-reserve`), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        // authHeader ajoute Authorization si le client est connecté (rattache
+        // la réservation à son compte, voir historique dashboard) — vide sinon,
+        // la réservation invité reste inchangée.
+        headers: { 'Content-Type': 'application/json', ...authHeader },
         body: JSON.stringify(body),
       });
       const data = await res.json();
@@ -430,7 +436,7 @@ export default function TableReservationPage() {
     doc.rect(0, 0, W, 28, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-    doc.text('RestoBook', W / 2, 10, { align: 'center' });
+    doc.text(BRAND.APP_NAME, W / 2, 10, { align: 'center' });
     doc.setFontSize(9); doc.setFont('helvetica', 'normal');
     doc.text('Confirmation de réservation', W / 2, 17, { align: 'center' });
     doc.setFontSize(8);
@@ -517,7 +523,7 @@ export default function TableReservationPage() {
     doc.setFontSize(7); doc.setTextColor(150, 150, 150);
     doc.text('Présentez ce document à l\'accueil.', W / 2, y, { align: 'center' });
     y += 4;
-    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} par RestoBook`, W / 2, y, { align: 'center' });
+    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} par ${BRAND.APP_NAME}`, W / 2, y, { align: 'center' });
 
     doc.save(`reservation-${reservationNumber}.pdf`);
   }

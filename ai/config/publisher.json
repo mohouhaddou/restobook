@@ -1,0 +1,17 @@
+{
+  "$schemaVersion": "1.0.0",
+  "enabled": false,
+  "mode": "disabled",
+  "workflow": "workflows/publish.md",
+  "queue": {
+    "incoming": "queue/incoming",
+    "processing": "queue/processing",
+    "published": "queue/published",
+    "failed": "queue/failed"
+  },
+  "defaults": {
+    "maxAttempts": 3,
+    "requireHumanReview": true,
+    "preserveSourcePackage": true
+  }
+}

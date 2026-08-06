@@ -3,13 +3,25 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import L from 'leaflet';
 import { API, ASSET } from '../api';
 import { useCart } from '../contexts/CartContext';
+import { ShareButton } from '../shared/components/ui/ShareMenu';
+import MenuItemModal from './restaurant/MenuItemModal';
+import { StoreHeroCarousel } from '../shared/components/marketplace/StoreHeroCarousel';
+import { StoreSidebar } from '../shared/components/marketplace/StoreSidebar';
+import { CartConflictModal } from '../shared/components/marketplace/CartConflictModal';
+import BusinessReviewsSection from './seo/components/BusinessReviewsSection';
+import { PremiumIcon, PremiumIconBadge } from '../shared/components/ui/PremiumIcon';
+import { AdSlot } from '../shared/components/ads/AdSlot';
 
 /* ══ CONSTANTS ══════════════════════════════════════════════════════════ */
 
 const TYPE_LABELS = { canteen:'Cantine', restaurant:'Restaurant', snack:'Snack', dark_kitchen:'Dark Kitchen', bakery:'Boulangerie', cafe:'Café' };
-const TYPE_ICONS  = { canteen:'🏢', restaurant:'🍽️', snack:'🥙', dark_kitchen:'📦', bakery:'🥐', cafe:'☕' };
-const DAY_NAMES   = { mon:'Lundi', tue:'Mardi', wed:'Mercredi', thu:'Jeudi', fri:'Vendredi', sat:'Samedi', sun:'Dimanche' };
-const DAYS_ORDER  = ['mon','tue','wed','thu','fri','sat','sun'];
+const TYPE_ICONS  = { canteen:'store', restaurant:'utensils', snack:'utensils', dark_kitchen:'package', bakery:'bakery', cafe:'cafe' };
+// Organization.type -> id businessConfig (la plupart correspondent déjà ; seul
+// 'bakery' diffère en orthographe de 'boulangerie'). 'canteen' n'a pas
+// d'équivalent dans businessConfig -> repli gris neutre (getTheme le gère).
+const ORG_TYPE_TO_BUSINESS_TYPE = { bakery: 'boulangerie' };
+const DAY_NAMES   = { monday:'Lundi', tuesday:'Mardi', wednesday:'Mercredi', thursday:'Jeudi', friday:'Vendredi', saturday:'Samedi', sunday:'Dimanche' };
+const DAYS_ORDER  = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
 
 /* ══ HOOKS ══════════════════════════════════════════════════════════════ */
 
@@ -45,7 +57,7 @@ function RestaurantMiniMap({ lat, lng, name, theme }) {
         : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
       { maxZoom:19 }
     ).addTo(map);
-    const icon = L.divIcon({ className:'', html:`<div style="background:#FF8A00;color:#fff;font-size:16px;width:38px;height:38px;border-radius:50% 50% 50% 4px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);transform:rotate(-45deg);border:2.5px solid #fff"><span style="transform:rotate(45deg)">${TYPE_ICONS['restaurant']}</span></div>`, iconSize:[38,38], iconAnchor:[19,38] });
+    const icon = L.divIcon({ className:'', html:`<div style="background:#FF8A00;color:#fff;font-size:16px;width:38px;height:38px;border-radius:50% 50% 50% 4px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);transform:rotate(-45deg);border:2.5px solid #fff"><span style="transform:rotate(45deg)"></span></div>`, iconSize:[38,38], iconAnchor:[19,38] });
     L.marker([lat,lng], { icon }).addTo(map).bindPopup(name);
     mapRef.current = map;
     return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
@@ -98,7 +110,7 @@ function GalleryLightbox({ images, open, startIdx, onClose }) {
 function OpeningHours({ hours }) {
   if (!hours) return <div style={{ fontSize:13, color:'var(--mk-muted)' }}>Horaires non renseignés</div>;
 
-  const today = ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
+  const today = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][new Date().getDay()];
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
       {DAYS_ORDER.map(day => {
@@ -180,7 +192,7 @@ function ReviewsSection({ slug }) {
         </div>
       ) : reviews.length === 0 ? (
         <div style={{ textAlign:'center', padding:'32px', color:'var(--mk-muted)', fontSize:14 }}>
-          <div style={{ fontSize:32, marginBottom:8 }}>💬</div>
+          <div style={{ display:'grid', placeItems:'center', color:'var(--mk-muted)', marginBottom:8 }}><PremiumIconBadge name="message" size={24} /></div>
           Aucun avis pour le moment. Soyez le premier !
         </div>
       ) : (
@@ -223,49 +235,80 @@ function ReviewsSection({ slug }) {
   );
 }
 
-/* ══ ITEM CARD ══════════════════════════════════════════════════════════ */
+/* ══ ITEM CARD (grid) ═══════════════════════════════════════════════════ */
 
-function ItemCard({ item, onAdd, qty }) {
+function ItemCard({ item, onOpen, onAdd, qty, slug }) {
+  const navigate = useNavigate();
   const [added, setAdded] = useState(false);
-  const available = item.is_available !== false && item.prix !== null;
+  const available  = item.is_available !== false && item.prix != null;
+  const hasOptions = (item.options || []).length > 0;
 
-  function handleAdd() {
+  // Ajout rapide (bouton dédié, stopPropagation) — n'ouvre jamais la fiche
+  // détail : ajoute directement, ou ouvre le sélecteur d'options si requis.
+  function handleQuickAdd() {
+    if (!available) return;
+    if (hasOptions) { onOpen(item); return; }
     onAdd(item);
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
   }
 
+  // Clic carte/image/nom → fiche produit unifiée (ProductDetailPage).
+  function openDetail() {
+    navigate(`/product/resto/${item.id}`);
+  }
+
   return (
-    <div style={{ display:'flex', gap:14, padding:'16px 0', borderBottom:'1px solid var(--mk-border2)', alignItems:'flex-start', opacity:available?1:.45 }}>
-      <div style={{ flex:1, minWidth:0 }}>
-        <div style={{ fontWeight:600, fontSize:15, color:'var(--mk-text)', lineHeight:1.3 }}>{item.libelle}</div>
-        {item.description && <div style={{ fontSize:13, color:'var(--mk-muted)', marginTop:4, lineHeight:1.45, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>{item.description}</div>}
-        <div style={{ display:'flex', gap:8, marginTop:8, alignItems:'center', flexWrap:'wrap' }}>
-          {item.prix !== null && <span style={{ fontWeight:800, color:'var(--mk-orange)', fontSize:15 }}>{Number(item.prix).toFixed(2)} MAD</span>}
-          {item.calories && <span style={{ fontSize:11, color:'var(--mk-muted)', background:'var(--mk-pill)', padding:'1px 7px', borderRadius:20 }}>{item.calories} kcal</span>}
-          {item.allergenes && item.allergenes.length > 0 && <span style={{ fontSize:11, color:'var(--mk-muted)' }}>⚠️ Allergènes</span>}
-          {!available && <span style={{ fontSize:11, color:'var(--mk-red)', fontWeight:700, background:'rgba(239,68,68,.1)', padding:'1px 7px', borderRadius:20 }}>Indisponible</span>}
-        </div>
-      </div>
-      <div style={{ position:'relative', flexShrink:0 }}>
+    <div onClick={openDetail} style={{
+      background:'var(--mk-surface)', borderRadius:16, overflow:'hidden',
+      border:'1px solid var(--mk-border)', cursor: available ? 'pointer' : 'default',
+      opacity: available ? 1 : .55, transition:'transform .15s, box-shadow .15s',
+      display:'flex', flexDirection:'column',
+    }}
+      onMouseEnter={e => { if (available) { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.12)'; } }}
+      onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}
+    >
+      {/* Image */}
+      <div style={{ position:'relative', height:160, background:'linear-gradient(135deg,rgba(255,138,0,.1),rgba(255,93,0,.15))', flexShrink:0 }}>
         {item.image_url
-          ? <img src={ASSET(item.image_url)} alt={item.libelle} style={{ width:90, height:90, objectFit:'cover', borderRadius:12, display:'block' }} />
-          : <div style={{ width:90, height:90, borderRadius:12, background:'linear-gradient(135deg,rgba(255,138,0,.12),rgba(255,93,0,.2))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:30 }}>🍽️</div>
+          ? <img src={ASSET(item.image_url)} alt={item.libelle} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+          : <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--mk-orange)' }}><PremiumIcon name="utensils" size={44} /></div>
         }
+        {!available && (
+          <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.35)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <span style={{ color:'#fff', fontSize:11, fontWeight:700, background:'rgba(0,0,0,.5)', padding:'3px 10px', borderRadius:20 }}>Indisponible</span>
+          </div>
+        )}
+        {hasOptions && available && (
+          <span style={{ position:'absolute', top:8, right:8, background:'rgba(0,0,0,.6)', color:'#fff', fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:20 }}>
+            Options ▸
+          </span>
+        )}
+        <ShareButton compact title={item.libelle} text={`${item.libelle} — ${Number(item.prix || 0).toFixed(2)} MAD sur iFilino`} url={`${window.location.origin}/r/${slug}`}
+          style={{ position:'absolute', bottom:8, left:8 }} />
+      </div>
+
+      {/* Content */}
+      <div style={{ flex:1, padding:'12px 14px 14px', display:'flex', flexDirection:'column', gap:6 }}>
+        <div style={{ fontWeight:700, fontSize:14, color:'var(--mk-text)', lineHeight:1.3 }}>{item.libelle}</div>
+        {item.description && (
+          <div style={{ fontSize:12, color:'var(--mk-muted)', lineHeight:1.4, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>{item.description}</div>
+        )}
+        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', marginTop:'auto', paddingTop:6 }}>
+          {item.prix != null && <span style={{ fontWeight:800, color:'var(--mk-orange)', fontSize:14 }}>{Number(item.prix).toFixed(2)} MAD</span>}
+          {item.calories && <span style={{ fontSize:11, color:'var(--mk-muted)', background:'var(--mk-pill)', padding:'1px 6px', borderRadius:12 }}>{item.calories} kcal</span>}
+          {item.allergenes?.length > 0 && <PremiumIcon name="alert" size={13} style={{ color:'var(--mk-muted)' }} />}
+        </div>
         {available && (
-          <button onClick={handleAdd} style={{
-            position:'absolute', bottom:-10, right:-6,
-            background: added ? '#16A34A' : qty > 0 ? 'var(--mk-orange)' : 'var(--mk-text)',
-            color:'#fff', border:'none', borderRadius:'50%',
-            width:32, height:32, fontSize: qty > 0 ? 12 : 20,
-            cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
-            boxShadow:'0 3px 10px rgba(0,0,0,.22)', transition:'background .2s, transform .1s',
-            fontWeight:700,
-          }}
-            onMouseEnter={e=>e.currentTarget.style.transform='scale(1.12)'}
-            onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
+          <button
+            onClick={e => { e.stopPropagation(); handleQuickAdd(); }}
+            style={{
+              marginTop:8, padding:'8px', borderRadius:10, border:'none',
+              background: added ? '#16A34A' : hasOptions ? 'var(--mk-orange)' : qty > 0 ? 'var(--mk-orange)' : 'var(--mk-text)',
+              color:'#fff', fontWeight:700, fontSize:13, cursor:'pointer', transition:'background .2s',
+            }}
           >
-            {added ? '✓' : qty > 0 ? qty : '+'}
+            {added ? 'Ajouté' : hasOptions ? <span className="premium-inline-icon"><PremiumIcon name="settings" size={14} /> Choisir</span> : qty > 0 ? `+ (${qty})` : '+ Ajouter'}
           </button>
         )}
       </div>
@@ -282,7 +325,7 @@ function CartSidebar({ cart, total, onUpdateQty, onRemove, onCheckout, orgSlug }
   if (!active || items.length === 0) {
     return (
       <div style={{ background:'var(--mk-surface)', borderRadius:16, padding:24, textAlign:'center', border:'1px solid var(--mk-border)' }}>
-        <div style={{ fontSize:36, marginBottom:10 }}>🛒</div>
+        <div style={{ display:'grid', placeItems:'center', color:'var(--mk-muted)', marginBottom:10 }}><PremiumIconBadge name="cart" size={28} /></div>
         <div style={{ fontSize:14, fontWeight:600, color:'var(--mk-text)', marginBottom:4 }}>Panier vide</div>
         <div style={{ fontSize:13, color:'var(--mk-muted)' }}>Ajoutez des plats pour commander</div>
       </div>
@@ -294,24 +337,36 @@ function CartSidebar({ cart, total, onUpdateQty, onRemove, onCheckout, orgSlug }
   return (
     <div style={{ position:'sticky', top:80, background:'var(--mk-surface)', borderRadius:16, boxShadow:'var(--mk-shadow-md)', padding:20, border:'1px solid var(--mk-border)' }}>
       <div style={{ fontWeight:700, fontSize:15, marginBottom:14, color:'var(--mk-text)', display:'flex', alignItems:'center', gap:8 }}>
-        <span>🛒 Panier</span>
+        <span className="premium-inline-icon"><PremiumIcon name="cart" size={16} /> Panier</span>
         <span style={{ marginLeft:'auto', fontSize:12, color:'var(--mk-muted)', fontWeight:500 }}>{count} article{count>1?'s':''}</span>
       </div>
-      <div style={{ marginBottom:14, display:'flex', flexDirection:'column', gap:8 }}>
-        {items.map(item => (
-          <div key={item.id} style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <div style={{ flex:1, fontSize:13, color:'var(--mk-text)', fontWeight:500 }}>{item.libelle}</div>
-            <div style={{ display:'flex', alignItems:'center', gap:3, background:'var(--mk-pill)', borderRadius:8, padding:'2px 4px' }}>
-              <button onClick={()=>onUpdateQty(item.id, item.quantity-1)} style={{ width:22, height:22, border:'none', borderRadius:6, cursor:'pointer', background:'var(--mk-surface)', fontSize:14, fontWeight:700, color:'var(--mk-text)', boxShadow:'var(--mk-shadow)', display:'grid', placeItems:'center' }}>−</button>
-              <span style={{ fontSize:12, fontWeight:700, minWidth:16, textAlign:'center', color:'var(--mk-text)' }}>{item.quantity}</span>
-              <button onClick={()=>onUpdateQty(item.id, item.quantity+1)} style={{ width:22, height:22, border:'none', borderRadius:6, cursor:'pointer', background:'var(--mk-surface)', fontSize:14, fontWeight:700, color:'var(--mk-text)', boxShadow:'var(--mk-shadow)', display:'grid', placeItems:'center' }}>+</button>
+      <div style={{ marginBottom:14, display:'flex', flexDirection:'column', gap:10 }}>
+        {items.map(item => {
+          const itemKey = item._key ?? item.id;
+          return (
+            <div key={itemKey} style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:13, color:'var(--mk-text)', fontWeight:600, lineHeight:1.3 }}>{item.libelle}</div>
+                {(item.selected_options||[]).length > 0 && (
+                  <div style={{ fontSize:11, color:'var(--mk-muted)', marginTop:2 }}>
+                    {item.selected_options.filter(o=>o.value_label||o.numeric_value||o.text_value).map((o,i)=>(
+                      <span key={i}>{i>0?', ':''}{o.value_label||o.numeric_value||o.text_value}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:3, background:'var(--mk-pill)', borderRadius:8, padding:'2px 4px', flexShrink:0 }}>
+                <button onClick={()=>onUpdateQty(itemKey, item.quantity-1)} style={{ width:22, height:22, border:'none', borderRadius:6, cursor:'pointer', background:'var(--mk-surface)', fontSize:14, fontWeight:700, color:'var(--mk-text)', boxShadow:'var(--mk-shadow)', display:'grid', placeItems:'center' }}>−</button>
+                <span style={{ fontSize:12, fontWeight:700, minWidth:16, textAlign:'center', color:'var(--mk-text)' }}>{item.quantity}</span>
+                <button onClick={()=>onUpdateQty(itemKey, item.quantity+1)} style={{ width:22, height:22, border:'none', borderRadius:6, cursor:'pointer', background:'var(--mk-surface)', fontSize:14, fontWeight:700, color:'var(--mk-text)', boxShadow:'var(--mk-shadow)', display:'grid', placeItems:'center' }}>+</button>
+              </div>
+              <div style={{ fontSize:12, fontWeight:700, color:'var(--mk-text)', minWidth:52, textAlign:'right', flexShrink:0, paddingTop:2 }}>{(item.unit_price*item.quantity).toFixed(2)}</div>
+              <button onClick={()=>onRemove(itemKey)} style={{ background:'none', border:'none', color:'var(--mk-border)', cursor:'pointer', fontSize:13, padding:2, flexShrink:0 }}
+                onMouseEnter={e=>e.currentTarget.style.color='var(--mk-red)'}
+                onMouseLeave={e=>e.currentTarget.style.color='var(--mk-border)'}>✕</button>
             </div>
-            <div style={{ fontSize:12, fontWeight:700, color:'var(--mk-text)', minWidth:52, textAlign:'right' }}>{(item.unit_price*item.quantity).toFixed(2)}</div>
-            <button onClick={()=>onRemove(item.id)} style={{ background:'none', border:'none', color:'var(--mk-border)', cursor:'pointer', fontSize:13, padding:2 }}
-              onMouseEnter={e=>e.currentTarget.style.color='var(--mk-red)'}
-              onMouseLeave={e=>e.currentTarget.style.color='var(--mk-border)'}>✕</button>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div style={{ borderTop:'1px solid var(--mk-border)', paddingTop:12, marginBottom:12 }}>
         <div style={{ display:'flex', justifyContent:'space-between', fontWeight:800, fontSize:15, color:'var(--mk-text)' }}>
@@ -341,6 +396,10 @@ export default function RestaurantPage() {
   const { isFav, toggle: toggleFav } = useFavorites();
   const theme = useTheme();
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [slug]);
+
   const qrTableLabel = location.state?.tableLabel || null;
   const qrTableId    = location.state?.tableId    || null;
   const qrPreselect  = location.state?.preselect  || null;
@@ -354,10 +413,10 @@ export default function RestaurantPage() {
   const [dailyMenu, setDailyMenu]   = useState(null);
   const [showConflict, setShowConflict]     = useState(false);
   const [pendingItem, setPendingItem]       = useState(null);
+  const [modalItem, setModalItem]           = useState(null);
   const [showGallery, setShowGallery]       = useState(false);
   const [galleryIdx, setGalleryIdx]         = useState(0);
   const [favAnim, setFavAnim]               = useState(false);
-  const [shareToast, setShareToast]         = useState(false);
   const [scrolled, setScrolled]             = useState(false);
 
   const catRefs = useRef({});
@@ -392,17 +451,31 @@ export default function RestaurantPage() {
     fetchData();
   }, [slug]);
 
+  function cartItemFromItem(item) {
+    const opts = item.selected_options || [];
+    const sig  = opts.map(o=>`${o.option_id}:${o.value_id||''}:${o.numeric_value||''}:${o.text_value||''}`).sort().join('|');
+    const _key = opts.length ? `${item.id}::${sig}` : undefined;
+    return {
+      id: item.id,
+      ...(  _key && { _key }),
+      libelle: item.libelle,
+      unit_price: item._cart_price != null ? Number(item._cart_price) : Number(item.prix || 0),
+      image_url: item.image_url,
+      ...(opts.length && { selected_options: opts }),
+    };
+  }
+
   function handleAddItem(item) {
     if (cart && cart.orgSlug !== slug) { setPendingItem(item); setShowConflict(true); return; }
-    addItem(slug, restaurant?.name || slug, { id:item.id, libelle:item.libelle, unit_price:Number(item.prix||0), image_url:item.image_url });
+    addItem(slug, restaurant?.name || slug, cartItemFromItem(item));
   }
   function confirmClearAndAdd() {
-    addItem(slug, restaurant?.name || slug, { id:pendingItem.id, libelle:pendingItem.libelle, unit_price:Number(pendingItem.prix||0), image_url:pendingItem.image_url });
+    addItem(slug, restaurant?.name || slug, cartItemFromItem(pendingItem));
     setPendingItem(null); setShowConflict(false);
   }
   function getQty(itemId) {
     if (!cart || cart.orgSlug !== slug) return 0;
-    return cart.items.find(i=>i.id===itemId)?.quantity || 0;
+    return cart.items.filter(i => i.id === itemId).reduce((s, i) => s + i.quantity, 0);
   }
   function scrollToCategory(key) {
     setActiveCategory(key);
@@ -413,10 +486,6 @@ export default function RestaurantPage() {
     setFavAnim(true);
     toggleFav(slug);
     setTimeout(() => setFavAnim(false), 600);
-  }
-  function handleShare() {
-    if (navigator.share) { navigator.share({ title:restaurant?.name, url:window.location.href }); }
-    else { navigator.clipboard?.writeText(window.location.href); setShareToast(true); setTimeout(()=>setShareToast(false), 2500); }
   }
 
   const goToCheckout = () => navigate('/checkout', { state:{ tableLabel:qrTableLabel, tableId:qrTableId, preselect:qrPreselect } });
@@ -437,7 +506,7 @@ export default function RestaurantPage() {
 
   if (!restaurant) return (
     <div className={`mk-wrap mk-${theme}`} style={{ minHeight:'100vh', background:'var(--mk-bg)', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:16 }}>
-      <div style={{ fontSize:48 }}>🍽️</div>
+      <PremiumIconBadge name="utensils" size={34} />
       <div style={{ fontSize:18, fontWeight:700, color:'var(--mk-text)' }}>Restaurant introuvable</div>
       <button onClick={()=>navigate('/marketplace')} style={{ padding:'11px 24px', background:'var(--mk-orange)', color:'#fff', border:'none', borderRadius:10, cursor:'pointer', fontWeight:600 }}>← Retour</button>
     </div>
@@ -462,29 +531,34 @@ export default function RestaurantPage() {
         <span style={{ fontWeight:700, fontSize:15, color:'var(--mk-text)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{restaurant.name}</span>
         {cartActive && cart.items.length > 0 && (
           <button onClick={goToCheckout} style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px', borderRadius:10, border:'none', background:'var(--mk-orange)', color:'#fff', cursor:'pointer', fontSize:13, fontWeight:700 }}>
-            🛒 {total.toFixed(0)} MAD
+            <PremiumIcon name="cart" size={16} /> {total.toFixed(0)} MAD
           </button>
         )}
       </div>
 
-      {/* ── COVER HERO ── */}
-      <div style={{ position:'relative', overflow:'hidden', height:'clamp(220px,38vh,340px)' }}>
-        {restaurant.cover_url
-          ? <img src={ASSET(restaurant.cover_url)} alt={restaurant.name} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-          : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#0F172A,#1E293B)' }} />
-        }
-        <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(0,0,0,.6) 100%)' }} />
+      {/* ── COVER HERO ── (mêmes dimensions que le Hero marketplace ; className
+          mk-hero pour hériter du même breakpoint mobile partagé) */}
+      <div className="mk-hero" style={{ position:'relative', overflow:'hidden', height:'clamp(420px,62vh,680px)' }}>
+        <StoreHeroCarousel
+          organizationId={restaurant.id}
+          businessType={ORG_TYPE_TO_BUSINESS_TYPE[restaurant.type] || restaurant.type}
+          orgName={restaurant.name}
+          logoUrl={restaurant.logo_url}
+          fallbackCoverUrl={restaurant.cover_url}
+        />
+        <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(0,0,0,.6) 100%)', pointerEvents:'none' }} />
 
         {/* Top actions */}
         <div style={{ position:'absolute', top:16, left:16, right:16, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <button onClick={()=>navigate('/marketplace')} style={{ background:'rgba(255,255,255,.88)', backdropFilter:'blur(8px)', border:'none', borderRadius:12, width:42, height:42, cursor:'pointer', fontSize:18, display:'grid', placeItems:'center', boxShadow:'0 2px 8px rgba(0,0,0,.2)', color:'#0F172A' }}>←</button>
           <div style={{ display:'flex', gap:8 }}>
             {galleryImages.length > 0 && (
-              <button onClick={()=>{ setGalleryIdx(0); setShowGallery(true); }} style={{ background:'rgba(255,255,255,.88)', backdropFilter:'blur(8px)', border:'none', borderRadius:12, padding:'10px 14px', cursor:'pointer', fontSize:13, fontWeight:700, color:'#0F172A' }}>📷 {galleryImages.length} photos</button>
+              <button onClick={()=>{ setGalleryIdx(0); setShowGallery(true); }} style={{ background:'rgba(255,255,255,.88)', backdropFilter:'blur(8px)', border:'none', borderRadius:12, padding:'10px 14px', cursor:'pointer', fontSize:13, fontWeight:700, color:'#0F172A' }}><PremiumIcon name="camera" size={15} /> {galleryImages.length} photos</button>
             )}
-            <button onClick={handleShare} style={{ background:'rgba(255,255,255,.88)', backdropFilter:'blur(8px)', border:'none', borderRadius:12, width:42, height:42, cursor:'pointer', fontSize:16, display:'grid', placeItems:'center', boxShadow:'0 2px 8px rgba(0,0,0,.2)', color:'#0F172A' }}>📤</button>
+            <ShareButton compact title={restaurant?.name} text={`${restaurant?.name} sur iFilino`} url={window.location.href}
+              style={{ position:'static', background:'rgba(255,255,255,.88)', backdropFilter:'blur(8px)', borderRadius:12, width:42, height:42, fontSize:16, boxShadow:'0 2px 8px rgba(0,0,0,.2)', color:'#0F172A' }} />
             <button onClick={handleFav} style={{ background:isFav(slug)?'rgba(239,68,68,.9)':'rgba(255,255,255,.88)', backdropFilter:'blur(8px)', border:'none', borderRadius:12, width:42, height:42, cursor:'pointer', fontSize:16, display:'grid', placeItems:'center', boxShadow:'0 2px 8px rgba(0,0,0,.2)', animation:favAnim?'mk-heartPop .6s':'none', color:isFav(slug)?'#fff':'#0F172A' }}>
-              {isFav(slug)?'❤️':'🤍'}
+              <PremiumIcon name="heart" size={17} style={{ fill: isFav(slug) ? '#fff' : 'none' }} />
             </button>
           </div>
         </div>
@@ -514,9 +588,9 @@ export default function RestaurantPage() {
                     <span style={{ color:'var(--mk-muted)' }}>({restaurant.total_reviews} avis)</span>
                   </span>
                 )}
-                {restaurant.address && <span style={{ fontSize:12, color:'var(--mk-muted)' }}>📍 {restaurant.address}</span>}
-                {restaurant.phone && <a href={`tel:${restaurant.phone}`} style={{ fontSize:12, color:'var(--mk-orange)', fontWeight:600, textDecoration:'none' }}>📞 {restaurant.phone}</a>}
-                {restaurant.accepts_delivery && <span style={{ fontSize:12, color:'var(--mk-muted)' }}>🛵 {restaurant.delivery_fee>0?`${restaurant.delivery_fee} MAD`:'Livraison gratuite'}</span>}
+                {restaurant.address && <span style={{ fontSize:12, color:'var(--mk-muted)' }}><PremiumIcon name="mapPin" size={13} /> {restaurant.address}</span>}
+                {restaurant.phone && <a href={`tel:${restaurant.phone}`} style={{ fontSize:12, color:'var(--mk-orange)', fontWeight:600, textDecoration:'none' }}><PremiumIcon name="phone" size={13} /> {restaurant.phone}</a>}
+                {restaurant.accepts_delivery && <span style={{ fontSize:12, color:'var(--mk-muted)' }}><PremiumIcon name="delivery" size={13} /> {restaurant.delivery_fee>0?`${restaurant.delivery_fee} MAD`:'Livraison gratuite'}</span>}
                 <span style={{ fontSize:12, color:'var(--mk-muted)' }}>⏱ ~{restaurant.avg_prep_time} min</span>
               </div>
               {restaurant.description && <p style={{ margin:'10px 0 0', fontSize:13, color:'var(--mk-muted)', lineHeight:1.55, maxWidth:520 }}>{restaurant.description}</p>}
@@ -540,7 +614,7 @@ export default function RestaurantPage() {
                 onMouseOver={e=>e.currentTarget.style.boxShadow='0 6px 28px rgba(255,93,0,.45)'}
                 onMouseOut={e=>e.currentTarget.style.boxShadow='0 4px 20px rgba(255,93,0,.3)'}
               >
-                🪑 Réserver une table
+                <PremiumIcon name="calendar" size={16} /> Réserver une table
               </button>
             </div>
           )}
@@ -548,7 +622,7 @@ export default function RestaurantPage() {
           {/* QR banner */}
           {qrTableLabel && (
             <div style={{ margin:'14px 0 0', padding:'10px 16px', background:'rgba(234,88,12,.08)', borderRadius:12, border:'1.5px solid rgba(234,88,12,.25)', display:'flex', alignItems:'center', gap:10 }}>
-              <span style={{ fontSize:20 }}>🪑</span>
+              <PremiumIcon name="calendar" size={20} />
               <div>
                 <div style={{ fontWeight:700, fontSize:13, color:'var(--mk-orange)' }}>Table {qrTableLabel}</div>
                 <div style={{ fontSize:12, color:'var(--mk-muted)', marginTop:1 }}>Commande scannée depuis le QR Code</div>
@@ -578,7 +652,7 @@ export default function RestaurantPage() {
               {dailyMenu && (
                 <div style={{ display:'flex', gap:0, marginBottom:20, background:'var(--mk-surface)', borderRadius:14, padding:4, border:'1px solid var(--mk-border)', width:'fit-content' }}>
                   <button onClick={()=>setMenuMode('menu_du_jour')} style={{ padding:'9px 18px', border:'none', background:menuMode==='menu_du_jour'?'var(--mk-orange)':'transparent', color:menuMode==='menu_du_jour'?'#fff':'var(--mk-muted)', borderRadius:10, cursor:'pointer', fontWeight:700, fontSize:13, fontFamily:'inherit', transition:'all .15s' }}>
-                    📅 Menu du jour
+                    Menu du jour
                     {dailyMenu.price && <span style={{ marginLeft:6, background:'rgba(255,255,255,.2)', padding:'2px 8px', borderRadius:8, fontSize:11 }}>{Number(dailyMenu.price).toFixed(0)} MAD</span>}
                   </button>
                   <button onClick={()=>setMenuMode('carte')} style={{ padding:'9px 18px', border:'none', background:menuMode==='carte'?'var(--mk-bg)':'transparent', color:menuMode==='carte'?'var(--mk-text)':'var(--mk-muted)', borderRadius:10, cursor:'pointer', fontWeight:menuMode==='carte'?700:500, fontSize:13, fontFamily:'inherit', transition:'all .15s', boxShadow:menuMode==='carte'?'var(--mk-shadow)':'none' }}>
@@ -592,11 +666,11 @@ export default function RestaurantPage() {
                 <div>
                   {dailyMenu.title && <h2 style={{ margin:'0 0 4px', fontSize:18, fontWeight:800, color:'var(--mk-text)' }}>{dailyMenu.title}</h2>}
                   {dailyMenu.description && <p style={{ margin:'0 0 16px', fontSize:13, color:'var(--mk-muted)' }}>{dailyMenu.description}</p>}
-                  <div style={{ marginBottom:32 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:16, marginBottom:32 }}>
                     {(dailyMenu.items||[]).map(dmi => dmi.menu_item && (
-                      <ItemCard key={dmi.id} item={dmi.menu_item} onAdd={handleAddItem} qty={getQty(dmi.menu_item.id)} />
+                      <ItemCard key={dmi.id} item={dmi.menu_item} onOpen={setModalItem} onAdd={handleAddItem} qty={getQty(dmi.menu_item.id)} />
                     ))}
-                    {(dailyMenu.items||[]).length === 0 && <p style={{ color:'var(--mk-muted)', fontSize:13 }}>Aucun plat dans le menu du jour.</p>}
+                    {(dailyMenu.items||[]).length === 0 && <p style={{ color:'var(--mk-muted)', fontSize:13, gridColumn:'1/-1' }}>Aucun plat dans le menu du jour.</p>}
                   </div>
                 </div>
               )}
@@ -624,7 +698,9 @@ export default function RestaurantPage() {
                       <div key={key} ref={el=>catRefs.current[key]=el} style={{ marginBottom:32, scrollMarginTop:140 }}>
                         <h2 style={{ margin:'0 0 4px', fontSize:18, fontWeight:800, color:'var(--mk-text)' }}>{cat.name}</h2>
                         {cat.description && <p style={{ margin:'0 0 8px', fontSize:13, color:'var(--mk-muted)' }}>{cat.description}</p>}
-                        {(cat.items||[]).map(item => <ItemCard key={item.id} item={item} onAdd={handleAddItem} qty={getQty(item.id)} />)}
+                        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:16 }}>
+                          {(cat.items||[]).map(item => <ItemCard key={item.id} item={item} onOpen={setModalItem} onAdd={handleAddItem} qty={getQty(item.id)} slug={slug} />)}
+                        </div>
                         {(cat.items||[]).length === 0 && <div style={{ padding:'20px 0', color:'var(--mk-muted)', fontSize:13 }}>Aucun plat dans cette catégorie.</div>}
                       </div>
                     );
@@ -634,7 +710,24 @@ export default function RestaurantPage() {
             </div>
             {/* Sidebar — cachée sur mobile (barre fixe en bas prend le relais) */}
             <div className="rp-cart-col">
+              <StoreSidebar
+                store={{ ...restaurant, logo_url: restaurant.logo_url ? ASSET(restaurant.logo_url) : '', type: TYPE_LABELS[restaurant.type] || restaurant.type }}
+                type="restaurant"
+                theme={{ primary: 'var(--mk-orange)', dark: 'var(--mk-orange)', light: 'var(--mk-orange-light)' }}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                tabs={TABS}
+                categories={categories.map(cat => ({ ...cat, count: cat.items?.length || 0 }))}
+                activeCategory={activeCategory}
+                onCategoryChange={value => value ? scrollToCategory(value) : window.scrollTo({ top: 0, behavior: 'smooth' })}
+                cartCount={cartActive ? cart.items.length : 0}
+                cartTotal={total}
+                onCartOpen={goToCheckout}
+                primaryRequestLabel={restaurant.accepts_dine_in ? 'Réserver une table' : ''}
+                onPrimaryRequest={() => navigate('/r/' + slug + '/reserve', { state: { org: restaurant } })}
+              />
               <CartSidebar cart={cart} total={total} onUpdateQty={updateQuantity} onRemove={removeItem} onCheckout={goToCheckout} orgSlug={slug} />
+              <AdSlot placement="sidebar_right" platform="marketplace" />
             </div>
           </>
         )}
@@ -642,7 +735,7 @@ export default function RestaurantPage() {
         {/* ─ AVIS TAB ─ */}
         {activeTab === 'Avis' && (
           <div style={{ gridColumn:'1/-1' }}>
-            <ReviewsSection slug={slug} />
+            {restaurant.business_id ? <BusinessReviewsSection businessId={restaurant.business_id} /> : <ReviewsSection slug={slug} />}
           </div>
         )}
 
@@ -651,32 +744,32 @@ export default function RestaurantPage() {
           <div style={{ gridColumn:'1/-1', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:20 }}>
             {/* Contact */}
             <div style={{ background:'var(--mk-surface)', borderRadius:16, padding:20, border:'1px solid var(--mk-border)' }}>
-              <h3 style={{ margin:'0 0 14px', fontSize:15, fontWeight:700, color:'var(--mk-text)' }}>📋 Contact & Infos</h3>
+              <h3 style={{ margin:'0 0 14px', fontSize:15, fontWeight:700, color:'var(--mk-text)' }}><span className="premium-inline-icon"><PremiumIcon name="package" size={17} /> Contact & Infos</span></h3>
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                 {restaurant.address && <div style={{ fontSize:13, color:'var(--mk-text2)' }}><span style={{ color:'var(--mk-muted)' }}>Adresse :</span> {restaurant.address}{restaurant.city&&`, ${restaurant.city}`}</div>}
                 {restaurant.phone && <div style={{ fontSize:13 }}><span style={{ color:'var(--mk-muted)' }}>Tél :</span> <a href={`tel:${restaurant.phone}`} style={{ color:'var(--mk-orange)', fontWeight:600, textDecoration:'none' }}>{restaurant.phone}</a></div>}
                 {restaurant.email && <div style={{ fontSize:13 }}><span style={{ color:'var(--mk-muted)' }}>Email :</span> <a href={`mailto:${restaurant.email}`} style={{ color:'var(--mk-orange)', fontWeight:600, textDecoration:'none' }}>{restaurant.email}</a></div>}
               </div>
               <div style={{ marginTop:16, display:'flex', gap:8, flexWrap:'wrap' }}>
-                {restaurant.accepts_delivery && <span style={{ fontSize:11, background:'var(--mk-green-light)', color:'var(--mk-green)', padding:'3px 10px', borderRadius:20, fontWeight:700 }}>🛵 Livraison</span>}
-                {restaurant.accepts_takeaway && <span style={{ fontSize:11, background:'var(--mk-orange-light)', color:'var(--mk-orange)', padding:'3px 10px', borderRadius:20, fontWeight:700 }}>🏃 Emporter</span>}
-                {restaurant.accepts_dine_in && <span style={{ fontSize:11, background:'var(--mk-pill)', color:'var(--mk-muted)', padding:'3px 10px', borderRadius:20, fontWeight:700 }}>🍽️ Sur place</span>}
+                {restaurant.accepts_delivery && <span style={{ fontSize:11, background:'var(--mk-green-light)', color:'var(--mk-green)', padding:'3px 10px', borderRadius:20, fontWeight:700 }}><PremiumIcon name="delivery" size={13} /> Livraison</span>}
+                {restaurant.accepts_takeaway && <span style={{ fontSize:11, background:'var(--mk-orange-light)', color:'var(--mk-orange)', padding:'3px 10px', borderRadius:20, fontWeight:700 }}><PremiumIcon name="shopping" size={13} /> Emporter</span>}
+                {restaurant.accepts_dine_in && <span style={{ fontSize:11, background:'var(--mk-pill)', color:'var(--mk-muted)', padding:'3px 10px', borderRadius:20, fontWeight:700 }}><PremiumIcon name="utensils" size={13} /> Sur place</span>}
               </div>
             </div>
 
             {/* Horaires */}
             <div style={{ background:'var(--mk-surface)', borderRadius:16, padding:20, border:'1px solid var(--mk-border)' }}>
-              <h3 style={{ margin:'0 0 14px', fontSize:15, fontWeight:700, color:'var(--mk-text)' }}>🕐 Horaires</h3>
+              <h3 style={{ margin:'0 0 14px', fontSize:15, fontWeight:700, color:'var(--mk-text)' }}><span className="premium-inline-icon"><PremiumIcon name="clock" size={17} /> Horaires</span></h3>
               <OpeningHours hours={restaurant.opening_hours} />
             </div>
 
             {/* Map */}
             {restaurant.latitude && restaurant.longitude && (
               <div style={{ background:'var(--mk-surface)', borderRadius:16, padding:20, border:'1px solid var(--mk-border)' }}>
-                <h3 style={{ margin:'0 0 14px', fontSize:15, fontWeight:700, color:'var(--mk-text)' }}>📍 Localisation</h3>
+                <h3 style={{ margin:'0 0 14px', fontSize:15, fontWeight:700, color:'var(--mk-text)' }}><span className="premium-inline-icon"><PremiumIcon name="mapPin" size={17} /> Localisation</span></h3>
                 <RestaurantMiniMap lat={restaurant.latitude} lng={restaurant.longitude} name={restaurant.name} theme={theme} />
                 <a href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`} target="_blank" rel="noopener noreferrer" style={{ display:'block', marginTop:12, textAlign:'center', padding:'10px', background:'var(--mk-orange)', color:'#fff', borderRadius:10, textDecoration:'none', fontWeight:700, fontSize:13 }}>
-                  🧭 Itinéraire Google Maps
+                  <PremiumIcon name="directions" size={15} /> Itinéraire Google Maps
                 </a>
               </div>
             )}
@@ -687,7 +780,7 @@ export default function RestaurantPage() {
         {activeTab === 'Horaires' && (
           <div style={{ gridColumn:'1/-1' }}>
             <div style={{ background:'var(--mk-surface)', borderRadius:16, padding:24, border:'1px solid var(--mk-border)', maxWidth:480 }}>
-              <h3 style={{ margin:'0 0 16px', fontSize:16, fontWeight:700, color:'var(--mk-text)' }}>🕐 Horaires d'ouverture</h3>
+              <h3 style={{ margin:'0 0 16px', fontSize:16, fontWeight:700, color:'var(--mk-text)' }}><span className="premium-inline-icon"><PremiumIcon name="clock" size={17} /> Horaires</span> d'ouverture</h3>
               <OpeningHours hours={restaurant.opening_hours} />
             </div>
           </div>
@@ -700,12 +793,12 @@ export default function RestaurantPage() {
           <button onClick={()=>navigate('/marketplace')} style={{ flexShrink:0, width:44, height:44, borderRadius:12, border:'1.5px solid var(--mk-border)', background:'transparent', color:'var(--mk-text)', fontSize:18, cursor:'pointer', display:'grid', placeItems:'center', fontWeight:700 }}>←</button>
           {cartActive && cart.items.length > 0 ? (
             <button onClick={goToCheckout} style={{ flex:1, padding:'12px 16px', background:'var(--mk-orange)', color:'#fff', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:'pointer', boxShadow:'0 4px 16px rgba(234,88,12,.35)', display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
-              <span>🛒 Voir le panier · {cart.items.reduce((s,i)=>s+i.quantity,0)} article{cart.items.reduce((s,i)=>s+i.quantity,0)>1?'s':''}</span>
+              <span className="premium-inline-icon"><PremiumIcon name="cart" size={16} /> Voir le panier · {cart.items.reduce((s,i)=>s+i.quantity,0)} article{cart.items.reduce((s,i)=>s+i.quantity,0)>1?'s':''}</span>
               <span style={{ fontWeight:800, flexShrink:0 }}>{total.toFixed(2)} MAD</span>
             </button>
           ) : (
             <div style={{ flex:1, padding:'12px 16px', background:'var(--mk-pill)', borderRadius:12, fontSize:14, color:'var(--mk-muted)', display:'flex', alignItems:'center', gap:8 }}>
-              <span>🛒</span><span>Panier vide — ajoutez des plats</span>
+              <PremiumIcon name="cart" size={16} /><span>Panier vide — ajoutez des plats</span>
             </div>
           )}
         </div>
@@ -714,27 +807,27 @@ export default function RestaurantPage() {
       {/* ── GALLERY ── */}
       <GalleryLightbox images={galleryImages} open={showGallery} startIdx={galleryIdx} onClose={()=>setShowGallery(false)} />
 
-      {/* ── SHARE TOAST ── */}
-      {shareToast && (
-        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', background:'#0F172A', color:'#fff', padding:'12px 20px', borderRadius:12, fontSize:13, fontWeight:600, zIndex:1000, animation:'mk-fadeUp .3s' }}>
-          ✓ Lien copié dans le presse-papier
-        </div>
+
+      {/* ── MENU ITEM MODAL ── */}
+      {modalItem && (
+        <MenuItemModal
+          item={modalItem}
+          restaurantName={restaurant?.name}
+          slug={slug}
+          theme={{ primary:'#FF8A00', dark:'#FF5D00' }}
+          onClose={() => setModalItem(null)}
+          onAddToCart={item => { handleAddItem(item); setModalItem(null); }}
+        />
       )}
 
       {/* ── CONFLICT MODAL ── */}
-      {showConflict && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.5)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)', animation:'mk-fadeIn .2s' }}>
-          <div style={{ background:'var(--mk-surface)', borderRadius:20, padding:28, maxWidth:360, width:'100%', boxShadow:'0 20px 60px rgba(0,0,0,.25)' }}>
-            <div style={{ fontSize:40, textAlign:'center', marginBottom:12 }}>🛒</div>
-            <h3 style={{ margin:'0 0 8px', fontSize:17, fontWeight:800, color:'var(--mk-text)', textAlign:'center' }}>Changer de restaurant ?</h3>
-            <p style={{ margin:'0 0 24px', fontSize:14, color:'var(--mk-muted)', lineHeight:1.5, textAlign:'center' }}>Votre panier contient des articles d'un autre restaurant. Voulez-vous le vider et commander ici ?</p>
-            <div style={{ display:'flex', gap:10 }}>
-              <button onClick={()=>setShowConflict(false)} style={{ flex:1, padding:'12px', border:'1.5px solid var(--mk-border)', borderRadius:12, background:'transparent', cursor:'pointer', fontSize:14, fontWeight:600, color:'var(--mk-text)' }}>Annuler</button>
-              <button onClick={confirmClearAndAdd} style={{ flex:1, padding:'12px', border:'none', borderRadius:12, background:'var(--mk-orange)', color:'#fff', cursor:'pointer', fontSize:14, fontWeight:700 }}>Vider & commander</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CartConflictModal
+        show={showConflict}
+        currentOrgName={cart?.orgName}
+        targetOrgName={restaurant?.name || slug}
+        onCancel={() => setShowConflict(false)}
+        onConfirm={confirmClearAndAdd}
+      />
     </div>
   );
 }

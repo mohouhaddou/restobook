@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { API } from '../api';
 import { useAuth } from '../contexts/AuthContext';
+import { BRAND } from '../config/branding';
 
 /* ══ HELPERS ════════════════════════════════════════════════════════════ */
 
@@ -327,7 +328,7 @@ export default function SubscriptionPage() {
           💳 Abonnement
         </h1>
         <p style={{ color: 'var(--rb-muted)', fontSize: 15, margin: 0 }}>
-          Gérez votre plan RestoBook et vos fonctionnalités disponibles.
+          Gérez votre plan {BRAND.APP_NAME} et vos fonctionnalités disponibles.
         </p>
       </div>
 

@@ -1,0 +1,19 @@
+{
+  "$schemaVersion": "1.0.0",
+  "root": ".",
+  "editors": "editors",
+  "publisher": "publisher",
+  "queue": "queue",
+  "incomingQueue": "queue/incoming",
+  "processingQueue": "queue/processing",
+  "publishedQueue": "queue/published",
+  "failedQueue": "queue/failed",
+  "templates": "templates",
+  "workflows": "workflows",
+  "prompts": "prompts",
+  "types": "types",
+  "services": "services",
+  "logs": "logs",
+  "scripts": "scripts",
+  "tests": "tests"
+}

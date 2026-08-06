@@ -1,0 +1,1 @@
+import type{AIProvider}from"./AIProvider";import{ProviderRegistry}from"./ProviderRegistry";export class ProviderFactory{public constructor(private readonly r:ProviderRegistry){}create(id:string):AIProvider{return this.r.get(id);}}

@@ -1,0 +1,1 @@
+import type{ExtensionManifest}from"./ExtensionManifest";export class ExtensionRegistry{private readonly x=new Map<string,ExtensionManifest>();register(e:ExtensionManifest){if(this.x.has(e.id))throw new Error("Extension dupliquée");this.x.set(e.id,e);}get(id:string){const e=this.x.get(id);if(!e)throw new Error("Extension absente");return e;}list(){return[...this.x.values()];}}

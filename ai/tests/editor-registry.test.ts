@@ -1,0 +1,2 @@
+import assert from"node:assert/strict";import test from"node:test";import{EditorRegistry}from"../editor-registry";
+test("FutureEditor est dynamique",()=>{const r=new EditorRegistry();r.register({id:"future",name:"FutureEditor",siteId:"s",workflowId:"w",providerId:"p",modelId:"m",enabled:true,capabilities:{languages:["fr"],contentTypes:["article"],images:true,seo:true}});assert.equal(r.get("future").name,"FutureEditor");});

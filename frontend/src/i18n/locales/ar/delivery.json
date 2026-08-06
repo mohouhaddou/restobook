@@ -1,0 +1,19 @@
+{
+  "fulfillment.type.delivery": "توصيل للمنزل",
+  "fulfillment.type.pickup": "استلام من المكان",
+  "fulfillment.type.click_collect": "طلب واستلام",
+  "fulfillment.type.takeaway": "سفري",
+  "fulfillment.type.dine_in": "في المكان",
+  "delivery.history.proposed": "البحث عن موصل",
+  "delivery.history.assigned": "تم تعيين موصل",
+  "delivery.history.picking_up": "الموصل في الطريق إلى المتجر",
+  "delivery.history.picked_up": "تم استلام الطلب",
+  "delivery.history.on_the_way": "في الطريق إليك",
+  "delivery.history.delivered": "تم توصيل الطلب",
+  "delivery.history.rejected": "البحث عن موصل آخر",
+  "delivery.courier.generic": "الموصل",
+  "delivery.courier.onTheWay": "الموصل في الطريق إليك",
+  "delivery.courier.namedOnTheWay": "{{name}} في الطريق",
+  "delivery.distanceFromStore": "على بعد {{distance}} من المتجر",
+  "delivery.courier.liveBadge": "🛵 {{name}} مباشر{{distance}} · وصل منذ {{time}}"
+}

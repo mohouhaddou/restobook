@@ -3,6 +3,10 @@ import L from 'leaflet';
 import { useApi } from '../hooks/useApi';
 import { Toast } from '../components/ui/Toast';
 import { API, ASSET } from '../api';
+import { GeocodingPicker } from '../shared/components/geo/GeocodingPicker';
+import { HoursEditor, ToggleSwitch } from '../shared/components/ui/HoursEditor';
+import { DeliveryModePicker } from '../shared/components/ui/DeliveryModePicker';
+import { StoreHeroManagerTab } from '../shared/components/storeHero/StoreHeroManagerTab';
 
 // ── Jours de la semaine ──────────────────────────────────────────────────────
 const DAYS_FR = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
@@ -38,17 +42,6 @@ function Label({ children, req }) {
   return (
     <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '.05em', display: 'block', marginBottom: 5 }}>
       {children}{req && <span style={{ color: '#EF4444', marginLeft: 3 }}>*</span>}
-    </label>
-  );
-}
-
-function ToggleSwitch({ checked, onChange, label }) {
-  return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-      <div onClick={() => onChange(!checked)} style={{ width: 44, height: 24, borderRadius: 12, background: checked ? 'var(--rb-orange,#FF8A00)' : '#D1D5DB', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
-        <div style={{ position: 'absolute', top: 3, left: checked ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
-      </div>
-      <span style={{ fontSize: 13, color: '#374151' }}>{label}</span>
     </label>
   );
 }
@@ -187,37 +180,7 @@ function LocationMap({ lat, lng, onMove }) {
   );
 }
 
-// ── Horaires ouverture ────────────────────────────────────────────────────────
-const DAYS_OPENING = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-const DAYS_OPENING_FR = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
-
-function HoursEditor({ value, onChange }) {
-  const hours = value || {};
-  function setDay(day, field, val) {
-    onChange({ ...hours, [day]: { ...hours[day], [field]: val } });
-  }
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {DAYS_OPENING.map((day, i) => {
-        const h = hours[day] || {};
-        return (
-          <div key={day} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <div style={{ width: 70, fontSize: 12, fontWeight: 600, color: '#374151' }}>{DAYS_OPENING_FR[i]}</div>
-            <ToggleSwitch checked={!h.closed} onChange={v => setDay(day, 'closed', !v)} label="" />
-            {!h.closed && (
-              <>
-                <input type="time" value={h.open || '09:00'} onChange={e => setDay(day, 'open', e.target.value)} style={{ ...inp, width: 100 }} />
-                <span style={{ color: '#9CA3AF', fontSize: 12 }}>→</span>
-                <input type="time" value={h.close || '22:00'} onChange={e => setDay(day, 'close', e.target.value)} style={{ ...inp, width: 100 }} />
-              </>
-            )}
-            {h.closed && <span style={{ fontSize: 12, color: '#9CA3AF' }}>Fermé</span>}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+// ── Horaires ouverture (composant partagé resto/hanout) ───────────────────────
 
 // ════════════════════════════════════════════════════════════════════════════
 export default function RestaurantConfigPage() {
@@ -355,10 +318,14 @@ export default function RestaurantConfigPage() {
         accepts_dine_in: !!org.accepts_dine_in,
         accepts_reservation: !!org.accepts_reservation,
         accepts_qr_table: !!org.accepts_qr_table,
+        delivery_mode: org.delivery_mode || 'disabled',
         opening_hours: org.opening_hours || {},
         latitude:  lat,
         longitude: lng,
         location_verified: !!org.location_verified,
+        formatted_address: org.formatted_address || null,
+        geocoding_source:  org.geocoding_source  || null,
+        geocoding_updated_at: org.geocoding_source ? new Date().toISOString() : null,
       });
       setMsg('Profil mis à jour ✓'); setKind('success');
     } catch (err) { setMsg(err.message); setKind('error'); }
@@ -434,6 +401,7 @@ export default function RestaurantConfigPage() {
           { key: 'profil',    icon: '🏪', label: 'Profil & Images' },
           { key: 'location',  icon: '📍', label: 'Localisation' },
           { key: 'menu',      icon: '📅', label: 'Menu du jour' },
+          { key: 'hero',      icon: '🎠', label: 'Hero' },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 18px', border: 'none', borderBottom: `3px solid ${tab === t.key ? 'var(--rb-orange,#FF8A00)' : 'transparent'}`, background: 'none', fontWeight: tab === t.key ? 800 : 500, fontSize: 14, color: tab === t.key ? 'var(--rb-orange,#FF8A00)' : '#6B7280', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
             {t.icon} {t.label}
@@ -497,10 +465,14 @@ export default function RestaurantConfigPage() {
                 <ToggleSwitch checked={!!org.accepts_takeaway} onChange={v => setField('accepts_takeaway', v)} label="À emporter / Click & Collect" />
                 <ToggleSwitch checked={!!org.accepts_dine_in}  onChange={v => setField('accepts_dine_in', v)}  label="Sur place / Réservation de table" />
                 {org.accepts_delivery && (
-                  <div style={{ background: '#F9FAFB', borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+                  <div style={{ background: '#F9FAFB', borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14, marginTop: 4 }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                       <div><Label>Frais de livraison (MAD)</Label><input type="number" min="0" step="0.5" style={inp} value={org.delivery_fee || ''} onChange={e => setField('delivery_fee', e.target.value)} /></div>
                       <div><Label>Commande min. (MAD)</Label><input type="number" min="0" step="1" style={inp} value={org.min_order_amount || ''} onChange={e => setField('min_order_amount', e.target.value)} /></div>
+                    </div>
+                    <div>
+                      <Label>Attribution des livraisons</Label>
+                      <DeliveryModePicker value={org.delivery_mode} onChange={v => setField('delivery_mode', v)} />
                     </div>
                   </div>
                 )}
@@ -554,78 +526,15 @@ export default function RestaurantConfigPage() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
-            {/* Adresse complète */}
+            {/* Adresse complète (champs fixes: zone, pays, code postal) */}
             <div className="card p-4">
-              <h6 style={{ fontWeight: 800, marginBottom: 16 }}>🏠 Adresse complète</h6>
+              <h6 style={{ fontWeight: 800, marginBottom: 16 }}>🏠 Informations complémentaires</h6>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <Label req>Adresse</Label>
-                  <input style={inp} value={org.address || ''} onChange={e => setField('address', e.target.value)} placeholder="N° rue, nom de rue…" />
-                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div><Label req>Ville</Label><input style={inp} value={org.city || ''} onChange={e => setField('city', e.target.value)} placeholder="Casablanca" /></div>
                   <div><Label>Quartier / Zone</Label><input style={inp} value={org.zone || ''} onChange={e => setField('zone', e.target.value)} placeholder="Maarif" /></div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div><Label>District / Arrondissement</Label><input style={inp} value={org.district || ''} onChange={e => setField('district', e.target.value)} placeholder="Aïn Chock" /></div>
                   <div><Label>Code postal</Label><input style={inp} value={org.postal_code || ''} onChange={e => setField('postal_code', e.target.value)} placeholder="20000" /></div>
                 </div>
                 <div><Label>Pays</Label><input style={inp} value={org.country || 'Maroc'} onChange={e => setField('country', e.target.value)} /></div>
-              </div>
-            </div>
-
-            {/* GPS */}
-            <div className="card p-4">
-              <h6 style={{ fontWeight: 800, marginBottom: 16 }}>🗺️ Coordonnées GPS</h6>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {/* Recherche adresse Nominatim */}
-                <div style={{ position: 'relative' }}>
-                  <Label>Recherche d'adresse</Label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input
-                      style={{ ...inp, flex: 1 }}
-                      value={addrSearch}
-                      onChange={e => {
-                        setAddrSearch(e.target.value);
-                        clearTimeout(addrDebRef.current);
-                        addrDebRef.current = setTimeout(() => searchAddress(e.target.value), 500);
-                      }}
-                      placeholder="Saisir une adresse pour géocoder…"
-                    />
-                    {addrLoading && <span style={{ display: 'flex', alignItems: 'center', fontSize: 18 }}>⏳</span>}
-                  </div>
-                  {addrResults.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 10, zIndex: 50, maxHeight: 200, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,.1)' }}>
-                      {addrResults.map((item, i) => (
-                        <button key={i} type="button" onClick={() => pickAddress(item)} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 12, color: '#374151', borderBottom: '1px solid #F3F4F6', fontFamily: 'inherit' }}
-                          onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                          📍 {item.display_name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Bouton GPS */}
-                <button type="button" onClick={detectGPS} disabled={geoLoading} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', borderRadius: 12, border: 'none', background: geoLoading ? '#F1F5F9' : 'linear-gradient(135deg,#3B82F6,#2563EB)', color: geoLoading ? '#94A3B8' : '#fff', cursor: geoLoading ? 'default' : 'pointer', fontWeight: 700, fontSize: 14, fontFamily: 'inherit', width: '100%', justifyContent: 'center', transition: 'all .15s', boxShadow: geoLoading ? 'none' : '0 4px 14px rgba(59,130,246,.35)' }}>
-                  {geoLoading
-                    ? <><span style={{ width: 16, height: 16, border: '2px solid #CBD5E1', borderTopColor: '#64748B', borderRadius: '50%', animation: 'rcp-spin .7s linear infinite', display: 'inline-block' }} /> Localisation en cours…</>
-                    : <>📍 Utiliser ma position actuelle</>}
-                </button>
-
-                {/* Lat / Lng manuels */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <Label>Latitude</Label>
-                    <input style={inp} type="number" step="0.0000001" min="-90" max="90" value={org.latitude || ''} onChange={e => setField('latitude', e.target.value)} placeholder="33.5731" />
-                  </div>
-                  <div>
-                    <Label>Longitude</Label>
-                    <input style={inp} type="number" step="0.0000001" min="-180" max="180" value={org.longitude || ''} onChange={e => setField('longitude', e.target.value)} placeholder="-7.5898" />
-                  </div>
-                </div>
-
                 {org.latitude && org.longitude && (
                   <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                     <input type="checkbox" checked={!!org.location_verified} onChange={e => setField('location_verified', e.target.checked)} style={{ accentColor: '#FF8A00', width: 16, height: 16 }} />
@@ -635,14 +544,28 @@ export default function RestaurantConfigPage() {
               </div>
             </div>
 
-            {/* Carte Leaflet pleine largeur */}
+            {/* GeocodingPicker pleine largeur */}
             <div className="card p-4" style={{ gridColumn: '1 / -1' }}>
-              <h6 style={{ fontWeight: 800, marginBottom: 8 }}>🗺️ Position sur la carte</h6>
-              <p style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>Cliquez sur la carte ou faites glisser le marqueur pour ajuster la position. Utilisez "Utiliser ma position" pour un positionnement automatique.</p>
-              <LocationMap
+              <h6 style={{ fontWeight: 800, marginBottom: 14 }}>📍 Localisation précise</h6>
+              <GeocodingPicker
                 lat={org.latitude ? parseFloat(org.latitude) : null}
                 lng={org.longitude ? parseFloat(org.longitude) : null}
-                onMove={(lat, lng) => setOrg(prev => ({ ...prev, latitude: lat.toFixed(7), longitude: lng.toFixed(7), location_verified: true }))}
+                address={org.address || ''}
+                city={org.city || ''}
+                district={org.district || ''}
+                formattedAddress={org.formatted_address || ''}
+                geocodingSource={org.geocoding_source || null}
+                onUpdate={data => setOrg(prev => ({
+                  ...prev,
+                  latitude:          data.lat,
+                  longitude:         data.lng,
+                  address:           data.address || prev.address,
+                  city:              data.city    || prev.city,
+                  district:          data.district || prev.district,
+                  formatted_address: data.formatted_address,
+                  geocoding_source:  data.geocoding_source,
+                  location_verified: true,
+                }))}
               />
             </div>
           </div>
@@ -745,6 +668,9 @@ export default function RestaurantConfigPage() {
           </div>
         </div>
       )}
+
+      {/* ══════════════════════════════════════ ONGLET HERO ══════════════════════════════════════ */}
+      {tab === 'hero' && <StoreHeroManagerTab />}
 
       <style>{`@keyframes rcp-spin { to { transform: rotate(360deg); } }`}</style>
     </>

@@ -1,0 +1,2 @@
+import assert from"node:assert/strict";import test from"node:test";import{BaseModule,ModuleLoader,ModuleRegistry}from"../modules";
+class M extends BaseModule{}test("modules chargés par manifest",()=>{const r=new ModuleRegistry(),l=new ModuleLoader(r);l.load(new M({id:"m",version:"1.0.0",dependencies:[],author:"x",description:"x",permissions:[],featureFlags:[],entryPoint:"index",healthCheck:true}));assert.equal(r.has("m"),true);});

@@ -1,0 +1,2 @@
+#!/usr/bin/env node
+'use strict';require('dotenv').config({path:require('path').join(__dirname,'../.env')});const job=require('../src/modules/media/mediaMaintenanceJob'),db=require('../models/db');async function run(){await db.authenticate();const command=process.argv[2]||'sync',result=command==='cleanup'?await job.cleanup():command==='check'?{unused:await job.checkUnused()}:await job.sync();console.log(JSON.stringify(result,null,2));await db.close()}run().catch(e=>{console.error(e);process.exit(1)});

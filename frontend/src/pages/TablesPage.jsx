@@ -225,6 +225,11 @@ export default function TablesPage() {
                           {r.guest_phone && <a href={`tel:${r.guest_phone}`} style={{ color:'var(--rb-orange,#FF8A00)', fontWeight:600, textDecoration:'none' }}>📞 {r.guest_phone}</a>}
                           {r.guest_email && <a href={`mailto:${r.guest_email}`} style={{ color:'var(--rb-orange,#FF8A00)', fontWeight:600, textDecoration:'none', maxWidth:200, overflow:'hidden', textOverflow:'ellipsis' }}>{r.guest_email}</a>}
                         </div>
+                        {r.createdAt && (
+                          <div style={{ marginTop:4, fontSize:11, color:'#9CA3AF' }}>
+                            Réservé le {formatTime(r.createdAt)}
+                          </div>
+                        )}
                         {r.notes && (
                           <div style={{ marginTop:8, padding:'8px 12px', background:'#F9FAFB', borderRadius:8, fontSize:12, color:'#374151', lineHeight:1.6 }}>
                             💬 {r.notes}

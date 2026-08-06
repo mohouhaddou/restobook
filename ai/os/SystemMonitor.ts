@@ -1,0 +1,1 @@
+import type{SystemMetrics}from"./SystemMetrics";import type{SystemHealth}from"./SystemHealth";export class SystemMonitor{public constructor(private readonly metrics:()=>SystemMetrics,private readonly health:()=>Promise<SystemHealth>){}getMetrics(){return this.metrics();}getHealth(){return this.health();}}

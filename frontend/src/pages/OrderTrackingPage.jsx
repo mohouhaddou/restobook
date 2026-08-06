@@ -3,46 +3,30 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
 import { API } from '../api';
+import { BRAND } from '../config/branding';
+import { getStatusSteps as getSteps } from '../shared/config/orderStatus';
+import { OrderTimeline } from '../shared/components/dashboard/OrderTimeline';
+import { useDeliverySocket } from '../shared/hooks/useDeliverySocket';
+import { useLeafletMap } from '../shared/hooks/useLeafletMap';
+import { useI18n } from '../i18n/config';
+import { translateApiError } from '../i18n/apiErrors';
+import { translateFulfillmentType, translateOrderStatus, translatePaymentStatus } from '../i18n/status';
 
-const STATUS_STEPS = {
-  // Commande sur place via QR table
-  TABLE_QR: [
-    { key: 'pending',   label: 'Reçue',           icon: '📥', desc: 'Votre commande a bien été reçue par le restaurant' },
-    { key: 'confirmed', label: 'Confirmée',        icon: '✅', desc: 'Le personnel a confirmé votre commande' },
-    { key: 'preparing', label: 'En préparation',  icon: '👨‍🍳', desc: 'Vos plats sont en cours de préparation en cuisine' },
-    { key: 'ready',     label: 'En cours de service', icon: '🍽️', desc: 'Vos plats arrivent à votre table' },
-    { key: 'delivered', label: 'Servie',           icon: '🎉', desc: 'Bon appétit ! Paiement auprès du serveur.' },
-  ],
-  // Commande en ligne — livraison
-  delivery: [
-    { key: 'pending',    label: 'Reçue',            icon: '📥', desc: 'Votre commande a bien été reçue' },
-    { key: 'confirmed',  label: 'Confirmée',         icon: '✅', desc: 'Le restaurant a confirmé votre commande' },
-    { key: 'preparing',  label: 'En préparation',   icon: '👨‍🍳', desc: 'Vos plats sont en cours de préparation' },
-    { key: 'ready',      label: 'Prête',             icon: '🛎️', desc: 'Votre commande attend le livreur' },
-    { key: 'on_the_way', label: 'En livraison',     icon: '🛵', desc: 'Votre livreur est en chemin' },
-    { key: 'delivered',  label: 'Livrée',            icon: '🎉', desc: 'Bon appétit !' },
-  ],
-  // Commande en ligne — à emporter / click & collect
-  takeaway: [
-    { key: 'pending',   label: 'Reçue',           icon: '📥', desc: 'Votre commande a bien été reçue' },
-    { key: 'confirmed', label: 'Confirmée',        icon: '✅', desc: 'Le restaurant a confirmé votre commande' },
-    { key: 'preparing', label: 'En préparation',  icon: '👨‍🍳', desc: 'Vos plats sont en cours de préparation' },
-    { key: 'ready',     label: 'Prête à emporter', icon: '🛎️', desc: 'Votre commande est prête, venez la récupérer' },
-    { key: 'picked_up', label: 'Récupérée',       icon: '🎉', desc: 'Bonne dégustation !' },
-  ],
+const DELIVERY_HISTORY_KEYS = {
+  proposed: 'delivery.history.proposed',
+  assigned: 'delivery.history.assigned',
+  picking_up: 'delivery.history.picking_up',
+  picked_up: 'delivery.history.picked_up',
+  on_the_way: 'delivery.history.on_the_way',
+  delivered: 'delivery.history.delivered',
+  rejected: 'delivery.history.rejected',
 };
-
-function getSteps(order) {
-  if (!order) return STATUS_STEPS.takeaway;
-  if (order.order_source === 'TABLE_QR') return STATUS_STEPS.TABLE_QR;
-  if (order.type === 'delivery') return STATUS_STEPS.delivery;
-  return STATUS_STEPS.takeaway;
-}
 
 export default function OrderTrackingPage() {
   const { code } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { t, formatCurrency, formatDate, formatTime, formatDistance } = useI18n();
 
   const [order, setOrder]         = useState(null);
   const [loading, setLoading]     = useState(true);
@@ -80,9 +64,9 @@ export default function OrderTrackingPage() {
     doc.rect(0, 0, W, 30, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-    doc.text('RestoBook', W / 2, 10, { align: 'center' });
+    doc.text(BRAND.APP_NAME, W / 2, 10, { align: 'center' });
     doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-    doc.text('Confirmation de commande', W / 2, 17, { align: 'center' });
+    doc.text(t('tracking.receipt.title'), W / 2, 17, { align: 'center' });
     doc.setFontSize(8);
     doc.text(order.restaurant?.name || '', W / 2, 24, { align: 'center' });
     y = 34;
@@ -101,7 +85,7 @@ export default function OrderTrackingPage() {
     y += 5;
     doc.setFontSize(7); doc.setFont('helvetica', 'normal');
     doc.setTextColor(120, 120, 120);
-    doc.text('Code de retrait / suivi', W / 2, y, { align: 'center' });
+    doc.text(t('tracking.receipt.codeLabel'), W / 2, y, { align: 'center' });
     y += 7;
 
     // Divider
@@ -111,13 +95,13 @@ export default function OrderTrackingPage() {
 
     // Info rows
     const infoRows = [
-      ['Restaurant', order.restaurant?.name || ''],
-      ['Mode', order.order_source === 'TABLE_QR' ? `Sur place — Table ${order.table_label || '—'}` : order.type === 'delivery' ? 'Livraison' : 'À emporter'],
-      ['Statut', order.status],
-      ['Paiement', order.payment_method === 'cash' ? 'Espèces' : order.payment_method],
+      [t(`tracking.businessType.${order.engine || 'resto'}`), order.restaurant?.name || ''],
+      [t('tracking.receipt.mode'), order.order_source === 'TABLE_QR' ? t('tracking.mode.table', { table: order.table_label || '—' }) : translateFulfillmentType(t, order.type)],
+      [t('tracking.receipt.status'), translateOrderStatus(t, order.status)],
+      [t('tracking.receipt.payment'), translatePaymentStatus(t, order.payment_method || 'cash')],
     ];
-    if (order.guest_name) infoRows.splice(1, 0, ['Client', order.guest_name]);
-    if (order.delivery_address) infoRows.push(['Adresse', order.delivery_address]);
+    if (order.guest_name) infoRows.splice(1, 0, [t('tracking.receipt.customer'), order.guest_name]);
+    if (order.delivery_address) infoRows.push([t('tracking.receipt.address'), order.delivery_address]);
 
     doc.setFontSize(8.5);
     for (const [label, value] of infoRows) {
@@ -135,7 +119,7 @@ export default function OrderTrackingPage() {
     doc.line(8, y, W - 8, y);
     y += 5;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(60, 60, 60);
-    doc.text('Détail de la commande', 8, y);
+    doc.text(t('tracking.sections.orderDetails'), 8, y);
     y += 5;
 
     for (const item of (order.items || [])) {
@@ -144,7 +128,7 @@ export default function OrderTrackingPage() {
       const itemLines = doc.splitTextToSize(itemLabel, 52);
       doc.text(itemLines, 8, y);
       doc.setFont('helvetica', 'bold');
-      doc.text(`${(item.unit_price * item.quantity).toFixed(2)} MAD`, W - 8, y, { align: 'right' });
+      doc.text(formatCurrency(item.unit_price * item.quantity), W - 8, y, { align: 'right' });
       y += itemLines.length * 5;
       if (y > 185) break;
     }
@@ -157,20 +141,20 @@ export default function OrderTrackingPage() {
 
     if (order.delivery_fee > 0) {
       doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 100, 100); doc.setFontSize(8);
-      doc.text('Livraison', 8, y);
-      doc.text(`${Number(order.delivery_fee).toFixed(2)} MAD`, W - 8, y, { align: 'right' });
+      doc.text(t('checkout.summary.delivery'), 8, y);
+      doc.text(formatCurrency(order.delivery_fee), W - 8, y, { align: 'right' });
       y += 5;
     }
     if (order.discount_amount > 0) {
       doc.setFont('helvetica', 'bold'); doc.setTextColor(22, 163, 74); doc.setFontSize(8);
-      doc.text('Réduction', 8, y);
-      doc.text(`-${Number(order.discount_amount).toFixed(2)} MAD`, W - 8, y, { align: 'right' });
+      doc.text(t('checkout.summary.discount'), 8, y);
+      doc.text(`-${formatCurrency(order.discount_amount)}`, W - 8, y, { align: 'right' });
       y += 5;
     }
 
     doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 138, 0); doc.setFontSize(11);
     doc.text('TOTAL', 8, y);
-    doc.text(`${Number(order.total_amount).toFixed(2)} MAD`, W - 8, y, { align: 'right' });
+    doc.text(formatCurrency(order.total_amount), W - 8, y, { align: 'right' });
     y += 7;
 
     // Footer
@@ -178,9 +162,9 @@ export default function OrderTrackingPage() {
     doc.line(8, y, W - 8, y);
     y += 5;
     doc.setFont('helvetica', 'normal'); doc.setTextColor(160, 160, 160); doc.setFontSize(7);
-    doc.text('Merci pour votre commande !', W / 2, y, { align: 'center' });
+    doc.text(t('tracking.receipt.thanks'), W / 2, y, { align: 'center' });
     y += 4;
-    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} par RestoBook`, W / 2, y, { align: 'center' });
+    doc.text(t('tracking.receipt.generatedBy', { date: formatDate(new Date()), app: BRAND.APP_NAME }), W / 2, y, { align: 'center' });
 
     doc.save(`commande-${code}.pdf`);
   }
@@ -189,9 +173,9 @@ export default function OrderTrackingPage() {
     try {
       const res = await fetch(API(`/marketplace/track/${code}`));
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Commande introuvable'); setLoading(false); return; }
+      if (!res.ok) { setError(data.messageKey ? t(data.messageKey) : translateApiError(t, data, 'errors.api.orderNotFound')); setLoading(false); return; }
       setOrder(data.order);
-    } catch { setError('Erreur réseau'); }
+    } catch (err) { setError(translateApiError(t, err, 'errors.api.generic')); }
     setLoading(false);
   }
 
@@ -200,6 +184,44 @@ export default function OrderTrackingPage() {
     const id = setInterval(load, 15000);
     return () => clearInterval(id);
   }, [code]);
+
+  /* ── Suivi GPS livreur en direct ── */
+  const [courierPos, setCourierPos] = useState(null);
+  const [liveDistanceKm, setLiveDistanceKm] = useState(null);
+  const { containerRef: courierMapRef, setMarker: setCourierMarker, drawRoute: drawCourierRoute, fitToMarkers: fitCourierMap } = useLeafletMap({ zoom: 14 });
+
+  useDeliverySocket({
+    pickupCode: code,
+    onPosition: (data) => {
+      setCourierPos({ lat: data.lat, lng: data.lng, heading: data.heading_deg || 0 });
+      if (data.distance_to_merchant_km != null) setLiveDistanceKm(data.distance_to_merchant_km);
+    },
+    onOrderStatus: (data) => setOrder(prev => (prev && data?.status) ? { ...prev, status: data.status } : prev),
+  });
+
+  // Position initiale connue via l'API REST (delivery.partner_lat/lng), avant
+  // le premier event socket — évite une carte vide le temps du 1er ping.
+  useEffect(() => {
+    if (courierPos || !order?.delivery?.partner_lat || !order?.delivery?.partner_lng) return;
+    setCourierPos({ lat: Number(order.delivery.partner_lat), lng: Number(order.delivery.partner_lng), heading: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order]);
+
+  const merchantPos = (order?.restaurant?.latitude != null && order?.restaurant?.longitude != null)
+    ? { lat: order.restaurant.latitude, lng: order.restaurant.longitude } : null;
+
+  useEffect(() => {
+    if (!courierPos) return;
+    setCourierMarker('courier', { lat: courierPos.lat, lng: courierPos.lng, html: '🛵', rotation: courierPos.heading });
+    if (merchantPos) {
+      setCourierMarker('merchant', { lat: merchantPos.lat, lng: merchantPos.lng, html: '🏪' });
+      drawCourierRoute('to-merchant', [[courierPos.lat, courierPos.lng], [merchantPos.lat, merchantPos.lng]]);
+      fitCourierMap();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courierPos, merchantPos?.lat, merchantPos?.lng]);
+
+  const displayDistanceKm = liveDistanceKm ?? order?.delivery?.distance_to_merchant_km ?? null;
 
   function updateItemRating(index, patch) {
     setItemRatings(prev => ({ ...prev, [index]: { ...(prev[index] || {}), ...patch } }));
@@ -229,16 +251,16 @@ export default function OrderTrackingPage() {
     <div style={{ minHeight: '100vh', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14 }}>
       <div style={{ width: 48, height: 48, border: '3px solid #E2E8F0', borderTopColor: '#FF8A00', borderRadius: '50%', animation: 'ot-spin .8s linear infinite' }} />
       <style>{`@keyframes ot-spin{to{transform:rotate(360deg)}}`}</style>
-      <div style={{ color: '#94A3B8', fontSize: 14 }}>Chargement du suivi…</div>
+      <div style={{ color: '#94A3B8', fontSize: 14 }}>{t('tracking.loading')}</div>
     </div>
   );
 
   if (error || !order) return (
     <div style={{ minHeight: '100vh', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14 }}>
       <div style={{ fontSize: 52 }}>❌</div>
-      <div style={{ color: '#DC2626', fontWeight: 700, fontSize: 16 }}>{error || 'Commande introuvable'}</div>
+      <div style={{ color: '#DC2626', fontWeight: 700, fontSize: 16 }}>{error || t('errors.api.orderNotFound')}</div>
       <button onClick={() => navigate('/marketplace')} style={{ padding: '12px 24px', background: '#FF8A00', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600 }}>
-        Retour à l'accueil
+        {t('tracking.actions.backHome')}
       </button>
     </div>
   );
@@ -260,7 +282,13 @@ export default function OrderTrackingPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: 'Inter,system-ui,sans-serif' }}>
-      <style>{`@keyframes ot-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:.9}}`}</style>
+      <style>{`
+        @keyframes ot-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:.9}}
+        @keyframes ot-fade-slide-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .ot-glass-card{animation:ot-fade-slide-in .35s ease-out;position:relative}
+        .ot-glass-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#FF8A00,#FF5D00);}
+        .ot-live-pill{animation:ot-pulse 2.5s infinite}
+      `}</style>
 
       {/* ── Status hero ── */}
       <div style={{ background: heroBg, padding: '40px 20px 80px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -270,7 +298,7 @@ export default function OrderTrackingPage() {
 
         {justOrdered && !isCancelled && (
           <div style={{ marginBottom: 12, fontSize: 13, color: 'rgba(255,255,255,.75)', fontWeight: 600, letterSpacing: '.02em' }}>
-            🎉 Commande envoyée avec succès !
+            🎉 {t('tracking.success.justOrdered')}
           </div>
         )}
 
@@ -278,15 +306,15 @@ export default function OrderTrackingPage() {
           {isCancelled ? '❌' : isDone ? '🎉' : currentStep?.icon || '📦'}
         </div>
         <h1 style={{ margin: 0, fontSize: 'clamp(20px,4vw,30px)', fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>
-          {isCancelled ? 'Commande annulée' : currentStep?.label || order.status}
+          {isCancelled ? t('tracking.status.cancelled') : currentStep?.label || order.status}
         </h1>
         <div style={{ fontSize: 14, marginTop: 8, color: 'rgba(255,255,255,.75)' }}>
-          {isCancelled ? "Contactez le restaurant pour plus d'informations" : currentStep?.desc || ''}
+          {isCancelled ? "{t('tracking.status.cancelledHelp')}" : currentStep?.desc || ''}
         </div>
 
         {/* Code badge */}
         <div style={{ marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.12)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '8px 16px', border: '1px solid rgba(255,255,255,.15)' }}>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', fontWeight: 600 }}>CODE</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', fontWeight: 600 }}>{t('tracking.code')}</span>
           <span style={{ fontFamily: 'monospace', fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: 3 }}>{code}</span>
         </div>
       </div>
@@ -301,16 +329,16 @@ export default function OrderTrackingPage() {
             </div>
             {/* Info + download */}
             <div style={{ flex: 1, minWidth: 140 }}>
-              <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, marginBottom: 4 }}>Code de suivi</div>
+              <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, marginBottom: 4 }}>{t('tracking.codeLabel')}</div>
               <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--rb-orange,#FF8A00)', fontFamily: 'monospace', letterSpacing: 2, marginBottom: 4 }}>{code}</div>
               <div style={{ fontSize: 12, color: '#64748B', marginBottom: 14, lineHeight: 1.5 }}>
-                {order?.order_source === 'TABLE_QR' ? 'Montrez ce code au serveur si besoin' : order?.type === 'delivery' ? 'Présentez ce QR code à votre livreur' : 'Présentez ce QR code lors du retrait'}
+                {order?.order_source === 'TABLE_QR' ? t('tracking.qr.showToServer') : order?.type === 'delivery' ? t('tracking.qr.showToCourier') : t('tracking.qr.showAtPickup')}
               </div>
               <button
                 onClick={downloadOrderReceipt}
                 style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', background: 'linear-gradient(135deg,#FF8A00,#FF5D00)', color: '#fff', border: 'none', borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: 'pointer', width: '100%', justifyContent: 'center', boxShadow: '0 4px 14px rgba(255,93,0,.28)', fontFamily: 'inherit' }}
               >
-                ⬇ Télécharger le reçu
+                ⬇ {t('tracking.actions.downloadReceipt')}
               </button>
             </div>
           </div>
@@ -323,9 +351,9 @@ export default function OrderTrackingPage() {
         {/* Temps estimé */}
         {order.estimated_ready_at && !isDone && !isCancelled && (
           <div style={{ background: '#fff', borderRadius: 16, padding: '18px 22px', boxShadow: '0 4px 20px rgba(0,0,0,.08)', border: '1.5px solid #FED7AA', textAlign: 'center' }}>
-            <div style={{ fontSize: 11, color: '#92400E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Heure estimée</div>
+            <div style={{ fontSize: 11, color: '#92400E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>{t('tracking.estimatedTime')}</div>
             <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--rb-orange,#FF8A00)' }}>
-              {new Date(order.estimated_ready_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              {formatTime(order.estimated_ready_at, { hour: '2-digit', minute: '2-digit' })}
             </div>
           </div>
         )}
@@ -333,62 +361,44 @@ export default function OrderTrackingPage() {
         {/* Timeline */}
         {!isCancelled && (
           <div style={{ background: '#fff', borderRadius: 16, padding: '20px 22px', boxShadow: '0 4px 20px rgba(0,0,0,.06)', border: '1px solid #F1F5F9' }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 20, color: '#0F172A' }}>Suivi de commande</div>
-            <div style={{ position: 'relative' }}>
-              {/* Vertical connector line */}
-              <div style={{ position: 'absolute', left: 15, top: 16, bottom: 16, width: 2, background: '#F1F5F9', zIndex: 0 }} />
-
-              {steps.filter(s => s.key !== 'cancelled').map((step, idx) => {
-                const done   = idx <= currentIdx;
-                const active = idx === currentIdx;
-                const future = idx > currentIdx;
-                return (
-                  <div key={step.key} style={{ display: 'flex', gap: 16, alignItems: 'flex-start', position: 'relative', zIndex: 1, marginBottom: idx < steps.length - 1 ? 24 : 0 }}>
-                    {/* Circle */}
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: active ? 16 : 13,
-                      background: active ? 'var(--rb-orange,#FF8A00)' : done ? '#16A34A' : '#fff',
-                      border: `2px solid ${active ? 'var(--rb-orange,#FF8A00)' : done ? '#16A34A' : '#E2E8F0'}`,
-                      color: done || active ? '#fff' : '#94A3B8',
-                      boxShadow: active ? '0 0 0 5px rgba(234,88,12,.15)' : 'none',
-                      transition: 'all .3s',
-                    }}>
-                      {future ? <span style={{ fontSize: 11, fontWeight: 700 }}>{idx + 1}</span>
-                        : active ? step.icon
-                        : '✓'}
-                    </div>
-
-                    {/* Text */}
-                    <div style={{ paddingTop: 4, flex: 1 }}>
-                      <div style={{
-                        fontSize: 14, fontWeight: active ? 700 : 500,
-                        color: future ? '#94A3B8' : '#0F172A',
-                        transition: 'color .3s',
-                      }}>
-                        {step.label}
-                      </div>
-                      {active && (
-                        <div style={{ fontSize: 12, color: '#64748B', marginTop: 3 }}>{step.desc}</div>
-                      )}
-                    </div>
-
-                    {/* Done timestamp placeholder */}
-                    {done && !active && (
-                      <div style={{ fontSize: 11, color: '#22C55E', fontWeight: 600, paddingTop: 4 }}>✓</div>
-                    )}
-                  </div>
-                );
-              })}
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 20, color: '#0F172A' }}>{t('tracking.sections.timeline')}</div>
+            <div style={{ '--mk-border': '#F1F5F9', '--mk-orange': 'var(--rb-orange,#FF8A00)', '--mk-orange-light': 'rgba(234,88,12,.15)', '--mk-green': '#16A34A', '--mk-surface': '#fff', '--mk-text': '#0F172A', '--mk-muted': '#94A3B8' }}>
+              <OrderTimeline order={order} />
             </div>
           </div>
         )}
 
-        {/* Restaurant info */}
+        {/* Suivi GPS livreur en direct */}
+        {order.type === 'delivery' && !isCancelled && !isDone && courierPos && (
+          <div className="ot-glass-card" style={{ background: '#fff', borderRadius: 16, padding: 0, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,.06)', border: '1px solid #F1F5F9' }}>
+            <div style={{ padding: '16px 22px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#0F172A' }}>
+                🛵 {order.delivery?.courier_first_name ? t('delivery.courier.namedOnTheWay', { name: order.delivery.courier_first_name }) : t('delivery.courier.onTheWay')}
+              </div>
+              {displayDistanceKm != null && (
+                <div className="ot-live-pill" style={{ fontSize: 12, fontWeight: 700, color: '#16A34A', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 20, padding: '4px 10px' }}>
+                  📍 {t('delivery.distanceFromStore', { distance: formatDistance(displayDistanceKm) })}
+                </div>
+              )}
+            </div>
+            <div ref={courierMapRef} style={{ height: 240, width: '100%' }} />
+            {(order.delivery?.status_history?.length > 0) && (
+              <div style={{ padding: '12px 22px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {order.delivery.status_history.map((h, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#94A3B8' }}>
+                    <span>{DELIVERY_HISTORY_KEYS[h.status] ? t(DELIVERY_HISTORY_KEYS[h.status]) : h.status}</span>
+                    <span>{formatTime(h.at, { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Restaurant / commerce info */}
         {order.restaurant && (
           <div style={{ background: '#fff', borderRadius: 16, padding: '18px 22px', boxShadow: '0 4px 20px rgba(0,0,0,.06)', border: '1px solid #F1F5F9' }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Restaurant</div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>{t(`tracking.businessType.${order.engine || 'resto'}`)}</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>{order.restaurant.name}</div>
             {order.restaurant.phone && (
               <a href={`tel:${order.restaurant.phone}`} style={{ fontSize: 13, color: 'var(--rb-orange,#FF8A00)', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -400,12 +410,12 @@ export default function OrderTrackingPage() {
 
         {/* Order detail */}
         <div style={{ background: '#fff', borderRadius: 16, padding: '18px 22px', boxShadow: '0 4px 20px rgba(0,0,0,.06)', border: '1px solid #F1F5F9' }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 14 }}>Détail de la commande</div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 14 }}>{t('tracking.sections.orderDetails')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {(order.items || []).map((item, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
                 <span style={{ color: '#374151' }}><span style={{ fontWeight: 700, color: '#0F172A' }}>{item.quantity}×</span> {item.libelle}</span>
-                <span style={{ fontWeight: 600, color: '#0F172A' }}>{(item.unit_price * item.quantity).toFixed(2)} MAD</span>
+                <span style={{ fontWeight: 600, color: '#0F172A' }}>{formatCurrency(item.unit_price * item.quantity)}</span>
               </div>
             ))}
           </div>
@@ -413,23 +423,23 @@ export default function OrderTrackingPage() {
           <div style={{ borderTop: '1px solid #F1F5F9', marginTop: 14, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {order.delivery_fee > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748B' }}>
-                <span>Frais de livraison</span><span>{Number(order.delivery_fee).toFixed(2)} MAD</span>
+                <span>{t('checkout.summary.deliveryFee')}</span><span>{formatCurrency(order.delivery_fee)}</span>
               </div>
             )}
             {order.discount_amount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#16A34A', fontWeight: 700 }}>
-                <span>Réduction</span><span>-{Number(order.discount_amount).toFixed(2)} MAD</span>
+                <span>{t('checkout.summary.discount')}</span><span>-{formatCurrency(order.discount_amount)}</span>
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 16, borderTop: '1px solid #F1F5F9', paddingTop: 12, marginTop: 4 }}>
               <span style={{ color: '#0F172A' }}>Total</span>
-              <span style={{ color: 'var(--rb-orange,#FF8A00)' }}>{Number(order.total_amount).toFixed(2)} MAD</span>
+              <span style={{ color: 'var(--rb-orange,#FF8A00)' }}>{formatCurrency(order.total_amount)}</span>
             </div>
           </div>
 
           <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontSize: 11, color: '#94A3B8', background: '#F8FAFC', padding: '3px 10px', borderRadius: 20, border: '1px solid #E2E8F0' }}>
-              💳 {order.payment_method === 'cash' ? 'Espèces' : order.payment_method}
+              💳 {translatePaymentStatus(t, order.payment_method || 'cash')}
             </span>
             {order.delivery_address && (
               <span style={{ fontSize: 11, color: '#94A3B8', background: '#F8FAFC', padding: '3px 10px', borderRadius: 20, border: '1px solid #E2E8F0' }}>
@@ -439,8 +449,8 @@ export default function OrderTrackingPage() {
           </div>
         </div>
 
-        {/* Review */}
-        {isDone && !reviewSent && !showReview && (
+        {/* Review — pas encore câblé pour les commandes commerce (hanout/pharmacie) */}
+        {isDone && !['hanout', 'pharmacie'].includes(order.engine) && !reviewSent && !showReview && (
           <button onClick={() => setShowReview(true)} style={{
             padding: '16px', background: '#fff',
             border: '2px solid var(--rb-orange,#FF8A00)',
@@ -452,23 +462,23 @@ export default function OrderTrackingPage() {
             onMouseEnter={e => e.currentTarget.style.background='#FFF7ED'}
             onMouseLeave={e => e.currentTarget.style.background='#fff'}
           >
-            ⭐ Donner mon avis
+            ⭐ {t('tracking.review.giveReview')}
           </button>
         )}
 
         {reviewSent && (
           <div style={{ padding: '18px', background: '#F0FDF4', borderRadius: 16, textAlign: 'center', color: '#16A34A', fontWeight: 700, border: '1.5px solid #BBF7D0', fontSize: 15 }}>
-            ✓ Merci pour votre avis ! C'est très précieux.
+            ✓ {t('tracking.review.thanks')}
           </div>
         )}
 
         {showReview && (
           <div style={{ background: '#fff', borderRadius: 16, padding: '20px 22px', boxShadow: '0 4px 20px rgba(0,0,0,.08)', border: '1px solid #F1F5F9' }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, color: '#0F172A' }}>⭐ Votre avis</div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, color: '#0F172A' }}>⭐ {t('tracking.review.title')}</div>
 
             {/* Global rating */}
             <div style={{ marginBottom: 16, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Note globale</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>{t('tracking.review.globalRating')}</div>
               <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                 {[1,2,3,4,5].map(s => (
                   <span key={s} onClick={() => setRating(s)} style={{
@@ -483,7 +493,7 @@ export default function OrderTrackingPage() {
             {/* Per-item ratings */}
             {(order.items || []).length > 1 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Notes par plat</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>{t('tracking.review.itemRatings')}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {(order.items || []).map((item, index) => (
                     <div key={index} style={{ border: '1px solid #F1F5F9', borderRadius: 12, padding: '12px 14px' }}>
@@ -499,7 +509,7 @@ export default function OrderTrackingPage() {
                       <input
                         value={itemRatings[index]?.comment || ''}
                         onChange={e => updateItemRating(index, { comment: e.target.value })}
-                        placeholder="Commentaire (optionnel)"
+                        placeholder={t('tracking.review.commentOptional')}
                         style={{ ...inputBase }}
                       />
                     </div>
@@ -509,21 +519,21 @@ export default function OrderTrackingPage() {
             )}
 
             <textarea value={comment} onChange={e => setComment(e.target.value)}
-              placeholder="Votre commentaire général (optionnel)…" rows={3}
+              placeholder={t('tracking.review.generalCommentOptional')} rows={3}
               style={{ ...inputBase, resize: 'vertical', marginBottom: 14 }} />
 
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowReview(false)} style={{
                 flex: 1, padding: '12px', border: '1.5px solid #E2E8F0', borderRadius: 10,
                 cursor: 'pointer', background: '#fff', fontSize: 14, fontWeight: 600, color: '#374151',
-              }}>Annuler</button>
+              }}>{t('common.cancel')}</button>
               <button onClick={sendReview} style={{
                 flex: 2, padding: '12px',
                 background: 'var(--rb-orange,#FF8A00)', color: '#fff',
                 border: 'none', borderRadius: 10,
                 cursor: 'pointer', fontWeight: 700, fontSize: 14,
                 boxShadow: '0 4px 12px rgba(234,88,12,.3)',
-              }}>Envoyer mon avis</button>
+              }}>{t('tracking.review.submit')}</button>
             </div>
           </div>
         )}
@@ -535,7 +545,7 @@ export default function OrderTrackingPage() {
           color: '#374151', fontWeight: 600, fontSize: 14, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
-          ← Retour à l'accueil
+          ← {t('tracking.actions.backHome')}
         </button>
       </div>
     </div>

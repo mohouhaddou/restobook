@@ -1,0 +1,6 @@
+{
+  "environment": "test",
+  "workspace": "workspace",
+  "dryRun": true,
+  "modules": ["workflowEngine", "publisherEngine", "contentManager", "fileSystem", "integration", "orchestrator"]
+}

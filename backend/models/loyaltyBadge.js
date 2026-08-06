@@ -12,7 +12,7 @@ LoyaltyBadge.init({
   icon:            { type: DataTypes.STRING(10), defaultValue: '🏅' },
   description:     { type: DataTypes.STRING(255), allowNull: true },
   condition_type: {
-    type: DataTypes.ENUM('orders_count', 'total_spent', 'points_earned', 'birthday', 'manual'),
+    type: DataTypes.ENUM('orders_count', 'total_spent', 'points_earned', 'birthday', 'manual', 'lists_completed'),
     defaultValue: 'orders_count',
   },
   condition_value: { type: DataTypes.INTEGER, defaultValue: 1 },

@@ -1,0 +1,7 @@
+{
+  "status.payment.cash": "نقدا",
+  "status.payment.online": "دفع إلكتروني",
+  "status.payment.card": "بطاقة بنكية",
+  "status.payment.cod": "الدفع عند التوصيل",
+  "status.payment.partially_refunded": "مسترد جزئيا"
+}

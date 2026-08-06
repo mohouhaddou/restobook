@@ -1,0 +1,6 @@
+'use strict';const {QueryTypes}=require('sequelize');
+class SeriesResolver{
+ static async find(sequelize,uid,transaction){return(await sequelize.query('SELECT * FROM comic_series WHERE series_uid=:uid LIMIT 1',{replacements:{uid},transaction,type:QueryTypes.SELECT}))[0]||null}
+ static async create(sequelize,m,userId,transaction){const collision=(await sequelize.query('SELECT id FROM comic_series WHERE slug=:slug LIMIT 1',{replacements:{slug:m.seriesId},transaction,type:QueryTypes.SELECT}))[0];const slug=collision?`${m.seriesId}-series`:m.seriesId;const [id]=await sequelize.query(`INSERT INTO comic_series (owner_user_id,series_uid,slug,title,language,season_number,status,genres,tags,package_metadata,created_at,updated_at) VALUES (:userId,:uid,:slug,:title,:language,:season,'draft',:genres,:tags,:metadata,NOW(),NOW())`,{replacements:{userId,uid:m.seriesId,slug,title:m.seriesTitle,language:m.language,season:m.seasonNumber,genres:JSON.stringify(m.genres||m.categories||[]),tags:JSON.stringify(m.tags||[]),metadata:JSON.stringify({publisher:m.publisher||null,generatedAt:m.generatedAt})},transaction,type:QueryTypes.INSERT});return{id,series_uid:m.seriesId,slug,title:m.seriesTitle,status:'draft'}}
+}
+module.exports=SeriesResolver;

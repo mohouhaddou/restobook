@@ -1,0 +1,94 @@
+{
+  "id": "sports-2026-001",
+  "editor": "sports",
+  "category": "analyse",
+  "language": "fr",
+  "createdAt": "2026-07-23T10:00:00.000Z",
+  "updatedAt": "2026-07-23T10:20:00.000Z",
+  "articleMarkdown": "# Comprendre la préparation d'avant-match\n\n## Les repères essentiels\n\nUne préparation structurée associe récupération, tactique et concentration.",
+  "sections": [
+    {
+      "heading": "Les repères essentiels",
+      "level": 2,
+      "content": "Une préparation structurée associe récupération, tactique et concentration.",
+      "imageReference": "sports-cover"
+    }
+  ],
+  "metadata": {
+    "title": "Comprendre la préparation d'avant-match",
+    "slug": "comprendre-la-preparation-avant-match",
+    "excerpt": "Les grands principes d'une préparation sportive structurée.",
+    "description": "Article pédagogique sur les étapes générales de préparation avant une rencontre.",
+    "keywords": ["préparation sportive", "avant-match"],
+    "tags": ["sport", "analyse"],
+    "author": {
+      "name": "Rédaction iFilino Sports",
+      "type": "ai-editor",
+      "id": "sports"
+    },
+    "category": "analyse",
+    "language": "fr",
+    "readingTime": 5,
+    "difficulty": "intermediate",
+    "sources": [
+      {
+        "title": "Source documentaire fictive Sports",
+        "url": "https://example.invalid/sports-source",
+        "publisher": "Exemple documentaire",
+        "accessedAt": "2026-07-23T09:30:00.000Z"
+      }
+    ],
+    "license": {
+      "name": "Tous droits réservés",
+      "attribution": "iFilino Sports"
+    }
+  },
+  "images": [
+    {
+      "id": "sports-cover",
+      "filename": "sports-preparation-cover.webp",
+      "alt": "Terrain de sport préparé avant une rencontre",
+      "caption": "La préparation précède chaque rencontre.",
+      "role": "cover",
+      "width": 1600,
+      "height": 900,
+      "format": "webp",
+      "relativePath": "sports/2026/sports-preparation-cover.webp",
+      "generated": false
+    }
+  ],
+  "seo": {
+    "title": "Préparation d'avant-match | iFilino Sports",
+    "description": "Les principes généraux d'une préparation sportive structurée.",
+    "canonical": "https://www.ifilino.com/sports/content/comprendre-la-preparation-avant-match",
+    "robots": "noindex,follow",
+    "openGraph": {
+      "title": "Comprendre la préparation d'avant-match",
+      "description": "Les principes généraux d'une préparation sportive structurée.",
+      "type": "article",
+      "image": "sports/2026/sports-preparation-cover.webp",
+      "siteName": "iFilino Sports"
+    },
+    "twitter": {
+      "card": "summary_large_image",
+      "title": "Comprendre la préparation d'avant-match",
+      "description": "Les principes généraux d'une préparation sportive structurée.",
+      "image": "sports/2026/sports-preparation-cover.webp"
+    }
+  },
+  "workflow": {
+    "editor": "sports",
+    "steps": [
+      {
+        "id": "fact-review",
+        "name": "Revue des informations",
+        "order": 1,
+        "status": "completed",
+        "requiresHumanReview": true
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "version": "1.0.0",
+  "status": "review"
+}

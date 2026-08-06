@@ -1,0 +1,7 @@
+{
+  "status.payment.cash": "Cash",
+  "status.payment.online": "Online payment",
+  "status.payment.card": "Card",
+  "status.payment.cod": "Cash on delivery",
+  "status.payment.partially_refunded": "Partially refunded"
+}

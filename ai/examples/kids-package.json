@@ -1,0 +1,94 @@
+{
+  "id": "kids-2026-001",
+  "editor": "kids",
+  "category": "science",
+  "language": "fr",
+  "createdAt": "2026-07-23T11:00:00.000Z",
+  "updatedAt": "2026-07-23T11:10:00.000Z",
+  "articleMarkdown": "# Pourquoi les feuilles sont-elles vertes ?\n\n## Une couleur pleine d'énergie\n\nLa chlorophylle aide les plantes à utiliser la lumière.",
+  "sections": [
+    {
+      "heading": "Une couleur pleine d'énergie",
+      "level": 2,
+      "content": "La chlorophylle aide les plantes à utiliser la lumière.",
+      "imageReference": "kids-cover"
+    }
+  ],
+  "metadata": {
+    "title": "Pourquoi les feuilles sont-elles vertes ?",
+    "slug": "pourquoi-les-feuilles-sont-elles-vertes",
+    "excerpt": "Une explication courte et accessible de la couleur des feuilles.",
+    "description": "Contenu scientifique introductif adapté à un jeune public.",
+    "keywords": ["feuilles", "chlorophylle", "science"],
+    "tags": ["enfants", "nature"],
+    "author": {
+      "name": "Rédaction iFilino Kids",
+      "type": "ai-editor",
+      "id": "kids"
+    },
+    "category": "science",
+    "language": "fr",
+    "readingTime": 3,
+    "difficulty": "beginner",
+    "sources": [
+      {
+        "title": "Source documentaire fictive Kids",
+        "url": "https://example.invalid/kids-source",
+        "publisher": "Exemple documentaire",
+        "accessedAt": "2026-07-23T10:30:00.000Z"
+      }
+    ],
+    "license": {
+      "name": "Tous droits réservés",
+      "attribution": "iFilino Kids"
+    }
+  },
+  "images": [
+    {
+      "id": "kids-cover",
+      "filename": "kids-feuilles-cover.png",
+      "alt": "Feuilles vertes observées à la lumière",
+      "caption": "Les feuilles utilisent la lumière pour grandir.",
+      "role": "cover",
+      "width": 1600,
+      "height": 900,
+      "format": "png",
+      "relativePath": "kids/2026/kids-feuilles-cover.png",
+      "generated": false
+    }
+  ],
+  "seo": {
+    "title": "Pourquoi les feuilles sont vertes ? | iFilino Kids",
+    "description": "Une explication scientifique accessible aux enfants.",
+    "canonical": "https://www.ifilino.com/kids/content/pourquoi-les-feuilles-sont-elles-vertes",
+    "robots": "noindex,follow",
+    "openGraph": {
+      "title": "Pourquoi les feuilles sont-elles vertes ?",
+      "description": "Une explication scientifique accessible aux enfants.",
+      "type": "article",
+      "image": "kids/2026/kids-feuilles-cover.png",
+      "siteName": "iFilino Kids"
+    },
+    "twitter": {
+      "card": "summary_large_image",
+      "title": "Pourquoi les feuilles sont-elles vertes ?",
+      "description": "Une explication scientifique accessible aux enfants.",
+      "image": "kids/2026/kids-feuilles-cover.png"
+    }
+  },
+  "workflow": {
+    "editor": "kids",
+    "steps": [
+      {
+        "id": "child-safety-review",
+        "name": "Revue sécurité et âge",
+        "order": 1,
+        "status": "completed",
+        "requiresHumanReview": true
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "version": "1.0.0",
+  "status": "review"
+}

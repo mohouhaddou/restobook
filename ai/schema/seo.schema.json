@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "seo.schema.json",
+  "title": "iFilino SEO Metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "description", "canonical", "robots", "openGraph", "twitter"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "canonical": { "type": "string", "format": "uri" },
+    "robots": {
+      "enum": ["index,follow", "noindex,follow", "noindex,nofollow"]
+    },
+    "openGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "description", "type", "image", "siteName"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["article", "website"] },
+        "image": { "type": "string", "minLength": 1 },
+        "siteName": { "type": "string", "minLength": 1 }
+      }
+    },
+    "twitter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["card", "title", "description", "image"],
+      "properties": {
+        "card": { "enum": ["summary", "summary_large_image"] },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "image": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

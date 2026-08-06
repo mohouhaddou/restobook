@@ -1,0 +1,2 @@
+export interface ModelCapabilities{readonly text:boolean;readonly images:boolean;readonly video:boolean;readonly audio:boolean;readonly embedding:boolean;readonly vision:boolean;readonly reasoning:boolean;readonly context:number;readonly cost:number;readonly latency:number;}
+export interface AIModelManifest{readonly id:string;readonly provider:string;readonly capabilities:ModelCapabilities;readonly enabled:boolean;}

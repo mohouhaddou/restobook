@@ -1,0 +1,138 @@
+/* ═══════════════════════════════════════════════════
+   IFIGHAK — Animations & Micro-interactions
+═══════════════════════════════════════════════════ */
+
+/* ── Keyframes ───────────────────────────────────── */
+
+@keyframes if-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes if-fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes if-fadeInDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes if-fadeInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes if-fadeInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes if-scaleIn {
+  from { opacity: 0; transform: scale(.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes if-slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes if-pulse-glow {
+  0%,100%{ box-shadow: 0 0 0 0 rgba(var(--il-primary-rgb), .4); }
+  50%    { box-shadow: 0 0 0 10px rgba(var(--il-primary-rgb), 0); }
+}
+@keyframes if-badge-pulse {
+  0%,100%{ transform: scale(1); opacity: 1; }
+  50%    { transform: scale(1.04); opacity: .85; }
+}
+@keyframes if-float {
+  0%,100%{ transform: translateY(0); }
+  50%    { transform: translateY(-8px); }
+}
+@keyframes if-shimmer {
+  0%  { background-position: -200% 0; }
+  100%{ background-position:  200% 0; }
+}
+@keyframes if-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes if-bounce-in {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  80%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+@keyframes if-shake {
+  0%,100%{ transform: translateX(0); }
+  20%    { transform: translateX(-6px); }
+  40%    { transform: translateX(6px); }
+  60%    { transform: translateX(-4px); }
+  80%    { transform: translateX(4px); }
+}
+@keyframes if-ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ── Animation Utility Classes ───────────────────── */
+
+.if-anim-fade-in    { animation: if-fadeIn    .4s var(--il-ease) both; }
+.if-anim-fade-up    { animation: if-fadeInUp  .4s var(--il-ease) both; }
+.if-anim-fade-down  { animation: if-fadeInDown .4s var(--il-ease) both; }
+.if-anim-scale-in   { animation: if-scaleIn   .3s var(--il-ease-bounce) both; }
+.if-anim-bounce-in  { animation: if-bounce-in .5s var(--il-ease-bounce) both; }
+.if-anim-float      { animation: if-float 3.5s ease-in-out infinite; }
+
+/* Delays */
+.if-delay-100 { animation-delay: 100ms; }
+.if-delay-200 { animation-delay: 200ms; }
+.if-delay-300 { animation-delay: 300ms; }
+.if-delay-400 { animation-delay: 400ms; }
+.if-delay-500 { animation-delay: 500ms; }
+
+/* ── Ripple Effect ───────────────────────────────── */
+.if-ripple-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.if-ripple-wrap::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  background: rgba(255,255,255,.35);
+  transform: scale(0);
+  pointer-events: none;
+}
+.if-ripple-wrap:active::after {
+  animation: if-ripple .5s ease-out forwards;
+}
+
+/* ── Page Transition ─────────────────────────────── */
+.if-page-enter {
+  animation: if-fadeInUp .35s var(--il-ease) both;
+}
+
+/* ── Notification Bell Animation ─────────────────── */
+@keyframes if-bell-ring {
+  0%,100%{ transform: rotate(0); }
+  20%    { transform: rotate(15deg); }
+  40%    { transform: rotate(-15deg); }
+  60%    { transform: rotate(10deg); }
+  80%    { transform: rotate(-8deg); }
+}
+.if-bell-ring { animation: if-bell-ring .5s ease-in-out; }
+
+/* ── Dot Indicator ───────────────────────────────── */
+.if-dot-live {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--il-success);
+  animation: if-pulse-glow 2s infinite;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

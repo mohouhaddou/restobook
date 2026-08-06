@@ -1,0 +1,1 @@
+import type{ExtensionManifest}from"./ExtensionManifest";import{ExtensionRegistry}from"./ExtensionRegistry";export class ExtensionLoader{public constructor(private readonly r:ExtensionRegistry){}load(e:ExtensionManifest){if(!e.id||!e.moduleId||!e.entryPoint)throw new Error("Extension invalide");this.r.register(e);}}

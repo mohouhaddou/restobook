@@ -1,0 +1,1 @@
+export interface ScheduleEntry{readonly id:string;readonly expression:string;readonly payload:unknown;}export class CronScheduler{private readonly x=new Map<string,ScheduleEntry>();register(e:ScheduleEntry){this.x.set(e.id,e);}list(){return[...this.x.values()];}remove(id:string){return this.x.delete(id);}}

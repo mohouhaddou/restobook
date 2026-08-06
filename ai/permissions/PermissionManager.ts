@@ -1,0 +1,1 @@
+import type{SystemRole}from"./RoleManager";export class PermissionManager{public constructor(private readonly grants:Readonly<Record<SystemRole,readonly string[]>>){}allows(roles:readonly SystemRole[],permission:string){return roles.some(r=>this.grants[r]?.includes("*")||this.grants[r]?.includes(permission));}}

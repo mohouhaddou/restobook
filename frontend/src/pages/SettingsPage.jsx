@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { Toast } from '../components/ui/Toast';
 import { API } from '../api';
+import { useI18n } from '../i18n/config';
+import { LanguageSelect } from '../shared/components/i18n/LanguageSelect';
 
 export default function SettingsPage() {
   const { get, put, token } = useApi();
-  const [settings, setSettings] = useState({ cutoff_time:'', allow_cancel_until:'', hero_image_url:'', brand_name:'', brand_logo_url:'', theme_primary:'#FF8A00', theme_accent:'#FFD500' });
+  const { t } = useI18n();
+  const [settings, setSettings] = useState({ cutoff_time:'', allow_cancel_until:'', hero_image_url:'', brand_name:'', brand_logo_url:'' });
   const [heroFile, setHeroFile] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [pwdForm, setPwdForm]   = useState({ current_password:'', new_password:'', confirm_password:'' });
@@ -28,47 +31,45 @@ export default function SettingsPage() {
         allow_cancel_until: settings.allow_cancel_until,
         brand_name: settings.brand_name,
         brand_logo_url: settings.brand_logo_url,
-        theme_primary: settings.theme_primary,
-        theme_accent: settings.theme_accent,
       });
-      notify('Paramètres sauvegardés');
+      notify(t('common.saved'));
     } catch (err) { notify(err.message, 'error'); }
   }
 
   async function uploadHero(e) {
     e.preventDefault();
-    if (!heroFile) return notify('Choisissez un fichier.', 'error');
+    if (!heroFile) return notify(t('common.choose_file'), 'error');
     const fd = new FormData();
     fd.append('image', heroFile);
     try {
       const r = await fetch(API('/admin/branding/hero'), { method:'POST', headers:{Authorization:`Bearer ${token}`}, body: fd });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
-      notify('Image héro mise à jour'); setHeroFile(null); loadSettings();
+      notify(t('settings.hero_updated')); setHeroFile(null); loadSettings();
     } catch (err) { notify(err.message, 'error'); }
   }
 
   async function uploadLogo(e) {
     e.preventDefault();
-    if (!logoFile) return notify('Choisissez un logo.', 'error');
+    if (!logoFile) return notify(t('common.choose_file'), 'error');
     const fd = new FormData();
     fd.append('image', logoFile);
     try {
       const r = await fetch(API('/admin/branding/logo'), { method:'POST', headers:{Authorization:`Bearer ${token}`}, body: fd });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
-      notify('Logo mis à jour'); setLogoFile(null); loadSettings();
+      notify(t('settings.logo_updated')); setLogoFile(null); loadSettings();
     } catch (err) { notify(err.message, 'error'); }
   }
 
   async function changePassword(e) {
     e.preventDefault();
-    if (pwdForm.new_password !== pwdForm.confirm_password) return notify('Les mots de passe ne correspondent pas.', 'error');
+    if (pwdForm.new_password !== pwdForm.confirm_password) return notify(t('auth.password_mismatch'), 'error');
     try {
       const r = await fetch(API('/auth/change-password'), { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`}, body: JSON.stringify(pwdForm) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
-      notify('Mot de passe mis à jour'); setPwdForm({ current_password:'', new_password:'', confirm_password:'' });
+      notify(t('auth.password_updated')); setPwdForm({ current_password:'', new_password:'', confirm_password:'' });
     } catch (err) { notify(err.message, 'error'); }
   }
 
@@ -77,44 +78,42 @@ export default function SettingsPage() {
       <Toast msg={msg} kind={kind} onClose={() => setMsg('')} />
 
       <div className="card p-3">
-        <h5 className="mb-3">Paramètres de la cantine</h5>
+        <h5 className="mb-3">{t('common.language_region')}</h5>
+        <div className="d-flex align-items-center gap-3 flex-wrap">
+          <LanguageSelect />
+          <p className="m-0 small" style={{ color: 'var(--rb-muted)', maxWidth: 620 }}>{t('settings.language_help')}</p>
+        </div>
+      </div>
+
+      <div className="card p-3">
+        <h5 className="mb-3">{t('settings.canteen_title')}</h5>
         <form onSubmit={saveSettings} className="row g-3">
           <div className="col-12 col-sm-6">
-            <label className="form-label">Heure limite de réservation (HH:MM)</label>
+            <label className="form-label">{t('settings.reservation_cutoff')}</label>
             <input className="form-control" value={settings.cutoff_time || ''}
               onChange={e => setSettings(s => ({...s, cutoff_time: e.target.value}))} pattern="\d{2}:\d{2}" />
           </div>
           <div className="col-12 col-sm-6">
-            <label className="form-label">Heure limite d'annulation (HH:MM)</label>
+            <label className="form-label">{t('settings.cancel_cutoff')}</label>
             <input className="form-control" value={settings.allow_cancel_until || ''}
               onChange={e => setSettings(s => ({...s, allow_cancel_until: e.target.value}))} pattern="\d{2}:\d{2}" />
           </div>
           <div className="col-auto">
-            <button className="btn btn-primary">Enregistrer</button>
+            <button className="btn btn-primary">{t('common.save')}</button>
           </div>
         </form>
       </div>
 
       <div className="card p-3">
-        <h5 className="mb-3">Identité visuelle</h5>
+        <h5 className="mb-3">{t('settings.visual_identity')}</h5>
         <form onSubmit={saveSettings} className="row g-3 align-items-end">
           <div className="col-12 col-md-4">
-            <label className="form-label">Nom affiché</label>
+            <label className="form-label">{t('settings.display_name')}</label>
             <input className="form-control" value={settings.brand_name || ''}
               onChange={e => setSettings(s => ({...s, brand_name: e.target.value}))} />
           </div>
-          <div className="col-6 col-md-3">
-            <label className="form-label">Couleur principale</label>
-            <input type="color" className="form-control form-control-color" value={settings.theme_primary || '#FF8A00'}
-              onChange={e => setSettings(s => ({...s, theme_primary: e.target.value}))} />
-          </div>
-          <div className="col-6 col-md-3">
-            <label className="form-label">Couleur accent</label>
-            <input type="color" className="form-control form-control-color" value={settings.theme_accent || '#FFD500'}
-              onChange={e => setSettings(s => ({...s, theme_accent: e.target.value}))} />
-          </div>
           <div className="col-12 col-md-auto">
-            <button className="btn btn-primary">Appliquer le thème</button>
+            <button className="btn btn-primary">{t('settings.save_visual')}</button>
           </div>
         </form>
         <div className="mt-3 d-flex align-items-center gap-3 flex-wrap">
@@ -122,34 +121,34 @@ export default function SettingsPage() {
           <form onSubmit={uploadLogo} className="d-flex gap-2 flex-wrap">
             <input type="file" accept="image/*" className="form-control" style={{maxWidth:300}}
               onChange={e => setLogoFile(e.target.files?.[0] || null)} />
-            <button className="btn btn-outline-primary">Uploader le logo</button>
+            <button className="btn btn-outline-primary">{t('settings.upload_logo')}</button>
           </form>
         </div>
       </div>
 
       <div className="card p-3">
-        <h5 className="mb-3">Image héro</h5>
+        <h5 className="mb-3">{t('settings.hero_image')}</h5>
         {settings.hero_image_url && (
           <div className="mb-2" style={{height:100, background:`url('${settings.hero_image_url}') center/cover`, borderRadius:8}} />
         )}
         <form onSubmit={uploadHero} className="d-flex gap-2 flex-wrap">
           <input type="file" accept="image/*" className="form-control" style={{maxWidth:300}}
             onChange={e => setHeroFile(e.target.files?.[0] || null)} />
-          <button className="btn btn-outline-primary">Upload</button>
+          <button className="btn btn-outline-primary">{t('common.upload')}</button>
         </form>
       </div>
 
       <div className="card p-3">
-        <h5 className="mb-3">Changer mon mot de passe</h5>
+        <h5 className="mb-3">{t('auth.change_password')}</h5>
         <form onSubmit={changePassword} className="row g-3" style={{maxWidth:400}}>
           {['current_password','new_password','confirm_password'].map(field => (
             <div key={field} className="col-12">
-              <label className="form-label small">{field.replace(/_/g,' ')}</label>
-              <input type="password" className="form-control" value={pwdForm[field]}
+              <label className="form-label small">{t('auth.' + field)}</label>
+              <input type="password" autoComplete={field === 'current_password' ? 'current-password' : 'new-password'} className="form-control" value={pwdForm[field]}
                 onChange={e => setPwdForm(f => ({...f, [field]: e.target.value}))} />
             </div>
           ))}
-          <div className="col-auto"><button className="btn btn-primary">Mettre à jour</button></div>
+          <div className="col-auto"><button className="btn btn-primary">{t('auth.update_password')}</button></div>
         </form>
       </div>
     </>

@@ -1,0 +1,1 @@
+import type{EditorConfiguration}from"./EditorConfiguration";import{EditorRegistry}from"./EditorRegistry";export class EditorFactory{public constructor(private readonly r:EditorRegistry){}create(id:string,configuration:EditorConfiguration){return{manifest:this.r.get(id),configuration};}}

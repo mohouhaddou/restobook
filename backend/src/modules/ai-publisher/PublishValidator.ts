@@ -1,0 +1,2 @@
+import{PUBLISH_MODULES}from"./PublishConfig";import{InvalidImportJobError}from"./PublishErrors";import type{ImportJob}from"./AIPublisher";
+export class PublishValidator{validate(job:ImportJob){const e:string[]=[];if(!job.validated)e.push("ImportJob non validé.");if(!PUBLISH_MODULES.includes(job.module))e.push("Module invalide.");if(!job.markdown.trim())e.push("article.md vide.");if(!job.metadata.title?.trim())e.push("Titre absent.");if(!job.files.includes("cover.webp"))e.push("cover.webp absent.");if(e.length)throw new InvalidImportJobError(e);}}

@@ -1,0 +1,1 @@
+export type SystemStatus="CREATED"|"STARTING"|"READY"|"STOPPING"|"STOPPED"|"FAILED";

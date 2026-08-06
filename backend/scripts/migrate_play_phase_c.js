@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+'use strict';
+require('dotenv').config({path:require('path').join(__dirname,'../.env')});
+const {Sequelize}=require('sequelize');
+const seq=new Sequelize(process.env.DB_NAME,process.env.DB_USER,process.env.DB_PASS,{host:process.env.DB_HOST||'127.0.0.1',port:Number(process.env.DB_PORT||3306),dialect:'mysql',logging:false});
+async function run(){await seq.authenticate();await seq.query("ALTER TABLE play_games MODIFY game_type ENUM('2048','memory','puzzle_image','quiz','true_false','geo_quiz','guess_place','memory_cards','reaction_test','color_match','bubble_pop','brick_smash') NOT NULL");const games=[['bubble-pop','Bubble Pop','Regroupez trois bulles ou plus pour vider le plateau.','bubble_pop','●',30],['brick-smash','Brick Smash','Brisez les briques et terminez trois niveaux originaux.','brick_smash','▰',31]];for(const [slug,name,description,type,icon,order] of games)await seq.query('INSERT INTO play_games (slug,name,description,game_type,icon,sort_order,active) VALUES (:slug,:name,:description,:type,:icon,:order,1) ON DUPLICATE KEY UPDATE name=VALUES(name),description=VALUES(description),game_type=VALUES(game_type),active=1',{replacements:{slug,name,description,type,icon,order}});console.log('✓ iFilino Play Phase C migration complete');await seq.close();}
+run().catch(async error=>{console.error('✗',error.message);await seq.close().catch(()=>{});process.exit(1);});

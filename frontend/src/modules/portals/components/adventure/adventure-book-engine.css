@@ -1,0 +1,14 @@
+/* Conteneur transparent pour Stories (pas de sidebar) : préserve exactement le comportement de
+   .storybook-viewport (flex:1 1 auto dans .storybook-root) — voir BookReader.tsx, inchangé. */
+.adventure-book-frame{flex:1 1 auto;min-height:0;min-width:0;display:flex;flex-direction:column}
+
+/* Avec sidebar (Study/Encyclopedia) : .storybook-root passe de column à row, la sidebar prend une
+   largeur fixe, le cadre du livre prend le reste. flex-direction:row respecte `dir` — pas besoin
+   de règle RTL séparée, la sidebar se place naturellement du côté "début" de la langue courante. */
+.storybook-root.adventure-has-sidebar{flex-direction:row}
+.adventure-sidebar-slot{flex:0 0 auto;width:min(320px,32vw);height:100%;overflow-y:auto;background:var(--portal-surface,#fff);border-inline-end:1px solid var(--portal-border,#eadcf4)}
+
+@media (max-width:860px){
+  .storybook-root.adventure-has-sidebar{flex-direction:column}
+  .adventure-sidebar-slot{position:static;width:auto;height:0;overflow:visible;border:0}
+}

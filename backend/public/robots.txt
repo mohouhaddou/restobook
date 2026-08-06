@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /dashboard/
+Disallow: /preview/
+Disallow: /auth/
+Disallow: /kids/*/login
+Disallow: /kids/*/profile
+Disallow: /kids/*/purchases
+
+Sitemap: https://ifilino.com/sitemap.xml

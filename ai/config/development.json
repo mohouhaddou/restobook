@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "environment": "development",
+  "workspace": { "root": "workspace", "temporary": "workspace/temp" },
+  "logs": { "directory": "workspace/logs", "level": "debug" },
+  "retry": { "maxAttempts": 2, "baseDelayMs": 100, "backoffMultiplier": 2 },
+  "scheduler": { "enabled": true, "concurrency": 1 },
+  "publisher": { "requireImages": true, "dryRun": true },
+  "orchestrator": { "autoStart": true, "archiveOnSuccess": false },
+  "modules": {
+    "workflowEngine": true,
+    "publisherEngine": true,
+    "contentManager": true,
+    "fileSystem": true,
+    "integration": true,
+    "aiPublisher": true,
+    "orchestrator": true
+  },
+  "featureFlags": { "notifications": false, "webhooks": false, "slack": false, "discord": false, "email": false }
+}

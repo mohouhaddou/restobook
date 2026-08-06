@@ -3,10 +3,11 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { API } from '../api';
 import { useApi } from '../hooks/useApi';
+import { BRAND } from '../config/branding';
 import { Toast } from '../components/ui/Toast';
-import { RestaurantKpiCard } from '../components/restaurant/RestaurantKpiCard';
-import { RestaurantItemStatsTable } from '../components/restaurant/RestaurantItemStatsTable';
-import { CustomerHistoryTable } from '../components/restaurant/CustomerHistoryTable';
+import { RestaurantKpiCard } from '../modules/resto/components/RestaurantKpiCard';
+import { RestaurantItemStatsTable } from '../modules/resto/components/RestaurantItemStatsTable';
+import { CustomerHistoryTable } from '../modules/resto/components/CustomerHistoryTable';
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -122,7 +123,7 @@ export default function RestaurantSaasPage() {
   function exportPdf() {
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text('Restobook Restaurant - Rapport', 14, 16);
+    doc.text(`${BRAND.APP_NAME} Restaurant - Rapport`, 14, 16);
     doc.setFontSize(10);
     doc.text(`Période: ${from} - ${to}`, 14, 24);
     doc.text(`CA: ${money(dashboard?.sales?.revenue)} | Commandes: ${dashboard?.sales?.orders || 0}`, 14, 31);

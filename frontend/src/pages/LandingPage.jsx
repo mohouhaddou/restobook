@@ -1,85 +1,139 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { BrandLogo } from '../components/brand/BrandLogo';
+import { BRAND } from '../config/branding';
+import { API, ASSET } from '../api';
 import './LandingPage.css';
 
 /* ══════════════════════════════════════════════════════
    DATA
 ══════════════════════════════════════════════════════ */
 
-// Fonctionnalités spécifiques Restaurant
-const FEATURES_RESTAURANT = [
-  { icon:'🍽️', color:'#FF8A00', bg:'rgba(255,138,0,.12)', title:'Marketplace Intelligente', desc:'Découvrez les meilleurs restaurants, snacks et cafés triés par note, proximité et disponibilité.' },
-  { icon:'📅', color:'#3B82F6', bg:'rgba(59,130,246,.12)', title:'Réservation de Table', desc:'Réservez votre table en quelques secondes ou précommandez votre repas.' },
-  { icon:'🛵', color:'#F59E0B', bg:'rgba(245,158,11,.12)', title:'Livraison & Click & Collect', desc:'Commandez en ligne avec suivi en temps réel jusqu\'à votre porte.' },
-  { icon:'🌟', color:'#8B5CF6', bg:'rgba(139,92,246,.12)', title:'Recommandations IA', desc:'L\'IA apprend vos préférences et propose les meilleures adresses personnalisées.' },
-  { icon:'💎', color:'#EC4899', bg:'rgba(236,72,153,.12)', title:'Programme Fidélité', desc:'Gagnez des points, débloquez des récompenses et des badges exclusifs.' },
-  { icon:'⭐', color:'#10B981', bg:'rgba(16,185,129,.12)', title:'Avis & Notations', desc:'Avis vérifiés, photos des plats, notes détaillées par catégorie.' },
+const NAV_LINKS = [
+  { label: 'Accueil',         href: '#top' },
+  { label: 'Marketplace',     href: '#categories' },
+  { label: 'Discover', href: '/discover' },
+  { label: 'Professionnels',  href: '#commercants' },
+  { label: 'Fonctionnalités', href: '#pourquoi' },
+  { label: 'Tarifs',          href: '#tarifs' },
+  { label: 'À propos',        href: '#footer' },
 ];
 
-// Fonctionnalités spécifiques Cantine
-const FEATURES_CANTEEN = [
-  { icon:'📅', color:'#22C55E', bg:'rgba(34,197,94,.12)', title:'Planification des Menus', desc:'Créez et publiez les menus de la semaine avec quotas et disponibilités.' },
-  { icon:'📷', color:'#3B82F6', bg:'rgba(59,130,246,.12)', title:'Validation QR Code', desc:'Contrôlez l\'accès aux repas avec scan QR instantané au self ou guichet.' },
-  { icon:'📊', color:'#06B6D4', bg:'rgba(6,182,212,.12)', title:'Statistiques & Gaspillage', desc:'Taux de participation, no-shows, gaspillage alimentaire en temps réel.' },
-  { icon:'🤖', color:'#8B5CF6', bg:'rgba(139,92,246,.12)', title:'IA Nutritionnelle', desc:'Analyse nutritionnelle automatique de chaque plat avec recommandations santé.' },
-  { icon:'🏢', color:'#FF8A00', bg:'rgba(255,138,0,.12)', title:'Multi-Organisations', desc:'Gérez plusieurs cantines, départements ou sites depuis un seul tableau de bord.' },
-  { icon:'👥', color:'#EC4899', bg:'rgba(236,72,153,.12)', title:'Gestion des Employés', desc:'Importez vos équipes, gérez les quotas et subventions individuellement.' },
+// Photos vérifiées (déjà utilisées ailleurs dans l'app) réutilisées en duotone
+// pour illustrer les catégories sans risquer une image cassée.
+const CATEGORY_PHOTOS = [
+  'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=500&q=70',
+  'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=70',
+  'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=70',
+  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=500&q=70',
+  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=70',
+  'https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=500&q=70',
+  'https://images.unsplash.com/photo-1567521464027-f127ff144326?auto=format&fit=crop&w=500&q=70',
+  'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?auto=format&fit=crop&w=500&q=70',
 ];
 
-// Kept for backward compatibility in FeaturesSection
-const FEATURES = [...FEATURES_RESTAURANT];
+const CATEGORIES = [
+  { icon:'🍽️', label:'Restaurants', color:'#FF8A00', type:'restaurant', count:'+500' },
+  { icon:'☕',  label:'Cafés',        color:'#0369A1', type:'cafe',       count:'+200' },
+  { icon:'🏪',  label:'Hanouts',      color:'#10B981', type:'hanout',     count:'+1k'  },
+  { icon:'🛒',  label:'Épiceries',    color:'#059669', type:'epicerie',   count:'+300' },
+  { icon:'🥩',  label:'Boucheries',   color:'#DC2626', type:'boucherie',  count:'+150' },
+  { icon:'🍰',  label:'Pâtisseries',  color:'#EC4899', type:'patisserie', count:'+100' },
+  { icon:'💊',  label:'Pharmacies',   color:'#6366F1', type:'pharmacie',  count:'+250' },
+  { icon:'🏬',  label:'Supermarchés', color:'#7E22CE', type:'supermarche',count:'+80'  },
+  { icon:'🥐',  label:'Boulangeries', color:'#D97706', type:'boulangerie',count:'+180' },
+  { icon:'🐟',  label:'Poissonneries',color:'#0891B2', type:'poissonnerie',count:'+60' },
+  { icon:'💐',  label:'Fleuristes',   color:'#DB2777', type:'fleuriste', count:'+40'  },
+].map((c, i) => ({ ...c, img: CATEGORY_PHOTOS[i % CATEGORY_PHOTOS.length] }));
+
+const SEARCH_SUGGESTIONS = ['Pizza','Café','Hanout','Pharmacie','Boucherie','Pâtisserie','Boulangerie','Épicerie'];
+const HERO_QUICK_CATS = [
+  { icon:'🍽️', label:'Restaurants', type:'restaurant' },
+  { icon:'☕',  label:'Cafés',       type:'cafe' },
+  { icon:'🏪',  label:'Hanouts',     type:'hanout' },
+  { icon:'💊',  label:'Pharmacies',  type:'pharmacie' },
+  { icon:'🥩',  label:'Boucheries',  type:'boucherie' },
+];
+const HERO_BG_IMAGES = [
+  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=1920&q=80',
+];
+
+const WHY_ITEMS = [
+  { icon:'🚀', color:'#FF8A00', bg:'rgba(255,138,0,.12)', title:'Livraison rapide',        desc:'Vos commandes livrées en moins de 30 minutes dans les zones couvertes.' },
+  { icon:'📍', color:'#3B82F6', bg:'rgba(59,130,246,.12)', title:'Commerces proches',        desc:'Découvrez les commerces autour de vous, du quartier à toute la ville.' },
+  { icon:'🔒', color:'#10B981', bg:'rgba(16,185,129,.12)', title:'Paiement sécurisé',        desc:'Paiement à la livraison ou par carte, toujours protégé.' },
+  { icon:'🥬', color:'#22C55E', bg:'rgba(34,197,94,.12)',  title:'Produits frais',           desc:'Des produits vérifiés et actualisés directement par les commerçants.' },
+  { icon:'📡', color:'#06B6D4', bg:'rgba(6,182,212,.12)',  title:'Suivi en temps réel',      desc:'Suivez votre commande du commerce jusqu’à votre porte.' },
+  { icon:'💎', color:'#8B5CF6', bg:'rgba(139,92,246,.12)', title:'Programme fidélité',       desc:'Cumulez des points et débloquez des récompenses à chaque commande.' },
+  { icon:'🏷️', color:'#EC4899', bg:'rgba(236,72,153,.12)', title:'Promotions exclusives',    desc:'Profitez d’offres et réductions chez vos commerces préférés.' },
+];
 
 const STATS = [
-  { value:500, suffix:'+', label:'Restaurants', icon:'🍽️' },
-  { value:50000, suffix:'+', label:'Utilisateurs', icon:'👥', format:'k' },
-  { value:2, suffix:'M+', label:'Repas servis', icon:'🍱' },
-  { value:300, suffix:'+', label:'Entreprises', icon:'🏢' },
-  { value:120, suffix:'+', label:'Écoles', icon:'🎓' },
-  { value:98, suffix:'%', label:'Satisfaction', icon:'⭐' },
+  { value:1500, suffix:'+',  label:'Commerces partenaires', icon:'🏪' },
+  { value:15,   suffix:'+',  label:'Villes couvertes',       icon:'📍' },
+  { value:80000,suffix:'+',  label:'Commandes livrées',      icon:'📦', format:'k' },
+  { value:25,   suffix:' min', label:'Livraison moyenne',    icon:'⚡' },
+  { value:98,   suffix:'%',  label:'Satisfaction client',    icon:'⭐' },
+  { value:24,   suffix:'/7', label:'Marketplace ouverte',    icon:'🕐' },
 ];
 
-const TESTIMONIALS = [
-  { name:'Mohammed Al-Rashid', role:'Directeur RH · TechCorp', rating:5, text:'RestoBook a révolutionné la gestion de notre cantine. Les employés adorent la simplicité et la qualité des recommandations IA.', avatar:'MA' },
-  { name:'Leila Benali', role:'Chef · Restaurant Le Maroc', rating:5, text:'L\'interface est magnifique et intuitive. Mes commandes ont augmenté de 40% depuis que j\'ai rejoint RestoBook.', avatar:'LB' },
-  { name:'Ahmed Cherif', role:'Étudiant · Casablanca', rating:5, text:'Je trouve toujours le bon restaurant rapidement. Les filtres intelligents et les recommandations IA sont vraiment pertinents.', avatar:'AC' },
-  { name:'Fatima Zahra', role:'Manager · École Supérieure', rating:5, text:'La gestion des menus scolaires n\'a jamais été aussi simple. Le suivi nutritionnel est exceptionnel.', avatar:'FZ' },
+const HOW_IT_WORKS = [
+  { icon:'🔍', title:'Choisissez un produit', desc:'Un plat, un médicament, des fruits, un dessert… dites-nous ce qu’il vous faut.' },
+  { icon:'🏪', title:'Choisissez un commerce', desc:'Comparez les commerces qui le proposent : prix, distance, note, temps de livraison.' },
+  { icon:'🛒', title:'Passez commande',        desc:'Validez votre panier et payez en toute sécurité en quelques secondes.' },
+  { icon:'📍', title:'Suivez votre livraison', desc:'Suivez votre commande en temps réel jusqu’à votre porte.' },
 ];
 
-const RESTAURANT_PREVIEWS = [
-  { name:'Le Jardin des Saveurs', type:'Restaurant', city:'Casablanca', rating:4.8, reviews:342, prep:25, delivery:true, cover:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80', tags:['Marocain','Gastronomique'] },
-  { name:'Pizza Express Casa', type:'Pizzeria', city:'Casablanca', rating:4.6, reviews:218, prep:20, delivery:true, cover:'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80', tags:['Italien','Pizza'] },
-  { name:'Snack Le Rapide', type:'Snack', city:'Rabat', rating:4.3, reviews:156, prep:12, delivery:true, cover:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80', tags:['Fast-food','Burgers'] },
+const MERCHANT_TOOLS = [
+  { icon:'📊', label:'Dashboard' },
+  { icon:'🧾', label:'Gestion commandes' },
+  { icon:'🖥️', label:'POS' },
+  { icon:'🛵', label:'Livraison' },
+  { icon:'📈', label:'Analytics' },
+  { icon:'📣', label:'Marketing' },
+  { icon:'💎', label:'Programme fidélité' },
+  { icon:'📲', label:'QR Code' },
+  { icon:'🗂️', label:'Gestion catalogue' },
+  { icon:'💳', label:'Paiements' },
+  { icon:'📦', label:'Stock' },
+  { icon:'📉', label:'Statistiques' },
 ];
 
-const PRICING_MARKETPLACE = [
-  { name:'Découverte', price:'Gratuit', period:'', icon:'🆓', cta:'Commencer gratuitement', popular:false, features:['Accès marketplace complète','5 commandes par mois','Historique 30 jours','Support email'] },
-  { name:'Premium',    price:'99',      period:'/mois', icon:'💎', cta:'Essai 30 jours offerts', popular:true,  features:['Commandes illimitées','Fidélité Gold ×2 points','Livraison offerte ×5/mois','Recommandations IA','Support prioritaire 24h'] },
-  { name:'Famille',    price:'199',     period:'/mois', icon:'👨‍👩‍👧', cta:'Choisir Famille',     popular:false, features:['4 profils inclus','Tous avantages Premium','Wallet famille partagé','Historique illimité','Gestion allergies enfants'] },
-];
-const PRICING_PRO = [
-  { name:'Starter',   price:'299',      period:'/mois', icon:'🏪', cta:'Démarrer',            popular:false, features:['1 établissement','100 commandes/jour','Menu digital','QR Code table','Statistiques basiques'] },
-  { name:'Pro',       price:'799',      period:'/mois', icon:'🚀', cta:'Essai 14 jours',       popular:true,  features:['5 établissements','Commandes illimitées','IA Analytics avancée','Fidélisation clients','Accès API','Support dédié'] },
-  { name:'Enterprise',price:'Sur devis',period:'',      icon:'🏢', cta:'Nous contacter',       popular:false, features:['Sites illimités','Intégration RH/Paie','Menus hebdomadaires','Gestion subventions repas','Déploiement accompagné','SLA 99,9% garanti'] },
-];
+const TESTIMONIALS_BY_ROLE = {
+  client: [
+    { name:'Ahmed Cherif', role:'Étudiant · Casablanca', rating:5, text:'Je trouve toujours le bon commerce rapidement. Les filtres et les recommandations sont vraiment pertinents.', avatar:'AC' },
+    { name:'Fatima Zahra', role:'Maman active · Rabat', rating:5, text:'Entre le travail et les enfants, iFilino me fait gagner un temps fou pour les courses du quotidien.', avatar:'FZ' },
+    { name:'Youssef El Amrani', role:'Marrakech', rating:5, text:'Livraison pharmacie en urgence un dimanche soir : commandé en 2 minutes, reçu en moins de 30. Bluffant.', avatar:'YE' },
+  ],
+  commercant: [
+    { name:'Leila Benali', role:'Chef · Restaurant Le Maroc', rating:5, text:`L'interface est magnifique et intuitive. Mes commandes ont augmenté de 40% depuis que j'ai rejoint ${BRAND.APP_NAME}.`, avatar:'LB' },
+    { name:'Karim Ziani', role:'Gérant · Hanout Al Baraka, Tanger', rating:5, text:'Le catalogue et le suivi de stock m’ont fait gagner des heures chaque semaine. Mes clients me trouvent facilement.', avatar:'KZ' },
+    { name:'Sanae Idrissi', role:'Pharmacienne · Agadir', rating:5, text:'Les demandes de disponibilité en ligne évitent les allers-retours inutiles. Un vrai plus pour mon officine.', avatar:'SI' },
+  ],
+  livreur: [
+    { name:'Rachid Amrani', role:'Livreur partenaire · Casablanca', rating:5, text:'Des zones bien optimisées et des revenus réguliers. L’app me donne des courses en continu toute la journée.', avatar:'RA' },
+    { name:'Hamza Fassi', role:'Livreur partenaire · Rabat', rating:5, text:'Simple à utiliser, paiements rapides, support réactif en cas de souci. Je recommande.', avatar:'HF' },
+    { name:'Younes Bouziane', role:'Livreur partenaire · Marrakech', rating:5, text:'Je choisis mes horaires librement et le suivi GPS facilite chaque livraison.', avatar:'YB' },
+  ],
+};
 
 const FAQ_ITEMS = [
-  { q:'Qu\'est-ce que RestoBook ?', a:'RestoBook est une plateforme SaaS de restauration premium qui connecte les clients, les restaurants et les cantines d\'entreprise. Elle propose une marketplace de restaurants, la réservation en ligne, la gestion des menus de cantine, et des outils analytiques avancés alimentés par l\'IA.' },
-  { q:'RestoBook est-il disponible dans ma ville ?', a:'RestoBook est disponible dans les principales villes du Maroc (Casablanca, Rabat, Marrakech, Agadir, Fès, Tanger). L\'expansion est continue — utilisez la géolocalisation pour voir les établissements disponibles près de vous.' },
-  { q:'Comment rejoindre la marketplace en tant que restaurant ?', a:'Cliquez sur « Espace pro » dans la marketplace, créez votre compte restaurateur, renseignez les informations de votre établissement (photos, menu, horaires) et passez en live en moins de 24h. Notre équipe vous accompagne pour l\'onboarding.' },
-  { q:'Comment fonctionne la gestion des cantines ?', a:'RestoBook Canteen est une solution B2B dédiée aux cantines d\'entreprise, scolaires et hospitalières. Elle couvre la planification des menus, la gestion des quotas employés, la validation QR Code, les statistiques de fréquentation et le suivi nutritionnel IA.' },
-  { q:'Peut-on essayer RestoBook gratuitement ?', a:'Oui — le plan Découverte est 100% gratuit avec 5 commandes/mois. Pour les professionnels (restaurants, cantines), nous offrons 14 jours d\'essai sur le plan Pro sans carte bancaire requise.' },
-  { q:'Quels modes de paiement sont acceptés ?', a:'Paiement à la livraison/au retrait, carte bancaire (Visa, Mastercard) et portefeuille numérique. Pour les abonnements Pro, virement bancaire et prélèvement automatique disponibles.' },
-  { q:'Les données de ma cantine sont-elles sécurisées ?', a:'Absolument. RestoBook utilise le chiffrement SSL/TLS, des sauvegardes automatiques quotidiennes et des serveurs hébergés en zone sécurisée. Vos données ne sont jamais partagées avec des tiers.' },
+  { q:`Qu'est-ce que ${BRAND.APP_NAME} ?`, a:`${BRAND.APP_NAME} est une marketplace marocaine de proximité qui connecte les clients aux commerces locaux : restaurants, cafés, hanouts, pharmacies, boucheries, boulangeries, pâtisseries et bien d'autres. Trouvez un produit, comparez les commerces qui le proposent, et commandez en quelques secondes.` },
+  { q:`${BRAND.APP_NAME} est-il disponible dans ma ville ?`, a:`${BRAND.APP_NAME} est disponible dans les principales villes du Maroc (Casablanca, Rabat, Marrakech, Agadir, Fès, Tanger). L'expansion est continue — utilisez la géolocalisation pour voir les commerces disponibles près de vous.` },
+  { q:'Comment rejoindre la marketplace en tant que commerçant ?', a:'Cliquez sur « Créer mon commerce », renseignez les informations de votre établissement (photos, catalogue, horaires) et passez en ligne en moins de 24h. Notre équipe vous accompagne pour l\'onboarding.' },
+  { q:'Comment fonctionne la livraison ?', a:'Chaque commerce définit ses zones et frais de livraison. Le temps estimé (préparation + trajet) est affiché avant validation de la commande, et vous suivez la course en temps réel jusqu’à votre porte.' },
+  { q:`${BRAND.APP_NAME} est-il gratuit pour les clients ?`, a:'Oui, la marketplace est 100% gratuite pour les clients — vous ne payez que vos commandes et, le cas échéant, les frais de livraison fixés par le commerce.' },
+  { q:'Quels modes de paiement sont acceptés ?', a:'Paiement à la livraison/au retrait, carte bancaire (Visa, Mastercard) et portefeuille numérique, selon les options activées par chaque commerce.' },
+  { q:'Mes données sont-elles sécurisées ?', a:`Absolument. ${BRAND.APP_NAME} utilise le chiffrement SSL/TLS, des sauvegardes automatiques quotidiennes et des serveurs hébergés en zone sécurisée. Vos données ne sont jamais partagées avec des tiers.` },
+  { q:'Comment devenir livreur partenaire ?', a:'Cliquez sur « Devenir livreur », créez votre compte en quelques minutes, puis complétez votre profil et téléversez vos documents (permis, véhicule) depuis votre espace livreur. Vos premières livraisons débutent dès validation par notre équipe.' },
 ];
 
-const NAV_LINKS = [
-  { label:'Restaurants', href:'#restaurants' },
-  { label:'Marketplace', href:'#marketplace' },
-  { label:'Solutions Cantine', href:'#cantines' },
-  { label:'IA RestoBook', href:'#ai' },
-  { label:'Tarifs', href:'#pricing' },
+const PRICING_PRO = [
+  { name:'Starter',   price:'299', period:'/mois', features:['1 établissement','100 commandes/jour','Catalogue digital','QR Code'] },
+  { name:'Pro',       price:'799', period:'/mois', features:['5 établissements','Commandes illimitées','Analytics avancée','Fidélisation clients'] },
 ];
 
 /* ══════════════════════════════════════════════════════
@@ -92,7 +146,7 @@ function useTheme() {
   return [theme, toggle];
 }
 
-function useCounter(target, decimals=0, suffix='') {
+function useCounter(target, decimals=0) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
   const started = useRef(false);
@@ -125,17 +179,56 @@ function useScrollNav() {
   return scrolled;
 }
 
+// Fetch public léger — masque la section si vide, sans jamais planter la landing.
+function usePublicList(path, key) {
+  const [list, setList] = useState(null); // null = chargement
+  useEffect(() => {
+    let alive = true;
+    fetch(API(path)).then(r => r.json()).then(d => { if (alive) setList(d?.[key] || []); }).catch(() => { if (alive) setList([]); });
+    return () => { alive = false; };
+  }, [path, key]);
+  return list;
+}
+
 /* ══════════════════════════════════════════════════════
    ANIMATION VARIANTS
 ══════════════════════════════════════════════════════ */
 
 const fadeUp     = { hidden:{ opacity:0, y:40 },   visible:{ opacity:1, y:0, transition:{ duration:.55, ease:[.4,0,.2,1] } } };
-const fadeIn     = { hidden:{ opacity:0 },           visible:{ opacity:1, transition:{ duration:.4 } } };
 const slideRight = { hidden:{ opacity:0, x:-40 },   visible:{ opacity:1, x:0, transition:{ duration:.55, ease:[.4,0,.2,1] } } };
 const slideLeft  = { hidden:{ opacity:0, x:40 },    visible:{ opacity:1, x:0, transition:{ duration:.55, ease:[.4,0,.2,1] } } };
-const stagger    = { visible:{ transition:{ staggerChildren:.09 } } };
-const float      = { animate:{ y:[0,-12,0], transition:{ duration:3.5, repeat:Infinity, ease:'easeInOut' } } };
-const float2     = { animate:{ y:[0,10,0], transition:{ duration:4.2, repeat:Infinity, ease:'easeInOut', delay:.7 } } };
+
+/* ══════════════════════════════════════════════════════
+   BUSINESS HELPERS (routage module -> page commerce)
+══════════════════════════════════════════════════════ */
+
+function businessHref(biz) {
+  if (biz.module === 'hanout') return `/h/${biz.slug}`;
+  if (biz.module === 'pharmacie') return `/ph/${biz.slug}`;
+  return `/r/${biz.slug}`;
+}
+
+function fmtPrice(n) {
+  return `${Number(n || 0).toFixed(2)} MAD`;
+}
+
+/* ══════════════════════════════════════════════════════
+   TOAST — "bientôt disponible" (CTA app mobile)
+══════════════════════════════════════════════════════ */
+
+function ComingSoonToast({ show }) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:20 }} transition={{ duration:.25 }}
+          style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', zIndex:2000, background:'var(--lp-text)', color:'var(--lp-bg)', padding:'14px 24px', borderRadius:14, fontSize:14, fontWeight:700, boxShadow:'var(--lp-shadow-lg)', display:'flex', alignItems:'center', gap:10, whiteSpace:'nowrap' }}>
+          📱 Bientôt disponible sur iOS et Android
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 /* ══════════════════════════════════════════════════════
    COMPONENTS
@@ -148,38 +241,29 @@ function LandingNav({ theme, toggleTheme, navigate }) {
 
   return (
     <nav className={`lp-nav ${scrolled?'scrolled':''}`}>
-      {/* Logo */}
-      <motion.div onClick={()=>navigate('/landing')} style={{ display:'flex', alignItems:'center', cursor:'pointer', textDecoration:'none', flexShrink:0 }}
+      <motion.div onClick={()=>navigate('/landing')} style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer', flexShrink:0 }}
         whileHover={{ scale:1.02 }}>
-        <BrandLogo variant="full" theme={theme} size="xs"
-          className="d-none d-sm-block"
-          style={{ height:88, filter:'drop-shadow(0 4px 8px rgba(255,138,0,.35))' }} />
-        <BrandLogo variant="icon" theme={theme} size="xs"
-          className="d-sm-none"
-          style={{ height:40, borderRadius:10, filter:'drop-shadow(0 4px 8px rgba(255,138,0,.35))' }} />
+        <BrandLogo variant="full" theme={theme} size="xs" style={{ height:76 }} />
       </motion.div>
 
-      {/* Nav links (desktop) */}
       <div className="lp-nav-links" style={{ display:'flex', gap:4, flex:1, justifyContent:'center', marginLeft:32 }}>
         {NAV_LINKS.map(({ label, href }) => (
           <a key={label} href={href} className="lp-nav-link">{label}</a>
         ))}
       </div>
 
-      {/* Right actions — desktop */}
       <div className="lp-nav-right-full">
         <motion.button onClick={toggleTheme} whileHover={{ scale:1.1 }} whileTap={{ scale:.95 }} style={{ width:36, height:36, borderRadius:10, border:'1px solid var(--lp-border)', background:'var(--lp-surface)', color:'var(--lp-text)', fontSize:16, cursor:'pointer', display:'grid', placeItems:'center' }}>
           {theme==='dark'?'☀️':'🌙'}
         </motion.button>
-        <motion.button onClick={()=>navigate('/login')} whileHover={{ scale:1.02 }} style={{ padding:'8px 18px', borderRadius:10, border:'1.5px solid var(--lp-orange,#FF8A00)', background:'transparent', color:'var(--lp-orange,#FF8A00)', fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-          🏢 Espace pro
+        <motion.button onClick={()=>navigate('/account')} whileHover={{ scale:1.02 }} style={{ padding:'8px 18px', borderRadius:10, border:'1.5px solid var(--lp-border)', background:'transparent', color:'var(--lp-text)', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+          Connexion
         </motion.button>
         <motion.button onClick={()=>navigate('/marketplace')} whileHover={{ scale:1.02, boxShadow:'0 8px 28px var(--lp-orange-glow)' }} whileTap={{ scale:.98 }} className="lp-btn-primary" style={{ padding:'9px 18px', fontSize:13 }}>
           Explorer →
         </motion.button>
       </div>
 
-      {/* Right actions — mobile (theme + hamburger) */}
       <div className="lp-nav-right-mobile">
         <motion.button onClick={toggleTheme} whileHover={{ scale:1.1 }} whileTap={{ scale:.95 }} style={{ width:36, height:36, borderRadius:10, border:'1px solid var(--lp-border)', background:'var(--lp-surface)', color:'var(--lp-text)', fontSize:16, cursor:'pointer', display:'grid', placeItems:'center' }}>
           {theme==='dark'?'☀️':'🌙'}
@@ -189,7 +273,6 @@ function LandingNav({ theme, toggleTheme, navigate }) {
         </button>
       </div>
 
-      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -197,17 +280,19 @@ function LandingNav({ theme, toggleTheme, navigate }) {
             <div className="lp-mobile-menu">
               <button className="lp-mobile-menu-close" onClick={() => setMobileOpen(false)}>✕</button>
 
-              {/* Nav links */}
               {NAV_LINKS.map(({ label, href }) => (
                 <a key={label} href={href} className="lp-mobile-link" onClick={() => setMobileOpen(false)}>{label}</a>
               ))}
 
               <div className="lp-mobile-divider" />
 
-              {/* CTA buttons */}
-              <button onClick={() => { navigate('/login'); setMobileOpen(false); }}
-                style={{ padding:'13px 16px', borderRadius:12, border:'1.5px solid var(--lp-orange,#FF8A00)', background:'transparent', color:'var(--lp-orange,#FF8A00)', fontSize:14, fontWeight:700, cursor:'pointer', textAlign:'center', width:'100%' }}>
-                🏢 Espace pro
+              <button onClick={() => { navigate('/account'); setMobileOpen(false); }}
+                style={{ padding:'13px 16px', borderRadius:12, border:'1.5px solid var(--lp-border)', background:'transparent', color:'var(--lp-text)', fontSize:14, fontWeight:700, cursor:'pointer', textAlign:'center', width:'100%' }}>
+                Connexion
+              </button>
+              <button onClick={() => { navigate('/discover'); setMobileOpen(false); }}
+                style={{ padding:'13px 16px', borderRadius:12, border:'1.5px solid var(--lp-border)', background:'transparent', color:'var(--lp-text)', fontSize:14, fontWeight:700, cursor:'pointer', textAlign:'center', width:'100%', marginTop:4 }}>
+                Lire Discover
               </button>
               <motion.button onClick={() => { navigate('/marketplace'); setMobileOpen(false); }}
                 whileTap={{ scale:.97 }}
@@ -224,188 +309,225 @@ function LandingNav({ theme, toggleTheme, navigate }) {
 }
 
 /* ─── Hero ─── */
-function HeroSection({ navigate }) {
+function HeroSection({ navigate, onDownloadClick }) {
+  const [q, setQ]           = useState('');
+  const [focused, setFocused] = useState(false);
+  const [bgIdx, setBgIdx]   = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setBgIdx(i => (i+1) % HERO_BG_IMAGES.length), 6000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
-    <section className="lp-hero-bg lp-grid-bg" style={{ minHeight:'100vh', display:'flex', alignItems:'center', position:'relative', overflow:'hidden', paddingTop:68 }}>
-      {/* Animated orbs — clampées pour éviter l'overflow horizontal sur mobile */}
-      <motion.div animate={{ x:[0,40,-20,0], y:[0,-30,20,0] }} transition={{ duration:16, repeat:Infinity, ease:'easeInOut' }}
-        style={{ position:'absolute', top:'8%', left:'5%', width:'clamp(200px,40vw,500px)', height:'clamp(200px,40vw,500px)', borderRadius:'50%', background:'radial-gradient(circle,rgba(255,138,0,.14),transparent 70%)', pointerEvents:'none', filter:'blur(40px)', maxWidth:'50vw' }} />
-      <motion.div animate={{ x:[0,-40,30,0], y:[0,40,-20,0] }} transition={{ duration:20, repeat:Infinity, ease:'easeInOut', delay:2 }}
-        style={{ position:'absolute', bottom:'10%', right:'5%', width:'clamp(160px,32vw,400px)', height:'clamp(160px,32vw,400px)', borderRadius:'50%', background:'radial-gradient(circle,rgba(139,92,246,.12),transparent 70%)', pointerEvents:'none', filter:'blur(40px)', maxWidth:'45vw' }} />
-      <motion.div animate={{ x:[0,30,-15,0], y:[0,-15,30,0] }} transition={{ duration:14, repeat:Infinity, ease:'easeInOut', delay:4 }}
-        style={{ position:'absolute', top:'40%', right:'30%', width:'clamp(120px,25vw,300px)', height:'clamp(120px,25vw,300px)', borderRadius:'50%', background:'radial-gradient(circle,rgba(6,182,212,.08),transparent 70%)', pointerEvents:'none', filter:'blur(40px)', maxWidth:'35vw' }} />
+    <section id="top" style={{ position:'relative', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', overflow:'hidden', paddingTop:68 }}>
+      {HERO_BG_IMAGES.map((url, i) => (
+        <div key={i} style={{ position:'absolute', inset:0, backgroundImage:`url(${url})`, backgroundSize:'cover', backgroundPosition:'center', transition:'opacity 1.8s ease', opacity:bgIdx===i?1:0 }} />
+      ))}
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,rgba(8,17,31,.72) 0%,rgba(8,17,31,.42) 45%,rgba(8,17,31,.88) 100%)' }} />
 
-      <div className="lp-hero-grid">
+      <div style={{ position:'relative', zIndex:2, width:'100%', maxWidth:820, textAlign:'center', padding:'0 clamp(16px,4vw,40px)', display:'flex', flexDirection:'column', alignItems:'center' }}>
 
-        {/* Left: Content */}
-        <motion.div variants={stagger} initial="hidden" animate="visible">
-          <motion.div variants={fadeUp} style={{ marginBottom:20 }}>
-            <span className="lp-section-badge" style={{ animation:'lp-badge-pulse 2.5s infinite' }}>
-              🆕 Nouvelle expérience culinaire
-            </span>
-          </motion.div>
-
-          <motion.h1 variants={fadeUp} style={{ fontSize:'clamp(36px,5vw,68px)', fontWeight:800, lineHeight:1.1, letterSpacing:-2, color:'var(--lp-text)', margin:'0 0 22px' }}>
-            Vivez une nouvelle façon{' '}
-            <span className="lp-gradient-text">de découvrir</span>{' '}
-            la restauration
-          </motion.h1>
-
-          <motion.p variants={fadeUp} style={{ fontSize:'clamp(15px,2vw,19px)', color:'var(--lp-text2)', lineHeight:1.65, margin:'0 0 36px', maxWidth:520 }}>
-            Marketplace intelligente · Réservation express · Cantines connectées · Nutrition IA — tout en une seule plateforme premium.
-          </motion.p>
-
-          <motion.div variants={fadeUp} style={{ display:'flex', gap:14, flexWrap:'wrap', marginBottom:40 }}>
-            <motion.button onClick={()=>navigate('/marketplace')} whileHover={{ scale:1.03, boxShadow:'0 12px 40px var(--lp-orange-glow)' }} whileTap={{ scale:.97 }} className="lp-btn-primary" style={{ fontSize:16, padding:'16px 32px' }}>
-              Découvrir →
-            </motion.button>
-            <motion.button onClick={()=>navigate('/login')} whileHover={{ scale:1.02 }} whileTap={{ scale:.98 }} className="lp-btn-outline" style={{ fontSize:16, padding:'15px 30px' }}>
-              Commencer gratuitement
-            </motion.button>
-          </motion.div>
-
-          {/* Trust badges */}
-          <motion.div variants={fadeUp} style={{ display:'flex', gap:20, alignItems:'center', flexWrap:'wrap' }}>
-            {[['🔒','Sécurisé SSL'],['🌟','4.9/5 étoiles'],['⚡','Setup rapide']].map(([icon,label]) => (
-              <div key={label} style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'var(--lp-muted)', fontWeight:500 }}>
-                <span>{icon}</span>{label}
-              </div>
-            ))}
-          </motion.div>
+        <motion.div initial={{ opacity:0, y:-16 }} animate={{ opacity:1, y:0 }} transition={{ duration:.5 }}>
+          <span className="lp-section-badge" style={{ background:'rgba(255,138,0,.18)', borderColor:'rgba(255,138,0,.35)', color:'#FFAA33', marginBottom:24, display:'inline-block' }}>
+            🇲🇦 La marketplace marocaine de proximité
+          </span>
         </motion.div>
 
-        {/* Right: Mockup collage */}
-        <div className="lp-hero-right" style={{ position:'relative', height:560 }}>
-          {/* Main card */}
-          <motion.div initial={{ opacity:0, scale:.9, y:30 }} animate={{ opacity:1, scale:1, y:0 }} transition={{ duration:.7, ease:[.4,0,.2,1], delay:.2 }}
-            style={{ position:'absolute', top:'10%', left:'5%', right:'5%', background:'var(--lp-card)', borderRadius:24, overflow:'hidden', border:'1px solid var(--lp-border)', boxShadow:'var(--lp-shadow-lg)' }}>
-            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=700&q=75" alt="" style={{ width:'100%', height:180, objectFit:'cover', display:'block' }} />
-            <div style={{ padding:'16px 18px' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-                <div>
-                  <div style={{ fontWeight:700, fontSize:16, color:'var(--lp-text)', marginBottom:2 }}>Le Jardin des Saveurs</div>
-                  <div style={{ fontSize:12, color:'var(--lp-muted)' }}>🍽️ Restaurant gastronomique · Casablanca</div>
-                </div>
-                <span style={{ background:'rgba(34,197,94,.15)', color:'var(--lp-green)', fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:20 }}>● Ouvert</span>
-              </div>
-              <div style={{ display:'flex', gap:8, marginTop:10, flexWrap:'wrap' }}>
-                <span style={{ color:'#F59E0B', fontSize:13 }}>★★★★★</span>
-                <span style={{ fontSize:12, fontWeight:700, color:'var(--lp-text)' }}>4.9</span>
-                <span style={{ fontSize:12, color:'var(--lp-muted)' }}>(342 avis)</span>
-                <span style={{ fontSize:12, color:'var(--lp-muted)', marginLeft:'auto' }}>🛵 Livraison gratuite</span>
-              </div>
-            </div>
-          </motion.div>
+        <motion.h1
+          initial={{ opacity:0, y:30 }} animate={{ opacity:1, y:0 }} transition={{ duration:.65, delay:.1 }}
+          style={{ fontSize:'clamp(38px,7vw,84px)', fontWeight:800, color:'#fff', lineHeight:1.05, letterSpacing:-2, margin:'0 0 18px' }}>
+          Tout ce qu'il vous faut,<br/>
+          <span className="lp-gradient-text">près de vous.</span>
+        </motion.h1>
 
-          {/* Floating: Notification */}
-          <motion.div {...float} initial={{ opacity:0, x:30 }} animate={{ opacity:1, x:0, ...float.animate }} transition={{ duration:.5, delay:.6 }}
-            className="lp-glass" style={{ position:'absolute', top:'4%', right:'-4%', padding:'14px 16px', minWidth:200, display:'flex', gap:10, alignItems:'center' }}>
-            <div style={{ width:36, height:36, borderRadius:10, background:'linear-gradient(135deg,var(--lp-orange),var(--lp-orange2))', display:'grid', placeItems:'center', fontSize:18, flexShrink:0 }}>🔔</div>
-            <div>
-              <div style={{ fontSize:12, fontWeight:700, color:'var(--lp-text)' }}>Commande confirmée !</div>
-              <div style={{ fontSize:11, color:'var(--lp-muted)' }}>Livraison dans ~25 min</div>
-            </div>
-          </motion.div>
+        <motion.p
+          initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ duration:.6, delay:.2 }}
+          style={{ fontSize:'clamp(14px,2vw,18px)', color:'rgba(255,255,255,.78)', lineHeight:1.65, margin:'0 0 32px', maxWidth:600 }}>
+          Trouvez le produit qu'il vous faut, comparez les commerces qui le proposent, et faites-vous livrer — restaurants, hanouts, pharmacies et bien plus.
+        </motion.p>
 
-          {/* Floating: AI Recommendation */}
-          <motion.div {...float2} initial={{ opacity:0, x:-30 }} animate={{ opacity:1, x:0, ...float2.animate }} transition={{ duration:.5, delay:.8 }}
-            className="lp-glass" style={{ position:'absolute', bottom:'28%', left:'-6%', padding:'14px 16px', minWidth:220 }}>
-            <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8 }}>
-              <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#8B5CF6,#4F46E5)', display:'grid', placeItems:'center', fontSize:14 }}>✨</div>
-              <span style={{ fontSize:11, fontWeight:700, color:'var(--lp-purple)' }}>IA RestoBook</span>
-            </div>
-            <div style={{ fontSize:12, color:'var(--lp-text2)', lineHeight:1.4 }}>Je recommande le <strong style={{ color:'var(--lp-orange)' }}>Tagine Royal</strong> selon vos goûts !</div>
-          </motion.div>
+        {/* CTA principaux */}
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:.55, delay:.28 }}
+          style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center', marginBottom:28 }}>
+          <motion.button onClick={()=>navigate('/marketplace')} whileHover={{ scale:1.03, boxShadow:'0 12px 40px var(--lp-orange-glow)' }} whileTap={{ scale:.97 }}
+            className="lp-btn-primary" style={{ fontSize:15, padding:'14px 28px' }}>
+            Explorer le marketplace →
+          </motion.button>
+          <motion.button onClick={()=>navigate('/pro-register')} whileHover={{ scale:1.03 }} whileTap={{ scale:.97 }}
+            style={{ padding:'14px 26px', borderRadius:14, border:'1.5px solid rgba(255,255,255,.35)', background:'rgba(255,255,255,.1)', backdropFilter:'blur(8px)', color:'#fff', fontSize:15, fontWeight:700, cursor:'pointer' }}>
+            Créer mon commerce
+          </motion.button>
+          <motion.button onClick={onDownloadClick} whileHover={{ scale:1.03 }} whileTap={{ scale:.97 }}
+            style={{ padding:'14px 26px', borderRadius:14, border:'1.5px solid rgba(255,255,255,.2)', background:'transparent', color:'rgba(255,255,255,.85)', fontSize:15, fontWeight:600, cursor:'pointer' }}>
+            📱 Télécharger l'application
+          </motion.button>
+        </motion.div>
 
-          {/* Floating: Stats */}
-          <motion.div animate={{ y:[0,-8,0] }} transition={{ duration:3.8, repeat:Infinity, ease:'easeInOut', delay:1 }}
-            initial={{ opacity:0, y:30 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }}
-            className="lp-glass" style={{ position:'absolute', bottom:'12%', right:'-2%', padding:'16px 20px', textAlign:'center' }}>
-            <div style={{ fontSize:24, fontWeight:800, color:'var(--lp-orange)' }}>50k+</div>
-            <div style={{ fontSize:11, color:'var(--lp-muted)', fontWeight:600 }}>Utilisateurs actifs</div>
-            <div style={{ fontSize:10, color:'var(--lp-green)', marginTop:2, fontWeight:700 }}>↑ +12% ce mois</div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Scroll indicator */}
-      <motion.div animate={{ y:[0,8,0] }} transition={{ duration:1.5, repeat:Infinity, ease:'easeInOut' }}
-        style={{ position:'absolute', bottom:28, left:'50%', transform:'translateX(-50%)', display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity:.4 }}>
-        <div style={{ width:20, height:34, borderRadius:12, border:'2px solid var(--lp-muted)', display:'flex', justifyContent:'center', paddingTop:6 }}>
-          <div style={{ width:3, height:8, borderRadius:4, background:'var(--lp-muted)' }} />
-        </div>
-        <span style={{ fontSize:10, color:'var(--lp-muted)', fontWeight:600, letterSpacing:'.08em' }}>SCROLL</span>
-      </motion.div>
-    </section>
-  );
-}
-
-/* ─── Search ─── */
-function SearchSection({ navigate }) {
-  const [q, setQ]         = useState('');
-  const [focused, setFocused] = useState(false);
-  const suggestions = ['Tagine marocain 🍲', 'Pizza napolitaine 🍕', 'Sushi premium 🍣', 'Burger artisanal 🍔', 'Café au lait ☕', 'Pâtisseries françaises 🥐'];
-
-  return (
-    <motion.section id="restaurants" className="lp-section" style={{ paddingTop:40, paddingBottom:60, background:'var(--lp-bg2)' }}
-      initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={fadeUp}>
-      <div style={{ maxWidth:800, margin:'0 auto', textAlign:'center' }}>
-        <div className="lp-section-badge">🔍 Recherche intelligente</div>
-        <h2 style={{ fontSize:'clamp(26px,4vw,40px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 10px', letterSpacing:-.5 }}>
-          Trouvez exactement ce que vous cherchez
-        </h2>
-        <p style={{ color:'var(--lp-muted)', fontSize:15, marginBottom:32 }}>Restaurants, plats, cuisines, villes — la recherche instantanée IA fait le reste</p>
-
-        {/* Search bar */}
-        <div style={{ position:'relative' }}>
-          <div style={{
-            display:'flex', gap:10, background:'var(--lp-surface)',
-            borderRadius:18, padding:'8px 8px 8px 22px',
-            border:`2px solid ${focused?'var(--lp-orange)':'var(--lp-border)'}`,
-            boxShadow: focused?`0 0 0 4px var(--lp-orange-light),var(--lp-shadow-lg)`:0,
-            transition:'all .2s',
-          }}>
-            <span style={{ display:'flex', alignItems:'center', fontSize:20 }}>🔍</span>
-            <input value={q} onChange={e=>setQ(e.target.value)}
-              onFocus={()=>setFocused(true)} onBlur={()=>setTimeout(()=>setFocused(false),200)}
-              placeholder="Restaurant, plat, cuisine, ville, spécialité…"
-              style={{ flex:1, border:'none', outline:'none', fontSize:16, background:'transparent', color:'var(--lp-text)', padding:'8px 0' }} />
-            <motion.button onClick={()=>navigate('/marketplace'+(q?`?q=${encodeURIComponent(q)}`:'' ))}
+        {/* Search bar (démo — redirige vers le marketplace) */}
+        <motion.div
+          initial={{ opacity:0, y:20, scale:.97 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:.6, delay:.36 }}
+          style={{ position:'relative', width:'100%', maxWidth:680, marginBottom:18 }}>
+          <div style={{ display:'flex', background:'#fff', borderRadius:20, padding:'7px 7px 7px 22px', boxShadow:`0 24px 80px rgba(0,0,0,.35)${focused?', 0 0 0 3px rgba(255,138,0,.45)':''}`, border:`2px solid ${focused?'#FF8A00':'transparent'}`, transition:'all .2s' }}>
+            <span style={{ display:'flex', alignItems:'center', fontSize:20, flexShrink:0 }}>🔍</span>
+            <input
+              value={q} onChange={e => setQ(e.target.value)}
+              onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => setFocused(false), 200)}
+              onKeyDown={e => e.key==='Enter' && navigate('/marketplace'+(q?`?q=${encodeURIComponent(q)}`:'' ))}
+              placeholder="Que recherchez-vous aujourd'hui ?"
+              style={{ flex:1, border:'none', outline:'none', fontSize:'clamp(13px,2vw,16px)', color:'#0F172A', padding:'10px 12px', minWidth:0, background:'transparent' }}
+            />
+            <motion.button
+              onClick={() => navigate('/marketplace'+(q?`?q=${encodeURIComponent(q)}`:'' ))}
               whileHover={{ scale:1.02 }} whileTap={{ scale:.97 }}
-              className="lp-btn-primary" style={{ padding:'13px 26px', fontSize:15, borderRadius:12 }}>
+              style={{ padding:'13px clamp(14px,2vw,24px)', borderRadius:14, border:'none', background:'linear-gradient(135deg,#FF8A00,#FF3B30)', color:'#fff', fontSize:'clamp(13px,1.5vw,15px)', fontWeight:700, cursor:'pointer', whiteSpace:'nowrap', flexShrink:0 }}>
               Rechercher
             </motion.button>
           </div>
 
-          {/* Autocomplete dropdown */}
           <AnimatePresence>
             {focused && (
-              <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-8 }} transition={{ duration:.18 }}
-                style={{ position:'absolute', top:'calc(100% + 8px)', left:0, right:0, background:'var(--lp-surface)', borderRadius:16, border:'1px solid var(--lp-border)', boxShadow:'var(--lp-shadow-lg)', padding:8, zIndex:10 }}>
-                {suggestions.map((s,i) => (
-                  <div key={i} onClick={()=>{ setQ(s.split(' ')[0]); navigate('/marketplace'); }}
-                    style={{ padding:'10px 14px', borderRadius:10, cursor:'pointer', fontSize:14, color:'var(--lp-text2)', display:'flex', alignItems:'center', gap:8, transition:'background .15s' }}
-                    onMouseEnter={e=>e.currentTarget.style.background='var(--lp-orange-light)'}
-                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                    <span style={{ color:'var(--lp-muted)', fontSize:13 }}>🔍</span>{s}
+              <motion.div
+                initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-8 }} transition={{ duration:.15 }}
+                style={{ position:'absolute', top:'calc(100% + 8px)', left:0, right:0, background:'#fff', borderRadius:16, border:'1px solid rgba(0,0,0,.08)', boxShadow:'0 20px 60px rgba(0,0,0,.2)', padding:8, zIndex:10, textAlign:'left' }}>
+                <div style={{ padding:'7px 14px 5px', fontSize:10, color:'#94A3B8', fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em' }}>Recherches populaires</div>
+                {SEARCH_SUGGESTIONS.map(s => (
+                  <div key={s}
+                    onClick={() => { setQ(s); navigate(`/marketplace?q=${encodeURIComponent(s)}`); }}
+                    style={{ padding:'10px 14px', borderRadius:10, cursor:'pointer', fontSize:14, color:'#0F172A', display:'flex', alignItems:'center', gap:10, transition:'background .12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background='rgba(255,138,0,.07)'}
+                    onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                    <span style={{ fontSize:13, color:'#94A3B8' }}>🔍</span>
+                    <span style={{ fontWeight:500 }}>{s}</span>
                   </div>
                 ))}
               </motion.div>
             )}
           </AnimatePresence>
+        </motion.div>
+
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:.5, delay:.44 }}>
+          <motion.button
+            onClick={() => navigate('/marketplace?geo=1')}
+            whileHover={{ scale:1.04, background:'rgba(255,255,255,.22)' }} whileTap={{ scale:.97 }}
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:14, border:'1.5px solid rgba(255,255,255,.35)', background:'rgba(255,255,255,.12)', backdropFilter:'blur(12px)', color:'#fff', fontSize:14, fontWeight:600, cursor:'pointer', transition:'all .2s', marginBottom:28 }}>
+            📍 Utiliser ma position
+          </motion.button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }} transition={{ duration:.5, delay:.5 }}
+          style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+          {HERO_QUICK_CATS.map(c => (
+            <motion.button key={c.label}
+              onClick={() => navigate(`/marketplace?type=${c.type}`)}
+              whileHover={{ scale:1.06, background:'rgba(255,255,255,.22)' }} whileTap={{ scale:.95 }}
+              style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:24, border:'1.5px solid rgba(255,255,255,.3)', background:'rgba(255,255,255,.12)', backdropFilter:'blur(8px)', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', transition:'all .15s' }}>
+              {c.icon} {c.label}
+            </motion.button>
+          ))}
+        </motion.div>
+      </div>
+
+      <div style={{ position:'absolute', bottom:80, left:'50%', transform:'translateX(-50%)', display:'flex', gap:6, zIndex:2 }}>
+        {HERO_BG_IMAGES.map((_,i) => (
+          <button key={i} onClick={() => setBgIdx(i)} style={{ width:bgIdx===i?22:6, height:6, borderRadius:3, border:'none', background:bgIdx===i?'#fff':'rgba(255,255,255,.38)', transition:'all .35s', cursor:'pointer', padding:0 }} />
+        ))}
+      </div>
+
+      <motion.div
+        animate={{ y:[0,8,0] }} transition={{ duration:1.8, repeat:Infinity, ease:'easeInOut' }}
+        onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior:'smooth' })}
+        style={{ position:'absolute', bottom:22, left:'50%', transform:'translateX(-50%)', display:'flex', flexDirection:'column', alignItems:'center', gap:4, opacity:.55, zIndex:2, cursor:'pointer' }}>
+        <div style={{ width:18, height:30, borderRadius:10, border:'2px solid rgba(255,255,255,.55)', display:'flex', justifyContent:'center', paddingTop:5 }}>
+          <motion.div animate={{ y:[0,8,0] }} transition={{ duration:1.5, repeat:Infinity }} style={{ width:2, height:6, borderRadius:3, background:'rgba(255,255,255,.8)' }} />
+        </div>
+        <span style={{ fontSize:9, color:'rgba(255,255,255,.55)', fontWeight:600, letterSpacing:'.1em' }}>EXPLORER</span>
+      </motion.div>
+    </section>
+  );
+}
+
+/* ─── Categories ─── */
+function CategoriesSection({ navigate }) {
+  return (
+    <section id="categories" style={{ padding:'72px clamp(16px,4vw,60px)', background:'var(--lp-bg)', overflow:'hidden' }}>
+      <div style={{ maxWidth:1280, margin:'0 auto' }}>
+        <motion.div initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ duration:.4 }}
+          style={{ textAlign:'center', marginBottom:44 }}>
+          <div className="lp-section-badge" style={{ margin:'0 auto 14px' }}>🏪 Toutes les catégories</div>
+          <h2 style={{ fontSize:'clamp(26px,4vw,42px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 10px', letterSpacing:-.5 }}>
+            Explorez par <span className="lp-gradient-text">catégorie</span>
+          </h2>
+          <p style={{ color:'var(--lp-muted)', fontSize:15, maxWidth:480, margin:'0 auto' }}>
+            Des restaurants aux pharmacies — tout ce dont vous avez besoin, à portée de main.
+          </p>
+        </motion.div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:14 }}>
+          {CATEGORIES.map((cat, i) => (
+            <motion.div key={cat.label}
+              onClick={() => navigate(`/marketplace${cat.type ? `?type=${cat.type}` : ''}`)}
+              initial={{ opacity:0, y:24 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }}
+              transition={{ duration:.38, delay:i*0.04 }}
+              whileHover={{ scale:1.05, y:-6, boxShadow:`0 14px 36px ${cat.color}30` }}
+              whileTap={{ scale:.96 }}
+              className="lp-category-card"
+              style={{ '--cat-color': cat.color, backgroundImage:`url(${cat.img})` }}
+            >
+              <div className="lp-category-overlay" style={{ background:`linear-gradient(160deg, ${cat.color}CC, ${cat.color}66)` }} />
+              <div className="lp-category-content">
+                <div style={{ width:52, height:52, borderRadius:16, background:'rgba(255,255,255,.16)', backdropFilter:'blur(4px)', display:'grid', placeItems:'center', fontSize:24, border:'1.5px solid rgba(255,255,255,.35)' }}>{cat.icon}</div>
+                <div style={{ fontWeight:700, fontSize:13, color:'#fff', textAlign:'center', lineHeight:1.3 }}>{cat.label}</div>
+                <div style={{ fontSize:10, color:'#fff', fontWeight:700, background:'rgba(255,255,255,.22)', padding:'2px 9px', borderRadius:20 }}>{cat.count}</div>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
-        {/* Quick tags */}
-        <div style={{ display:'flex', gap:8, justifyContent:'center', marginTop:20, flexWrap:'wrap' }}>
-          {['🍕 Pizza','🍣 Sushi','🥩 Viande','🥗 Végétarien','☕ Café','🥐 Boulangerie','🍔 Burgers','🍱 Japonais'].map(tag => (
-            <motion.button key={tag} whileHover={{ scale:1.05 }} whileTap={{ scale:.97 }}
-              onClick={()=>navigate('/marketplace')} style={{ padding:'7px 15px', borderRadius:20, border:'1px solid var(--lp-border)', background:'var(--lp-card)', color:'var(--lp-text2)', fontSize:13, fontWeight:500, cursor:'pointer', transition:'all .15s' }}>
-              {tag}
-            </motion.button>
+        <motion.div initial={{ opacity:0 }} whileInView={{ opacity:1 }} viewport={{ once:true }} transition={{ delay:.4 }}
+          style={{ textAlign:'center', marginTop:36 }}>
+          <motion.button onClick={() => navigate('/marketplace')} whileHover={{ scale:1.02 }} whileTap={{ scale:.97 }}
+            className="lp-btn-primary" style={{ padding:'14px 36px', fontSize:15 }}>
+            Explorer tous les commerces →
+          </motion.button>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Pourquoi iFilino ─── */
+function WhySection() {
+  return (
+    <section id="pourquoi" className="lp-section" style={{ background:'var(--lp-bg2)' }}>
+      <div style={{ maxWidth:1200, margin:'0 auto' }}>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={fadeUp} style={{ textAlign:'center', marginBottom:48 }}>
+          <div className="lp-section-badge">✨ Pourquoi {BRAND.APP_NAME}</div>
+          <h2 style={{ fontSize:'clamp(26px,4vw,42px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 12px', letterSpacing:-.5 }}>
+            Une expérience <span className="lp-gradient-text">pensée pour vous</span>
+          </h2>
+          <p style={{ color:'var(--lp-muted)', fontSize:15, maxWidth:520, margin:'0 auto' }}>
+            Tout ce qu'il faut pour commander en confiance, près de chez vous.
+          </p>
+        </motion.div>
+
+        <div className="lp-why-grid">
+          {WHY_ITEMS.map((f,i) => (
+            <motion.div key={f.title} className="lp-feat-card"
+              initial={{ opacity:0, y:28 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true, amount:.3 }}
+              transition={{ duration:.45, delay:i*0.06, ease:[.4,0,.2,1] }}
+              whileHover={{ scale:1.02 }}>
+              <div className="lp-feat-icon" style={{ background:f.bg, color:f.color }}>
+                <span style={{ filter:'drop-shadow(0 2px 4px rgba(0,0,0,.2))' }}>{f.icon}</span>
+              </div>
+              <h3 style={{ fontSize:15, fontWeight:700, color:'var(--lp-text)', margin:'0 0 8px' }}>{f.title}</h3>
+              <p style={{ fontSize:13, color:'var(--lp-muted)', lineHeight:1.55, margin:0 }}>{f.desc}</p>
+            </motion.div>
           ))}
         </div>
       </div>
-    </motion.section>
+    </section>
   );
 }
 
@@ -413,17 +535,13 @@ function SearchSection({ navigate }) {
 function StatCounter({ stat }) {
   const isK = stat.format === 'k';
   const target = isK ? stat.value/1000 : stat.value;
-  const decimals = isK ? 0 : 0;
-  const [count, ref] = useCounter(target, decimals);
+  const [count, ref] = useCounter(target, 0);
   const display = isK ? `${count}k` : count.toLocaleString('fr-FR');
 
   return (
     <motion.div ref={ref} className="lp-stat-card"
-      initial={{ opacity:0, y:30 }}
-      whileInView={{ opacity:1, y:0 }}
-      viewport={{ once:true, amount:0.3 }}
-      transition={{ duration:.5, ease:[.4,0,.2,1] }}
-    >
+      initial={{ opacity:0, y:30 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true, amount:0.3 }}
+      transition={{ duration:.5, ease:[.4,0,.2,1] }}>
       <div style={{ fontSize:32, marginBottom:8 }}>{stat.icon}</div>
       <div style={{ fontSize:'clamp(28px,4vw,40px)', fontWeight:800, color:'var(--lp-orange)', lineHeight:1 }}>
         {display}{stat.suffix}
@@ -440,9 +558,9 @@ function StatsSection() {
         <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={fadeUp} style={{ textAlign:'center', marginBottom:48 }}>
           <div className="lp-section-badge">📊 En chiffres</div>
           <h2 style={{ fontSize:'clamp(26px,4vw,40px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 10px', letterSpacing:-.5 }}>
-            RestoBook en chiffres
+            {BRAND.APP_NAME} en chiffres
           </h2>
-          <p style={{ color:'var(--lp-muted)', fontSize:15 }}>Une plateforme qui grandit chaque jour grâce à sa communauté</p>
+          <p style={{ color:'var(--lp-muted)', fontSize:15 }}>Une marketplace qui grandit chaque jour grâce à sa communauté</p>
         </motion.div>
         <div className="lp-stats-grid">
           {STATS.map(stat => <StatCounter key={stat.label} stat={stat} />)}
@@ -452,248 +570,110 @@ function StatsSection() {
   );
 }
 
-/* ─── Features ─── */
-/* ─── Deux Univers Section (après la Hero) ─── */
-function TwoUniversesSection({ navigate }) {
+/* ─── Comment ça marche ─── */
+function HowItWorksSection() {
   return (
-    <section id="univers" className="lp-section" style={{ background:'var(--lp-bg)', paddingTop:80, paddingBottom:80 }}>
+    <section id="comment-ca-marche" className="lp-section" style={{ background:'var(--lp-bg2)' }}>
       <div style={{ maxWidth:1200, margin:'0 auto' }}>
-        <motion.div initial={{ opacity:0, y:30 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ duration:.6 }}
-          style={{ textAlign:'center', marginBottom:56 }}>
-          <div className="lp-section-badge">🌍 Deux solutions, un seul choix</div>
-          <h2 style={{ fontSize:'clamp(26px,4vw,44px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 14px', letterSpacing:-.5, lineHeight:1.2 }}>
-            Choisissez votre <span className="lp-gradient-text">univers RestoBook</span>
-          </h2>
-          <p style={{ color:'var(--lp-muted)', fontSize:16, maxWidth:580, margin:'0 auto' }}>
-            Deux modules distincts, conçus pour deux réalités différentes. Choisissez celui qui correspond à votre métier.
-          </p>
-        </motion.div>
-
-        <div className="lp-two-universes-grid">
-
-          {/* ── Carte Restaurant / Marketplace ─────────────────────────────── */}
-          <motion.div
-            initial={{ opacity:0, x:-40 }} whileInView={{ opacity:1, x:0 }} viewport={{ once:true }} transition={{ duration:.65, ease:[.4,0,.2,1] }}
-            style={{
-              borderRadius:24, overflow:'hidden', position:'relative',
-              border:'2px solid rgba(255,138,0,.25)',
-              background:'linear-gradient(145deg, rgba(255,138,0,.07), transparent)',
-              boxShadow:'0 0 0 0 rgba(255,138,0,0)',
-              transition:'box-shadow .3s, transform .3s',
-            }}
-            whileHover={{ boxShadow:'0 20px 60px rgba(255,138,0,.15)', scale:1.01 }}
-          >
-            {/* Header */}
-            <div style={{ padding:'36px 36px 24px', background:'linear-gradient(135deg,rgba(255,138,0,.15),rgba(255,138,0,.08))' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:18 }}>
-                <div style={{ width:56, height:56, borderRadius:16, background:'linear-gradient(135deg,#FF8A00,#FF8A00)', display:'grid', placeItems:'center', fontSize:28, boxShadow:'0 8px 24px rgba(255,138,0,.35)' }}>🍽️</div>
-                <div>
-                  <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color:'#FF8A00', marginBottom:4 }}>Domaine Restaurant</div>
-                  <div style={{ fontSize:22, fontWeight:800, color:'var(--lp-text)', letterSpacing:-.3 }}>RestoBook Restaurant</div>
-                </div>
-              </div>
-              <p style={{ color:'var(--lp-muted)', fontSize:14, lineHeight:1.6, margin:0 }}>
-                Pour les <strong style={{ color:'var(--lp-text)' }}>restaurants, snacks, cafés et boulangeries</strong>. Développez votre activité avec une marketplace publique, des réservations en ligne et la fidélisation client.
-              </p>
-            </div>
-
-            {/* Pour qui */}
-            <div style={{ padding:'20px 36px', borderTop:'1px solid rgba(255,138,0,.12)' }}>
-              <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'.08em', color:'var(--lp-muted)', marginBottom:12 }}>Pour qui ?</div>
-              <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                {['🍽️ Restaurants', '☕ Cafés', '🥙 Snacks', '🥐 Boulangeries', '📦 Dark Kitchens', '👥 Clients finaux'].map(tag => (
-                  <span key={tag} style={{ padding:'4px 12px', borderRadius:20, background:'rgba(255,138,0,.1)', border:'1px solid rgba(255,138,0,.2)', fontSize:12, fontWeight:600, color:'#FF8A00' }}>{tag}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Features */}
-            <div style={{ padding:'20px 36px', borderTop:'1px solid rgba(255,138,0,.12)' }}>
-              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                {['🌍 Marketplace publique & découverte', '📅 Réservation de table en ligne', '🛵 Livraison & Click & Collect', '⭐ Avis clients vérifiés', '💎 Programme fidélité & badges', '🤖 Recommandations IA personnalisées'].map(f => (
-                  <div key={f} style={{ display:'flex', gap:8, alignItems:'flex-start', fontSize:13, color:'var(--lp-muted)' }}>
-                    <span>{f}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div style={{ padding:'24px 36px', borderTop:'1px solid rgba(255,138,0,.12)' }}>
-              <motion.button onClick={() => navigate('/marketplace')} whileHover={{ scale:1.02 }} whileTap={{ scale:.98 }}
-                style={{ width:'100%', padding:'14px', borderRadius:14, border:'none', background:'linear-gradient(135deg,#FF8A00,#FF8A00)', color:'#fff', fontSize:15, fontWeight:700, cursor:'pointer', boxShadow:'0 8px 24px rgba(255,138,0,.35)', letterSpacing:-.2 }}>
-                Explorer la Marketplace →
-              </motion.button>
-            </div>
-          </motion.div>
-
-          {/* ── Carte Cantine ─────────────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity:0, x:40 }} whileInView={{ opacity:1, x:0 }} viewport={{ once:true }} transition={{ duration:.65, delay:.1, ease:[.4,0,.2,1] }}
-            style={{
-              borderRadius:24, overflow:'hidden', position:'relative',
-              border:'2px solid rgba(34,197,94,.25)',
-              background:'linear-gradient(145deg, rgba(34,197,94,.07), transparent)',
-              transition:'box-shadow .3s, transform .3s',
-            }}
-            whileHover={{ boxShadow:'0 20px 60px rgba(34,197,94,.15)', scale:1.01 }}
-          >
-            {/* Header */}
-            <div style={{ padding:'36px 36px 24px', background:'linear-gradient(135deg,rgba(34,197,94,.15),rgba(22,163,74,.08))' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:18 }}>
-                <div style={{ width:56, height:56, borderRadius:16, background:'linear-gradient(135deg,#22C55E,#16A34A)', display:'grid', placeItems:'center', fontSize:28, boxShadow:'0 8px 24px rgba(34,197,94,.35)' }}>🏢</div>
-                <div>
-                  <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color:'#22C55E', marginBottom:4 }}>Domaine Cantine</div>
-                  <div style={{ fontSize:22, fontWeight:800, color:'var(--lp-text)', letterSpacing:-.3 }}>RestoBook Canteen</div>
-                </div>
-              </div>
-              <p style={{ color:'var(--lp-muted)', fontSize:14, lineHeight:1.6, margin:0 }}>
-                Pour les <strong style={{ color:'var(--lp-text)' }}>entreprises, écoles, universités et hôpitaux</strong>. Gérez vos cantines internes avec des outils dédiés, sans aucune visibilité publique.
-              </p>
-            </div>
-
-            {/* Pour qui */}
-            <div style={{ padding:'20px 36px', borderTop:'1px solid rgba(34,197,94,.12)' }}>
-              <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'.08em', color:'var(--lp-muted)', marginBottom:12 }}>Pour qui ?</div>
-              <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                {['🏢 Entreprises', '🎓 Universités', '🏫 Écoles', '🏥 Hôpitaux', '🏛️ Administrations', '👨‍💼 Employés & élèves'].map(tag => (
-                  <span key={tag} style={{ padding:'4px 12px', borderRadius:20, background:'rgba(34,197,94,.1)', border:'1px solid rgba(34,197,94,.2)', fontSize:12, fontWeight:600, color:'#22C55E' }}>{tag}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Features */}
-            <div style={{ padding:'20px 36px', borderTop:'1px solid rgba(34,197,94,.12)' }}>
-              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                {['📅 Planification des menus de la semaine', '📷 Validation QR Code au self', '📊 Suivi gaspillage & statistiques', '🤖 IA Nutritionnelle par plat', '👥 Gestion employés & quotas', '🔒 Accès 100% privé, pas de marketplace'].map(f => (
-                  <div key={f} style={{ display:'flex', gap:8, alignItems:'flex-start', fontSize:13, color:'var(--lp-muted)' }}>
-                    <span>{f}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Mention: pas de marketplace publique */}
-            <div style={{ margin:'0 36px', padding:'12px 16px', borderRadius:12, background:'rgba(34,197,94,.08)', border:'1px solid rgba(34,197,94,.15)', display:'flex', gap:8, alignItems:'center' }}>
-              <span style={{ fontSize:16 }}>🔒</span>
-              <span style={{ fontSize:12, color:'#22C55E', fontWeight:600 }}>Accès strictement interne — vos cantines n'apparaissent jamais sur la marketplace publique</span>
-            </div>
-
-            {/* CTA */}
-            <div style={{ padding:'24px 36px', borderTop:'1px solid rgba(34,197,94,.12)', marginTop:16 }}>
-              <motion.button onClick={() => navigate('/login')} whileHover={{ scale:1.02 }} whileTap={{ scale:.98 }}
-                style={{ width:'100%', padding:'14px', borderRadius:14, border:'none', background:'linear-gradient(135deg,#22C55E,#16A34A)', color:'#fff', fontSize:15, fontWeight:700, cursor:'pointer', boxShadow:'0 8px 24px rgba(34,197,94,.35)', letterSpacing:-.2 }}>
-                Découvrir RestoBook Canteen →
-              </motion.button>
-            </div>
-          </motion.div>
-
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FeaturesSection() {
-  const [tab, setTab] = useState('restaurant');
-  const features = tab === 'restaurant' ? FEATURES_RESTAURANT : FEATURES_CANTEEN;
-
-  return (
-    <section id="about" className="lp-section" style={{ background:'var(--lp-bg2)' }}>
-      <div style={{ maxWidth:1200, margin:'0 auto' }}>
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={fadeUp} style={{ textAlign:'center', marginBottom:48 }}>
-          <div className="lp-section-badge">✨ Fonctionnalités</div>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={fadeUp} style={{ textAlign:'center', marginBottom:52 }}>
+          <div className="lp-section-badge">⚡ Simple et rapide</div>
           <h2 style={{ fontSize:'clamp(26px,4vw,42px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 12px', letterSpacing:-.5 }}>
-            Tout pour <span className="lp-gradient-text">votre activité</span>
+            Comment ça <span className="lp-gradient-text">fonctionne</span>
           </h2>
-          <p style={{ color:'var(--lp-muted)', fontSize:15, maxWidth:520, margin:'0 auto 24px' }}>
-            Des outils puissants adaptés à chaque contexte — restaurant ou cantine.
-          </p>
-          <div className="lp-tab-switcher">
-            <button className={`lp-tab-btn${tab==='restaurant'?' active':''}`} onClick={() => setTab('restaurant')}>🍽️ Restaurants</button>
-            <button className={`lp-tab-btn${tab==='canteen'?' active':''}`} onClick={() => setTab('canteen')}>🏢 Cantines</button>
-          </div>
+          <p style={{ color:'var(--lp-muted)', fontSize:15 }}>Quatre étapes, quelques minutes.</p>
         </motion.div>
 
-        <AnimatePresence mode="wait">
-          <motion.div key={tab} initial={{ opacity:0, y:18 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-12 }} transition={{ duration:.26 }}>
-            <div className="lp-feats-grid">
-              {features.map((f,i) => (
-                <motion.div key={i} className="lp-feat-card"
-                  initial={{ opacity:0, y:28 }}
-                  animate={{ opacity:1, y:0 }}
-                  transition={{ duration:.45, delay:i*0.06, ease:[.4,0,.2,1] }}
-                  whileHover={{ scale:1.02 }}
-                >
-                  <div className="lp-feat-icon" style={{ background:f.bg, color:f.color }}>
-                    <span style={{ filter:'drop-shadow(0 2px 4px rgba(0,0,0,.2))' }}>{f.icon}</span>
-                  </div>
-                  <h3 style={{ fontSize:15, fontWeight:700, color:'var(--lp-text)', margin:'0 0 8px' }}>{f.title}</h3>
-                  <p style={{ fontSize:13, color:'var(--lp-muted)', lineHeight:1.55, margin:0 }}>{f.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </section>
-  );
-}
-
-/* ─── Marketplace Preview ─── */
-function MarketplaceSection({ navigate }) {
-  return (
-    <section id="marketplace" className="lp-section" style={{ background:'var(--lp-bg)' }}>
-      <div style={{ maxWidth:1200, margin:'0 auto' }}>
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginBottom:52 }}>
-          <div className="lp-section-badge">🍽️ Marketplace</div>
-          <h2 style={{ fontSize:'clamp(26px,4vw,42px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 12px', letterSpacing:-.5 }}>
-            Les meilleures adresses à portée de main
-          </h2>
-          <p style={{ color:'var(--lp-muted)', fontSize:15 }}>Découvrez des centaines de restaurants triés par note, distance et disponibilité</p>
-        </motion.div>
-
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))', gap:20 }}>
-          {RESTAURANT_PREVIEWS.map((r,i) => (
-            <motion.div key={i} className="lp-resto-card"
-              initial={{ opacity:0, y:40 }}
-              whileInView={{ opacity:1, y:0 }}
-              viewport={{ once:true, amount:0.15 }}
-              transition={{ duration:.5, delay:i*0.12, ease:[.4,0,.2,1] }}
-              whileHover={{ y:-6, boxShadow:'0 20px 60px rgba(0,0,0,.3)' }}
-              onClick={()=>navigate('/marketplace')}>
-              <div style={{ position:'relative', overflow:'hidden' }}>
-                <img src={r.cover} alt={r.name} style={{ width:'100%', height:190, objectFit:'cover', display:'block', transition:'transform .5s' }}
-                  onMouseEnter={e=>e.currentTarget.style.transform='scale(1.05)'}
-                  onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
-                />
-                <div style={{ position:'absolute', inset:0, background:'linear-gradient(transparent 40%,rgba(0,0,0,.55))' }} />
-                <span style={{ position:'absolute', top:10, right:10, background:'rgba(220,252,231,.95)', color:'#16A34A', fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:20 }}>● Ouvert</span>
-                <div style={{ position:'absolute', bottom:10, left:12, display:'flex', gap:6 }}>
-                  {r.tags.map(t => <span key={t} style={{ background:'rgba(0,0,0,.55)', color:'rgba(255,255,255,.9)', fontSize:10, padding:'2px 8px', borderRadius:20, backdropFilter:'blur(4px)' }}>{t}</span>)}
-                </div>
-              </div>
-              <div style={{ padding:'14px 16px' }}>
-                <div style={{ fontWeight:700, fontSize:15, color:'var(--lp-text)', marginBottom:4 }}>{r.name}</div>
-                <div style={{ fontSize:12, color:'var(--lp-muted)', marginBottom:8 }}>📍 {r.type} · {r.city}</div>
-                <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-                  <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:12 }}>
-                    <span style={{ color:'#F59E0B' }}>★</span>
-                    <span style={{ fontWeight:700, color:'var(--lp-text)' }}>{r.rating}</span>
-                    <span style={{ color:'var(--lp-muted)' }}>({r.reviews})</span>
-                  </span>
-                  <span style={{ fontSize:11, color:'var(--lp-muted)', background:'var(--lp-bg2)', padding:'2px 8px', borderRadius:20 }}>⏱ ~{r.prep} min</span>
-                  {r.delivery && <span style={{ fontSize:11, color:'var(--lp-green)', background:'var(--lp-green-light)', padding:'2px 8px', borderRadius:20, fontWeight:700 }}>🛵 Livraison</span>}
-                </div>
-              </div>
-            </motion.div>
+        <div className="lp-steps-grid">
+          {HOW_IT_WORKS.map((step, i) => (
+            <React.Fragment key={step.title}>
+              <motion.div className="lp-step-card"
+                initial={{ opacity:0, y:28 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true, amount:.3 }}
+                transition={{ duration:.45, delay:i*0.1 }}>
+                <div className="lp-step-num">{i+1}</div>
+                <div style={{ fontSize:30, marginBottom:10 }}>{step.icon}</div>
+                <h3 style={{ fontSize:15, fontWeight:700, color:'var(--lp-text)', margin:'0 0 8px' }}>{step.title}</h3>
+                <p style={{ fontSize:13, color:'var(--lp-muted)', lineHeight:1.55, margin:0 }}>{step.desc}</p>
+              </motion.div>
+              {i < HOW_IT_WORKS.length-1 && <div className="lp-step-arrow">→</div>}
+            </React.Fragment>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
 
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginTop:40 }}>
-          <motion.button onClick={()=>navigate('/marketplace')} whileHover={{ scale:1.03, boxShadow:'0 12px 40px var(--lp-orange-glow)' }} whileTap={{ scale:.97 }}
-            className="lp-btn-primary" style={{ fontSize:16, padding:'15px 36px' }}>
-            Voir tous les restaurants →
+/* ─── Skeleton (chargement produits / commerces) ─── */
+function LandingCardSkeleton({ height=200 }) {
+  return (
+    <div style={{ borderRadius:16, overflow:'hidden', border:'1px solid var(--lp-border)' }}>
+      <div className="lp-skel" style={{ height }} />
+      <div style={{ padding:14, display:'flex', flexDirection:'column', gap:8 }}>
+        <div className="lp-skel" style={{ height:12, width:'70%', borderRadius:6 }} />
+        <div className="lp-skel" style={{ height:12, width:'40%', borderRadius:6 }} />
+      </div>
+    </div>
+  );
+}
+
+/* ─── Produits populaires (données réelles) ─── */
+function LandingProductCard({ product, navigate }) {
+  const image = product.images?.[0] ? ASSET(product.images[0]) : null;
+  return (
+    <div className="lp-product-card" onClick={() => navigate(`/marketplace/search?q=${encodeURIComponent(product.name)}`)}>
+      <div style={{ position:'relative', height:130, background:'var(--lp-bg2)' }}>
+        {image
+          ? <img src={image} alt={product.name} loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+          : <div style={{ width:'100%', height:'100%', display:'grid', placeItems:'center', fontSize:32 }}>🛍️</div>}
+        {product.is_promo && <span style={{ position:'absolute', top:8, left:8, background:'#EF4444', color:'#fff', fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:20 }}>Promo</span>}
+      </div>
+      <div style={{ padding:'12px 14px' }}>
+        <div style={{ fontWeight:700, fontSize:13, color:'var(--lp-text)', marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{product.name}</div>
+        <div style={{ fontSize:15, fontWeight:800, color:'var(--lp-orange)', marginBottom:6 }}>{fmtPrice(product.price)}</div>
+        <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:11, color:'var(--lp-muted)', marginBottom:8 }}>
+          {product.business?.logo_url && <img src={ASSET(product.business.logo_url)} alt="" loading="lazy" style={{ width:16, height:16, borderRadius:'50%', objectFit:'cover' }} />}
+          <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{product.business?.name || 'Plusieurs commerces'}</span>
+        </div>
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:10 }}>
+          {product.distance_km != null && <span style={{ fontSize:10, color:'var(--lp-muted)', background:'var(--lp-bg2)', padding:'2px 8px', borderRadius:20 }}>📍 {product.distance_km} km</span>}
+          {product.eta_range && <span style={{ fontSize:10, color:'var(--lp-muted)', background:'var(--lp-bg2)', padding:'2px 8px', borderRadius:20 }}>⏱ {product.eta_range}</span>}
+        </div>
+        <button style={{ width:'100%', padding:'8px', borderRadius:10, border:'none', background:'var(--lp-orange-light)', color:'var(--lp-orange)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+          Voir dans le marketplace →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PopularProductsSection({ navigate }) {
+  const products = usePublicList('/marketplace/search?sort=popular&limit=8', 'products');
+  const trackRef = useRef(null);
+
+  if (products && products.length === 0) return null; // pas de section vide
+
+  return (
+    <section id="produits" className="lp-section" style={{ background:'var(--lp-bg)' }}>
+      <div style={{ maxWidth:1200, margin:'0 auto' }}>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginBottom:40 }}>
+          <div className="lp-section-badge">🔥 Produits populaires</div>
+          <h2 style={{ fontSize:'clamp(26px,4vw,42px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 12px', letterSpacing:-.5 }}>
+            Ce que vos voisins commandent
+          </h2>
+          <p style={{ color:'var(--lp-muted)', fontSize:15 }}>Des produits réels, chez de vrais commerces, près de chez vous</p>
+        </motion.div>
+
+        <div ref={trackRef} className="lp-scroll-track">
+          {products === null
+            ? Array.from({ length:4 }).map((_,i) => <div key={i} style={{ flexShrink:0, width:200 }}><LandingCardSkeleton /></div>)
+            : products.map(p => <div key={p.id} style={{ flexShrink:0, width:200, scrollSnapAlign:'start' }}><LandingProductCard product={p} navigate={navigate} /></div>)
+          }
+        </div>
+
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginTop:32 }}>
+          <motion.button onClick={()=>navigate('/marketplace')} whileHover={{ scale:1.03 }} whileTap={{ scale:.97 }}
+            className="lp-btn-outline" style={{ fontSize:14, padding:'13px 28px' }}>
+            Voir tous les produits →
           </motion.button>
         </motion.div>
       </div>
@@ -701,188 +681,117 @@ function MarketplaceSection({ navigate }) {
   );
 }
 
-/* ─── AI Section ─── */
-function AISection() {
-  const [activePrompt, setActivePrompt] = useState(0);
-  const prompts = [
-    { q:'Je veux manger végétarien ce soir', a:'🥗 Voici 12 restaurants végétariens près de vous avec une note > 4.5', icon:'🥗' },
-    { q:'Suggère un repas riche en protéines', a:'💪 Poulet grillé, steak haché… 8 options à moins de 80 MAD', icon:'💪' },
-    { q:'Restaurant romantique pour ce soir', a:'🕯️ 5 restaurants avec ambiance tamisée, disponibles ce soir', icon:'🕯️' },
-    { q:'Quelle cuisine pour ma glycémie ?', a:'🩺 Recommandation : Légumes grillés, protéines maigres, index glycémique bas', icon:'🩺' },
-  ];
-
-  useEffect(() => {
-    const id = setInterval(() => setActivePrompt(i => (i+1)%prompts.length), 3200);
-    return () => clearInterval(id);
-  }, []);
-
+/* ─── Commerces populaires (données réelles) ─── */
+function LandingBusinessCard({ biz, navigate }) {
+  const cover = biz.cover_url ? ASSET(biz.cover_url) : null;
   return (
-    <section id="ai" className="lp-section" style={{ background:'var(--lp-bg2)' }}>
-      <div className="lp-2col-grid" style={{ maxWidth:1200, margin:'0 auto' }}>
-        {/* Left */}
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={slideRight}>
-          <div className="lp-section-badge">🤖 Intelligence Artificielle</div>
-          <h2 style={{ fontSize:'clamp(28px,4vw,44px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 18px', lineHeight:1.15, letterSpacing:-.5 }}>
-            L'IA qui comprend <span className="lp-gradient-text">vos goûts</span>
-          </h2>
-          <p style={{ color:'var(--lp-muted)', fontSize:15, lineHeight:1.65, marginBottom:28 }}>
-            Notre IA analyse vos habitudes alimentaires, vos préférences gustatives et vos besoins nutritionnels pour vous offrir des recommandations ultra-personnalisées.
-          </p>
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            {[
-              ['✨','Recommandations personnalisées','Basées sur votre historique et vos préférences'],
-              ['🍎','Analyse nutritionnelle','Calories, macronutriments, vitamines en temps réel'],
-              ['📈','Prévision de fréquentation','Anticipez les temps d\'attente et planifiez mieux'],
-              ['💬','Analyse des avis','Résumé IA des points forts et axes d\'amélioration'],
-            ].map(([icon,title,desc]) => (
-              <div key={title} style={{ display:'flex', gap:14, alignItems:'flex-start' }}>
-                <div style={{ width:40, height:40, borderRadius:12, background:'var(--lp-orange-light)', display:'grid', placeItems:'center', fontSize:18, flexShrink:0 }}>{icon}</div>
-                <div>
-                  <div style={{ fontWeight:600, fontSize:14, color:'var(--lp-text)', marginBottom:2 }}>{title}</div>
-                  <div style={{ fontSize:12, color:'var(--lp-muted)' }}>{desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Right: Terminal animation */}
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={slideLeft}>
-          <div style={{ background:'#0A0F1E', borderRadius:20, overflow:'hidden', border:'1px solid rgba(34,197,94,.2)', boxShadow:'0 20px 60px rgba(0,0,0,.5)' }}>
-            {/* Terminal header */}
-            <div style={{ background:'#111827', padding:'12px 16px', display:'flex', alignItems:'center', gap:6, borderBottom:'1px solid rgba(255,255,255,.06)' }}>
-              <div style={{ width:12, height:12, borderRadius:'50%', background:'#EF4444' }} />
-              <div style={{ width:12, height:12, borderRadius:'50%', background:'#F59E0B' }} />
-              <div style={{ width:12, height:12, borderRadius:'50%', background:'#22C55E' }} />
-              <span style={{ marginLeft:10, fontSize:12, color:'#64748B', fontFamily:'monospace' }}>restobook-ai</span>
-            </div>
-
-            <div className="lp-ai-terminal-body" style={{ padding:24, fontFamily:"'JetBrains Mono',monospace", fontSize:13, lineHeight:1.7 }}>
-              <div style={{ color:'#64748B', marginBottom:16 }}># Assistant IA RestoBook v2.0</div>
-
-              <AnimatePresence mode="wait">
-                <motion.div key={activePrompt} initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }} transition={{ duration:.3 }}>
-                  <div style={{ display:'flex', gap:8, marginBottom:8 }}>
-                    <span style={{ color:'#22C55E' }}>vous@restobook</span>
-                    <span style={{ color:'#64748B' }}>$</span>
-                    <span style={{ color:'#E2E8F0' }}>ask "{prompts[activePrompt].q}"</span>
-                  </div>
-                  <div style={{ marginLeft:0, color:'#94A3B8', marginBottom:8 }}>
-                    <span style={{ color:'#FF8A00' }}>→</span> Analyse en cours…
-                  </div>
-                  <div style={{ background:'rgba(34,197,94,.08)', borderRadius:12, padding:'14px', border:'1px solid rgba(34,197,94,.15)', marginBottom:16 }}>
-                    <div style={{ color:'#22C55E', fontSize:11, fontWeight:700, marginBottom:6, fontFamily:'Poppins,sans-serif' }}>✓ RÉPONSE IA</div>
-                    <div style={{ color:'#E2E8F0', fontFamily:'Poppins,sans-serif', fontSize:13, lineHeight:1.5 }}>
-                      {prompts[activePrompt].a}
-                    </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Prompt selector */}
-              <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                {prompts.map((p,i) => (
-                  <button key={i} onClick={()=>setActivePrompt(i)} style={{ padding:'4px 10px', borderRadius:8, border:`1px solid ${activePrompt===i?'rgba(255,138,0,.4)':'rgba(255,255,255,.08)'}`, background:activePrompt===i?'rgba(255,138,0,.1)':'transparent', color:activePrompt===i?'#FF8A00':'#64748B', cursor:'pointer', fontSize:18 }}>
-                    {p.icon}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
+    <div className="lp-resto-card" onClick={() => navigate(businessHref(biz))}>
+      <div style={{ position:'relative', overflow:'hidden' }}>
+        {cover
+          ? <img src={cover} alt={biz.name} loading="lazy" style={{ width:'100%', height:170, objectFit:'cover', display:'block' }} />
+          : <div style={{ width:'100%', height:170, background:'var(--lp-bg2)', display:'grid', placeItems:'center', fontSize:32 }}>🏪</div>}
+        <div style={{ position:'absolute', inset:0, background:'linear-gradient(transparent 40%,rgba(0,0,0,.55))' }} />
       </div>
-    </section>
+      <div style={{ padding:'14px 16px' }}>
+        <div style={{ fontWeight:700, fontSize:15, color:'var(--lp-text)', marginBottom:4 }}>{biz.name}</div>
+        <div style={{ fontSize:12, color:'var(--lp-muted)', marginBottom:8 }}>📍 {biz.city || biz.district || 'Maroc'}</div>
+        <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+          <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:12 }}>
+            <span style={{ color:'#F59E0B' }}>★</span>
+            <span style={{ fontWeight:700, color:'var(--lp-text)' }}>{Number(biz.avg_rating||0).toFixed(1)}</span>
+            <span style={{ color:'var(--lp-muted)' }}>({biz.total_reviews||0})</span>
+          </span>
+          <span style={{ fontSize:11, color:'var(--lp-muted)', background:'var(--lp-bg2)', padding:'2px 8px', borderRadius:20 }}>⏱ ~{biz.avg_prep_time} min</span>
+          {biz.distance_km != null && <span style={{ fontSize:11, color:'var(--lp-green)', background:'var(--lp-green-light)', padding:'2px 8px', borderRadius:20, fontWeight:700 }}>📍 {biz.distance_km} km</span>}
+        </div>
+      </div>
+    </div>
   );
 }
 
-/* ─── Cantines ─── */
-function CantinesSection({ navigate }) {
-  const features = [
-    { icon:'🏢', label:'Entreprises' }, { icon:'🎓', label:'Universités' },
-    { icon:'🏥', label:'Hôpitaux' },   { icon:'🏫', label:'Écoles' },
-  ];
+function PopularBusinessesSection({ navigate }) {
+  const businesses = usePublicList('/marketplace/businesses?sort=featured&limit=6', 'businesses');
+
+  if (businesses && businesses.length === 0) return null;
 
   return (
-    <section id="cantines" className="lp-section" style={{ background:'var(--lp-bg)' }}>
-      <div className="lp-2col-grid" style={{ maxWidth:1200, margin:'0 auto' }}>
-        {/* Left visual */}
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={slideRight}>
-          <div style={{ position:'relative' }}>
-            <div style={{ background:'var(--lp-card)', borderRadius:24, overflow:'hidden', border:'1px solid var(--lp-border)', boxShadow:'var(--lp-shadow-lg)' }}>
-              <img src="https://images.unsplash.com/photo-1567521464027-f127ff144326?auto=format&fit=crop&w=700&q=75" alt="Cantine moderne" style={{ width:'100%', height:280, objectFit:'cover', display:'block' }} />
-              <div style={{ padding:20 }}>
-                <div style={{ fontWeight:700, fontSize:15, color:'var(--lp-text)', marginBottom:10 }}>Cantine Entreprise · TechCorp</div>
-                <div style={{ display:'flex', gap:8 }}>
-                  {['Plat du jour','Végétarien','Sans gluten'].map(t => (
-                    <span key={t} style={{ fontSize:11, background:'var(--lp-green-light)', color:'var(--lp-green)', padding:'3px 8px', borderRadius:20, fontWeight:600 }}>{t}</span>
-                  ))}
-                </div>
-                <div style={{ marginTop:14, display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
-                  {[['142','Repas / jour'],['98%','Satisfaction'],['0 min','Attente']].map(([v,l]) => (
-                    <div key={l} style={{ textAlign:'center', background:'var(--lp-bg2)', borderRadius:12, padding:'10px 6px' }}>
-                      <div style={{ fontWeight:800, fontSize:17, color:'var(--lp-orange)' }}>{v}</div>
-                      <div style={{ fontSize:11, color:'var(--lp-muted)' }}>{l}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Floating QR */}
-            <motion.div animate={{ y:[0,-10,0] }} transition={{ duration:3.5, repeat:Infinity, ease:'easeInOut' }}
-              className="lp-glass lp-canteen-qr-float" style={{ padding:'14px 18px', display:'flex', gap:12, alignItems:'center' }}>
-              <div style={{ width:40, height:40, background:'var(--lp-text)', borderRadius:10, display:'grid', placeItems:'center', fontSize:22 }}>⬛</div>
-              <div>
-                <div style={{ fontSize:12, fontWeight:700, color:'var(--lp-text)' }}>Scan & Commande</div>
-                <div style={{ fontSize:11, color:'var(--lp-muted)' }}>QR Code table</div>
-              </div>
-            </motion.div>
-          </div>
+    <section id="commerces" className="lp-section" style={{ background:'var(--lp-bg2)' }}>
+      <div style={{ maxWidth:1200, margin:'0 auto' }}>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginBottom:52 }}>
+          <div className="lp-section-badge">🏪 Commerces populaires</div>
+          <h2 style={{ fontSize:'clamp(26px,4vw,42px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 12px', letterSpacing:-.5 }}>
+            Les commerces les mieux notés
+          </h2>
+          <p style={{ color:'var(--lp-muted)', fontSize:15 }}>Triés par note, distance et disponibilité</p>
         </motion.div>
 
-        {/* Right: Content */}
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={slideLeft}>
-          <div className="lp-section-badge">🏢 Cantines Connectées</div>
-          <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 18px', lineHeight:1.15, letterSpacing:-.5 }}>
-            La restauration collective réinventée
-          </h2>
-          <p style={{ color:'var(--lp-muted)', fontSize:15, lineHeight:1.65, marginBottom:28 }}>
-            RestoBook transforme la gestion des cantines d'entreprise, scolaires et hospitalières avec des outils digitaux puissants et intuitifs.
-          </p>
-          <div className="lp-canteen-icons-grid">
-            {features.map(({ icon, label }) => (
-              <motion.div key={label} whileHover={{ scale:1.05 }} style={{ background:'var(--lp-card)', borderRadius:14, padding:'16px 12px', textAlign:'center', border:'1px solid var(--lp-border)', cursor:'pointer' }}>
-                <div style={{ fontSize:26, marginBottom:8 }}>{icon}</div>
-                <div style={{ fontSize:12, fontWeight:600, color:'var(--lp-text2)' }}>{label}</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))', gap:20 }}>
+          {businesses === null
+            ? Array.from({ length:3 }).map((_,i) => <LandingCardSkeleton key={i} height={170} />)
+            : businesses.map(b => (
+              <motion.div key={b.id} initial={{ opacity:0, y:40 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true, amount:.15 }} transition={{ duration:.5 }}>
+                <LandingBusinessCard biz={b} navigate={navigate} />
               </motion.div>
-            ))}
+            ))
+          }
+        </div>
+
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginTop:40 }}>
+          <motion.button onClick={()=>navigate('/marketplace')} whileHover={{ scale:1.03, boxShadow:'0 12px 40px var(--lp-orange-glow)' }} whileTap={{ scale:.97 }}
+            className="lp-btn-primary" style={{ fontSize:16, padding:'15px 36px' }}>
+            Voir tous les commerces →
+          </motion.button>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Pour les commerçants ─── */
+function ForMerchantsSection({ navigate }) {
+  const startingPrice = PRICING_PRO[0];
+  return (
+    <section id="commercants" className="lp-section" style={{ background:'var(--lp-bg)' }}>
+      <div style={{ maxWidth:1200, margin:'0 auto' }}>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={fadeUp} style={{ textAlign:'center', marginBottom:48 }}>
+          <div className="lp-section-badge">🚀 Espace professionnel</div>
+          <h2 style={{ fontSize:'clamp(26px,4vw,44px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 14px', letterSpacing:-.5 }}>
+            Pourquoi rejoindre <span className="lp-gradient-text">{BRAND.APP_NAME}</span> ?
+          </h2>
+          <p style={{ color:'var(--lp-muted)', fontSize:16, maxWidth:580, margin:'0 auto' }}>
+            Développez votre commerce avec des outils professionnels complets — sans compétences techniques requises.
+          </p>
+        </motion.div>
+
+        <div className="lp-merchant-tools-grid">
+          {MERCHANT_TOOLS.map((tool, i) => (
+            <motion.div key={tool.label} className="lp-merchant-tool"
+              initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true, amount:.3 }}
+              transition={{ duration:.35, delay:i*0.03 }}
+              whileHover={{ scale:1.05, y:-3 }}>
+              <div style={{ fontSize:26, marginBottom:8 }}>{tool.icon}</div>
+              <div style={{ fontSize:12, fontWeight:600, color:'var(--lp-text2)' }}>{tool.label}</div>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div id="tarifs" initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp}
+          style={{ marginTop:40, display:'flex', alignItems:'center', justifyContent:'center', gap:16, flexWrap:'wrap', padding:'20px 28px', borderRadius:18, background:'var(--lp-card)', border:'1px solid var(--lp-border)', maxWidth:640, marginLeft:'auto', marginRight:'auto' }}>
+          <div style={{ fontSize:14, color:'var(--lp-muted)' }}>
+            À partir de <strong style={{ color:'var(--lp-text)', fontSize:20 }}>{startingPrice.price} MAD{startingPrice.period}</strong> · essai 14 jours offert
           </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:32 }}>
-            {[
-              ['✅','Menus digitaux','Gérez et publiez les menus quotidiens en temps réel'],
-              ['📱','QR Code ordering','Scannez et commandez directement depuis la table'],
-              ['📊','Statistiques RH','Suivez la fréquentation, les coûts et la satisfaction'],
-              ['🥗','Nutrition intégrée','Informations caloriques et allergènes affichées'],
-            ].map(([icon,title,desc]) => (
-              <div key={title} style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
-                <span style={{ fontSize:18 }}>{icon}</span>
-                <div>
-                  <span style={{ fontWeight:600, fontSize:14, color:'var(--lp-text)', marginRight:6 }}>{title} —</span>
-                  <span style={{ fontSize:13, color:'var(--lp-muted)' }}>{desc}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
-            <motion.button onClick={()=>navigate('/login')} whileHover={{ scale:1.03, boxShadow:'0 12px 40px rgba(34,197,94,.35)' }} style={{ padding:'13px 24px', borderRadius:14, border:'none', background:'linear-gradient(135deg,#22C55E,#16A34A)', color:'#fff', fontSize:14, fontWeight:700, cursor:'pointer' }}>
-              Découvrir RestoBook Canteen →
-            </motion.button>
-            <motion.button onClick={()=>navigate('/landing#univers')} whileHover={{ scale:1.03 }} style={{ padding:'13px 24px', borderRadius:14, border:'1px solid rgba(34,197,94,.3)', background:'transparent', color:'var(--lp-text)', fontSize:14, fontWeight:600, cursor:'pointer' }}>
-              Comparer les solutions
-            </motion.button>
-          </div>
-          <div style={{ marginTop:16, padding:'12px 16px', borderRadius:12, background:'rgba(34,197,94,.08)', border:'1px solid rgba(34,197,94,.15)', fontSize:13, color:'#22C55E', fontWeight:600 }}>
-            🔒 Vos cantines ne sont jamais visibles sur la marketplace publique
+        </motion.div>
+
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginTop:28 }}>
+          <motion.button onClick={()=>navigate('/pro-register')} whileHover={{ scale:1.03, boxShadow:'0 12px 40px var(--lp-orange-glow)' }} whileTap={{ scale:.97 }}
+            className="lp-btn-primary" style={{ fontSize:16, padding:'15px 36px' }}>
+            Créer mon commerce →
+          </motion.button>
+          <div style={{ marginTop:16, fontSize:13, color:'var(--lp-muted)' }}>
+            Déjà un commerce ?{' '}
+            <button onClick={()=>navigate('/login')} style={{ background:'none', border:'none', color:'var(--lp-orange)', fontWeight:700, cursor:'pointer', padding:0, fontSize:13 }}>
+              Se connecter à mon espace pro →
+            </button>
           </div>
         </motion.div>
       </div>
@@ -890,162 +799,59 @@ function CantinesSection({ navigate }) {
   );
 }
 
-/* ─── Testimonials ─── */
-function TestimonialsSection() {
-  const [idx, setIdx] = useState(0);
+/* ─── Témoignages ─── */
+function TestimonialsSection({ navigate }) {
+  const [tab, setTab] = useState('client');
+  const items = TESTIMONIALS_BY_ROLE[tab];
+  const TABS = [ ['client','Clients'], ['commercant','Commerçants'], ['livreur','Livreurs'] ];
 
   return (
     <section className="lp-section" style={{ background:'var(--lp-bg2)', overflow:'hidden' }}>
       <div style={{ maxWidth:1200, margin:'0 auto' }}>
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginBottom:48 }}>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginBottom:36 }}>
           <div className="lp-section-badge">💬 Témoignages</div>
           <h2 style={{ fontSize:'clamp(26px,4vw,40px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 10px', letterSpacing:-.5 }}>
             Ils nous font confiance
           </h2>
-          <p style={{ color:'var(--lp-muted)', fontSize:15 }}>Des milliers d'utilisateurs satisfaits partout au Maroc</p>
-        </motion.div>
-
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:20 }}>
-          {TESTIMONIALS.map((t,i) => (
-            <motion.div key={i} className="lp-testi-card"
-              initial={{ opacity:0, y:30 }}
-              whileInView={{ opacity:1, y:0 }}
-              viewport={{ once:true, amount:0.2 }}
-              transition={{ duration:.5, delay:i*0.1, ease:[.4,0,.2,1] }}
-              whileHover={{ y:-4, boxShadow:'var(--lp-shadow-lg)' }}
-            >
-              <div style={{ color:'#F59E0B', marginBottom:10, fontSize:16 }}>{'★'.repeat(t.rating)}</div>
-              <p style={{ fontSize:14, color:'var(--lp-text2)', lineHeight:1.65, margin:'0 0 18px', fontStyle:'italic' }}>"{t.text}"</p>
-              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <div style={{ width:40, height:40, borderRadius:'50%', background:`linear-gradient(135deg,var(--lp-orange),var(--lp-orange2))`, display:'grid', placeItems:'center', fontWeight:800, color:'#fff', fontSize:14 }}>
-                  {t.avatar}
-                </div>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:'var(--lp-text)' }}>{t.name}</div>
-                  <div style={{ fontSize:12, color:'var(--lp-muted)' }}>{t.role}</div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── Gallery ─── */
-function GallerySection() {
-  const images = [
-    'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?auto=format&fit=crop&w=600&q=75',
-    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=75',
-    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=75',
-    'https://images.unsplash.com/photo-1567521464027-f127ff144326?auto=format&fit=crop&w=600&q=75',
-    'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=75',
-    'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=75',
-  ];
-
-  return (
-    <section className="lp-section" style={{ background:'var(--lp-bg)', paddingTop:60, paddingBottom:60 }}>
-      <div style={{ maxWidth:1200, margin:'0 auto' }}>
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={fadeUp} style={{ textAlign:'center', marginBottom:36 }}>
-          <div className="lp-section-badge">📸 Galerie</div>
-          <h2 style={{ fontSize:'clamp(24px,3.5vw,38px)', fontWeight:800, color:'var(--lp-text)', margin:0, letterSpacing:-.5 }}>
-            L'art de bien manger
-          </h2>
-        </motion.div>
-        <div className="lp-gallery-grid">
-          {images.map((url,i) => (
-            <motion.div key={i}
-              initial={{ opacity:0, scale:.96 }}
-              whileInView={{ opacity:1, scale:1 }}
-              viewport={{ once:true, amount:0.2 }}
-              transition={{ duration:.45, delay:i*0.07 }}
-              whileHover={{ scale:1.03, zIndex:2 }}
-              style={{ borderRadius:16, overflow:'hidden', cursor:'pointer', boxShadow:'var(--lp-shadow)', transition:'box-shadow .2s' }}
-            >
-              <img src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', transition:'transform .4s' }}
-                onMouseEnter={e=>e.currentTarget.style.transform='scale(1.08)'}
-                onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'} />
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── Pricing ─── */
-function PricingSection({ navigate }) {
-  const [tab, setTab] = useState('marketplace');
-  const plans = tab === 'marketplace' ? PRICING_MARKETPLACE : PRICING_PRO;
-
-  return (
-    <section id="pricing" className="lp-section" style={{ background:'var(--lp-bg)' }}>
-      <div style={{ maxWidth:1100, margin:'0 auto' }}>
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={fadeUp} style={{ textAlign:'center', marginBottom:48 }}>
-          <div className="lp-section-badge">💰 Tarifs</div>
-          <h2 style={{ fontSize:'clamp(26px,4vw,42px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 12px', letterSpacing:-.5 }}>
-            Des tarifs <span className="lp-gradient-text">transparents</span>
-          </h2>
-          <p style={{ color:'var(--lp-muted)', fontSize:15, maxWidth:480, margin:'0 auto 24px' }}>
-            Pas de frais cachés. Changez ou annulez votre plan à tout moment.
-          </p>
+          <p style={{ color:'var(--lp-muted)', fontSize:15, marginBottom:24 }}>Clients, commerçants et livreurs partout au Maroc</p>
           <div className="lp-tab-switcher">
-            <button className={`lp-tab-btn${tab==='marketplace'?' active':''}`} onClick={() => setTab('marketplace')}>🍽️ Marketplace</button>
-            <button className={`lp-tab-btn${tab==='pro'?' active':''}`} onClick={() => setTab('pro')}>🏢 Pro / Cantine</button>
+            {TABS.map(([key,label]) => (
+              <button key={key} className={`lp-tab-btn${tab===key?' active':''}`} onClick={() => setTab(key)}>{label}</button>
+            ))}
           </div>
         </motion.div>
 
         <AnimatePresence mode="wait">
-          <motion.div key={tab} initial={{ opacity:0, y:18 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-12 }} transition={{ duration:.26 }}>
-            <div className="lp-pricing-grid">
-              {plans.map((p,i) => (
-                <motion.div key={p.name}
-                  className={`lp-pricing-card${p.popular?' popular':''}`}
-                  initial={{ opacity:0, y:30 }} animate={{ opacity:1, y:0 }} transition={{ duration:.45, delay:i*0.1 }}
-                  whileHover={{ scale:1.015 }}
-                >
-                  {p.popular && <div className="lp-pricing-popular-badge">⭐ Plus populaire</div>}
-
-                  <div style={{ marginBottom:22 }}>
-                    <div style={{ fontSize:30, marginBottom:10 }}>{p.icon}</div>
-                    <div style={{ fontWeight:700, fontSize:17, color:'var(--lp-text)', marginBottom:6 }}>{p.name}</div>
-                    <div style={{ display:'flex', alignItems:'baseline', gap:3 }}>
-                      {p.price === 'Sur devis' || p.price === 'Gratuit' ? (
-                        <span style={{ fontSize:26, fontWeight:800, color:p.popular?'var(--lp-orange)':'var(--lp-text)' }}>{p.price}</span>
-                      ) : (
-                        <>
-                          <span className="lp-pricing-price" style={{ color:p.popular?'var(--lp-orange)':'var(--lp-text)' }}>{p.price}</span>
-                          <span style={{ fontSize:13, color:'var(--lp-muted)', marginLeft:4 }}>MAD/mois</span>
-                        </>
-                      )}
-                    </div>
+          <motion.div key={tab} initial={{ opacity:0, y:18 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-12 }} transition={{ duration:.26 }}
+            style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:20 }}>
+            {items.map((t,i) => (
+              <motion.div key={t.name} className="lp-testi-card"
+                initial={{ opacity:0, y:30 }} animate={{ opacity:1, y:0 }} transition={{ duration:.4, delay:i*0.08 }}
+                whileHover={{ y:-4, boxShadow:'var(--lp-shadow-lg)' }}>
+                <div style={{ color:'#F59E0B', marginBottom:10, fontSize:16 }}>{'★'.repeat(t.rating)}</div>
+                <p style={{ fontSize:14, color:'var(--lp-text2)', lineHeight:1.65, margin:'0 0 18px', fontStyle:'italic' }}>"{t.text}"</p>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ width:40, height:40, borderRadius:'50%', background:'linear-gradient(135deg,var(--lp-orange),var(--lp-orange2))', display:'grid', placeItems:'center', fontWeight:800, color:'#fff', fontSize:14 }}>
+                    {t.avatar}
                   </div>
-
-                  <div style={{ borderTop:'1px solid var(--lp-border)', paddingTop:18, marginBottom:22 }}>
-                    {p.features.map(f => (
-                      <div key={f} className="lp-pricing-feature">
-                        <span className="lp-pricing-check">✓</span>
-                        {f}
-                      </div>
-                    ))}
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:'var(--lp-text)' }}>{t.name}</div>
+                    <div style={{ fontSize:12, color:'var(--lp-muted)' }}>{t.role}</div>
                   </div>
-
-                  <motion.button onClick={() => navigate('/login')} whileHover={{ scale:1.03 }} whileTap={{ scale:.97 }}
-                    className={p.popular ? 'lp-btn-primary' : 'lp-btn-outline'}
-                    style={{ width:'100%', justifyContent:'center', fontSize:14, padding:'13px 20px' }}>
-                    {p.cta}
-                  </motion.button>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
         </AnimatePresence>
 
-        <motion.p initial={{ opacity:0 }} whileInView={{ opacity:1 }} viewport={{ once:true }} transition={{ delay:.3 }}
-          style={{ textAlign:'center', marginTop:28, fontSize:13, color:'var(--lp-muted)' }}>
-          ✅ Pas de carte bancaire requise · 🔒 Annulation à tout moment · ⚡ Activation immédiate
-        </motion.p>
+        {tab === 'livreur' && (
+          <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }} transition={{ duration:.35 }} style={{ textAlign:'center', marginTop:32 }}>
+            <motion.button onClick={()=>navigate('/devenir-livreur')} whileHover={{ scale:1.03, boxShadow:'0 12px 40px var(--lp-orange-glow)' }} whileTap={{ scale:.97 }}
+              className="lp-btn-primary" style={{ fontSize:15, padding:'14px 32px' }}>
+              🛵 Devenir livreur →
+            </motion.button>
+          </motion.div>
+        )}
       </div>
     </section>
   );
@@ -1056,14 +862,14 @@ function FAQSection() {
   const [open, setOpen] = useState(null);
 
   return (
-    <section id="faq" className="lp-section" style={{ background:'var(--lp-bg2)' }}>
+    <section id="faq" className="lp-section" style={{ background:'var(--lp-bg)' }}>
       <div style={{ maxWidth:780, margin:'0 auto' }}>
         <motion.div initial="hidden" whileInView="visible" viewport={{ once:true, margin:'-80px' }} variants={fadeUp} style={{ textAlign:'center', marginBottom:48 }}>
           <div className="lp-section-badge">❓ FAQ</div>
           <h2 style={{ fontSize:'clamp(26px,4vw,42px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 12px', letterSpacing:-.5 }}>
             Questions <span className="lp-gradient-text">fréquentes</span>
           </h2>
-          <p style={{ color:'var(--lp-muted)', fontSize:15, margin:0 }}>Tout ce que vous devez savoir sur RestoBook</p>
+          <p style={{ color:'var(--lp-muted)', fontSize:15, margin:0 }}>Tout ce que vous devez savoir sur {BRAND.APP_NAME}</p>
         </motion.div>
 
         <div>
@@ -1077,11 +883,8 @@ function FAQSection() {
               <AnimatePresence>
                 {open === i && (
                   <motion.div
-                    initial={{ height:0, opacity:0 }}
-                    animate={{ height:'auto', opacity:1 }}
-                    exit={{ height:0, opacity:0 }}
-                    transition={{ duration:.24, ease:[.4,0,.2,1] }}
-                    style={{ overflow:'hidden' }}>
+                    initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }} exit={{ height:0, opacity:0 }}
+                    transition={{ duration:.24, ease:[.4,0,.2,1] }} style={{ overflow:'hidden' }}>
                     <div className="lp-faq-answer">{item.a}</div>
                   </motion.div>
                 )}
@@ -1094,11 +897,10 @@ function FAQSection() {
   );
 }
 
-/* ─── CTA Final ─── */
-function CTASection({ navigate }) {
+/* ─── CTA final ─── */
+function CTASection({ navigate, onDownloadClick }) {
   return (
     <section className="lp-cta-bg lp-section" style={{ textAlign:'center', position:'relative' }}>
-      {/* Background orbs */}
       <div style={{ position:'absolute', top:'10%', left:'20%', width:300, height:300, borderRadius:'50%', background:'radial-gradient(circle,rgba(255,138,0,.12),transparent)', filter:'blur(60px)', pointerEvents:'none' }} />
       <div style={{ position:'absolute', bottom:'10%', right:'20%', width:250, height:250, borderRadius:'50%', background:'radial-gradient(circle,rgba(139,92,246,.1),transparent)', filter:'blur(60px)', pointerEvents:'none' }} />
 
@@ -1108,25 +910,28 @@ function CTASection({ navigate }) {
         </motion.div>
         <motion.h2 initial={{ opacity:0, y:25 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ duration:.5, delay:.1 }}
           style={{ fontSize:'clamp(32px,5vw,56px)', fontWeight:800, color:'var(--lp-text)', margin:'0 0 18px', lineHeight:1.15, letterSpacing:-1 }}>
-          Prêt à vivre une nouvelle<br/><span className="lp-gradient-text">expérience culinaire ?</span>
+          Prêt à découvrir<br/><span className="lp-gradient-text">votre quartier autrement ?</span>
         </motion.h2>
         <motion.p initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ duration:.5, delay:.18 }}
           style={{ fontSize:17, color:'var(--lp-muted)', margin:'0 0 40px', lineHeight:1.6 }}>
-          Rejoignez des milliers d'utilisateurs et de restaurants qui font confiance à RestoBook chaque jour.
+          Rejoignez des milliers d'utilisateurs et de commerçants qui font confiance à {BRAND.APP_NAME} chaque jour.
         </motion.p>
         <motion.div initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ duration:.5, delay:.26 }}
           style={{ display:'flex', gap:16, justifyContent:'center', flexWrap:'wrap' }}>
           <motion.button onClick={()=>navigate('/marketplace')} whileHover={{ scale:1.04, boxShadow:'0 16px 48px var(--lp-orange-glow)' }} whileTap={{ scale:.97 }}
             className="lp-btn-primary" style={{ fontSize:17, padding:'17px 40px' }}>
-            Découvrir RestoBook →
+            Explorer le marketplace →
           </motion.button>
-          <motion.button onClick={()=>navigate('/login')} whileHover={{ scale:1.03 }} className="lp-btn-outline" style={{ fontSize:17, padding:'16px 38px' }}>
-            Commencer gratuitement
+          <motion.button onClick={()=>navigate('/pro-register')} whileHover={{ scale:1.03 }} className="lp-btn-outline" style={{ fontSize:17, padding:'16px 38px' }}>
+            Créer mon commerce
+          </motion.button>
+          <motion.button onClick={onDownloadClick} whileHover={{ scale:1.03 }} className="lp-btn-outline" style={{ fontSize:17, padding:'16px 38px' }}>
+            📱 Télécharger l'app
           </motion.button>
         </motion.div>
         <motion.p initial={{ opacity:0 }} whileInView={{ opacity:1 }} viewport={{ once:true }} transition={{ duration:.4, delay:.36 }}
           style={{ marginTop:22, fontSize:13, color:'var(--lp-muted)' }}>
-          ✅ Gratuit · 🔒 Sécurisé · ⚡ Setup en 2 minutes
+          ✅ Gratuit pour les clients · 🔒 Sécurisé · ⚡ Setup commerçant en 2 minutes
         </motion.p>
       </div>
     </section>
@@ -1134,25 +939,42 @@ function CTASection({ navigate }) {
 }
 
 /* ─── Footer ─── */
-function LandingFooter({ navigate, theme }) {
-  const links = {
-    'Produit':   ['Marketplace','Cantines','IA RestoBook','Nutrition','Statistiques'],
-    'Entreprise':['À propos','Blog','Presse','Carrières','Contact'],
-    'Support':   ['Documentation','FAQ','Statut','Sécurité','Confidentialité'],
-    'Légal':     ['CGU','CGV','Mentions légales','Cookies'],
-  };
+const FOOTER_LINKS = {
+  'Entreprise': [
+    { label:'À propos', href:'#footer' },
+    { label:'Solutions entreprise (Cantines)', to:'/login' },
+    { label:'Contact' },
+  ],
+  'Marketplace': [
+    { label:'Explorer', to:'/marketplace' },
+    { label:'iFilino Discover', to:'/discover' },
+    { label:'Catégories', href:'#categories' },
+    { label:'Comment ça marche', href:'#comment-ca-marche' },
+  ],
+  'Professionnels': [
+    { label:'Créer mon commerce', to:'/pro-register' },
+    { label:'Devenir livreur', to:'/devenir-livreur' },
+    { label:'Espace pro', to:'/login' },
+    { label:'Tarifs', href:'#tarifs' },
+  ],
+  'Support': [
+    { label:'FAQ', href:'#faq' },
+    { label:'CGU' },
+    { label:'Confidentialité' },
+  ],
+};
 
+function LandingFooter({ navigate, theme }) {
   return (
-    <footer style={{ background:'var(--lp-bg)', borderTop:'1px solid var(--lp-border)', padding:'60px clamp(16px,4vw,60px) 30px' }}>
+    <footer id="footer" style={{ background:'var(--lp-bg)', borderTop:'1px solid var(--lp-border)', padding:'60px clamp(16px,4vw,60px) 30px' }}>
       <div style={{ maxWidth:1200, margin:'0 auto' }}>
         <div className="lp-footer-grid" style={{ marginBottom:48 }}>
-          {/* Brand */}
           <div>
             <div style={{ marginBottom:16 }}>
-              <BrandLogo variant="full" theme={theme ?? 'dark'} size="xs" style={{ height:100 }} />
+              <BrandLogo variant="footer" theme={theme ?? 'dark'} size="xs" style={{ height:110 }} />
             </div>
             <p style={{ fontSize:13, color:'var(--lp-muted)', lineHeight:1.65, margin:'0 0 20px', maxWidth:240 }}>
-              La plateforme de restauration premium qui révolutionne l'expérience culinaire au Maroc.
+              La marketplace marocaine de proximité — trouvez, comparez et commandez près de chez vous.
             </p>
             <div style={{ display:'flex', gap:10 }}>
               {['𝕏','in','📧'].map(icon => (
@@ -1161,28 +983,25 @@ function LandingFooter({ navigate, theme }) {
             </div>
           </div>
 
-          {/* Links */}
-          {Object.entries(links).map(([cat, items]) => (
+          {Object.entries(FOOTER_LINKS).map(([cat, items]) => (
             <div key={cat}>
               <div style={{ fontSize:12, fontWeight:700, color:'var(--lp-text)', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:14 }}>{cat}</div>
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                {items.map(item => (
-                  <button key={item} onClick={()=>navigate('/marketplace')} style={{ background:'none', border:'none', padding:0, fontSize:13, color:'var(--lp-muted)', cursor:'pointer', textAlign:'left', transition:'color .15s' }}
-                    onMouseEnter={e=>e.currentTarget.style.color='var(--lp-orange)'}
-                    onMouseLeave={e=>e.currentTarget.style.color='var(--lp-muted)'}>
-                    {item}
-                  </button>
-                ))}
+                {items.map(item => {
+                  const common = { key:item.label, style:{ background:'none', border:'none', padding:0, fontSize:13, color:'var(--lp-muted)', textAlign:'left' } };
+                  if (item.to) return <button {...common} onClick={()=>navigate(item.to)} style={{ ...common.style, cursor:'pointer', transition:'color .15s' }} onMouseEnter={e=>e.currentTarget.style.color='var(--lp-orange)'} onMouseLeave={e=>e.currentTarget.style.color='var(--lp-muted)'}>{item.label}</button>;
+                  if (item.href) return <a key={item.label} href={item.href} style={{ ...common.style, cursor:'pointer', textDecoration:'none', transition:'color .15s' }} onMouseEnter={e=>e.currentTarget.style.color='var(--lp-orange)'} onMouseLeave={e=>e.currentTarget.style.color='var(--lp-muted)'}>{item.label}</a>;
+                  return <span {...common}>{item.label}</span>; // pas encore de page dédiée — texte statique plutôt qu'un lien trompeur
+                })}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Bottom bar */}
         <div style={{ borderTop:'1px solid var(--lp-border)', paddingTop:24, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
-          <span style={{ fontSize:12, color:'var(--lp-muted)' }}>© {new Date().getFullYear()} RestoBook. Tous droits réservés.</span>
+          <span style={{ fontSize:12, color:'var(--lp-muted)' }}>© {new Date().getFullYear()} {BRAND.APP_NAME}. Tous droits réservés.</span>
           <div style={{ display:'flex', gap:8 }}>
-            <span style={{ width:8, height:8, borderRadius:'50%', background:'var(--lp-green)', display:'inline-block', boxShadow:`0 0 8px var(--lp-green)` }} />
+            <span style={{ width:8, height:8, borderRadius:'50%', background:'var(--lp-green)', display:'inline-block', boxShadow:'0 0 8px var(--lp-green)' }} />
             <span style={{ fontSize:12, color:'var(--lp-muted)' }}>Tous les systèmes opérationnels</span>
           </div>
         </div>
@@ -1198,24 +1017,29 @@ function LandingFooter({ navigate, theme }) {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [theme, toggleTheme] = useTheme();
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
+  function notifyComingSoon() {
+    setShowComingSoon(true);
+    setTimeout(() => setShowComingSoon(false), 2600);
+  }
 
   return (
     <div className={`lp lp-${theme}`}>
       <LandingNav theme={theme} toggleTheme={toggleTheme} navigate={navigate} />
-      <HeroSection navigate={navigate} />
-      <TwoUniversesSection navigate={navigate} />
-      <SearchSection navigate={navigate} />
+      <HeroSection navigate={navigate} onDownloadClick={notifyComingSoon} />
+      <CategoriesSection navigate={navigate} />
+      <WhySection />
       <StatsSection />
-      <FeaturesSection />
-      <MarketplaceSection navigate={navigate} />
-      <AISection />
-      <CantinesSection navigate={navigate} />
-      <TestimonialsSection />
-      <GallerySection />
-      <PricingSection navigate={navigate} />
+      <HowItWorksSection />
+      <PopularProductsSection navigate={navigate} />
+      <PopularBusinessesSection navigate={navigate} />
+      <ForMerchantsSection navigate={navigate} />
+      <TestimonialsSection navigate={navigate} />
       <FAQSection />
-      <CTASection navigate={navigate} />
+      <CTASection navigate={navigate} onDownloadClick={notifyComingSoon} />
       <LandingFooter navigate={navigate} theme={theme} />
+      <ComingSoonToast show={showComingSoon} />
     </div>
   );
 }

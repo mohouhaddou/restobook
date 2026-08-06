@@ -1,0 +1,2 @@
+import type { BasePlugin } from "./BasePlugin"; import type { PluginContext } from "./PluginContext"; import { PluginPermissions } from "./PluginPermissions";
+export class PluginSandbox { public constructor(private readonly permissions=new PluginPermissions()){} public async activate(plugin:BasePlugin,context:PluginContext,granted:readonly string[]):Promise<void>{if(!this.permissions.allows(granted,plugin.manifest.permissions))throw new Error("Permissions plugin refusées"); await plugin.activate(Object.freeze({...context}));} }

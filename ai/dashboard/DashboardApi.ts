@@ -1,0 +1,1 @@
+import{DashboardService}from"./DashboardService";export class DashboardApi{public constructor(private readonly service:DashboardService){}async getOverview(){return{metrics:this.service.snapshot(),health:await this.service.status()};}}

@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { API } from '../api';
 import { useCustomerAuth } from '../contexts/CustomerAuthContext';
 import { BrandLogo } from '../components/brand/BrandLogo';
+import GoogleAuthButton from '../shared/components/auth/GoogleAuthButton';
+import { useI18n } from '../i18n/config';
 
 const inputStyle = {
   width: '100%', padding: '13px 14px', border: '1.5px solid #E5E7EB', borderRadius: 10,
@@ -16,6 +18,7 @@ export default function CustomerAuthPage() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const { loginCustomer } = useCustomerAuth();
+  const { t } = useI18n();
   const from = location.state?.from || '/marketplace';
 
   const [tab, setTab]         = useState(location.state?.tab || 'login');
@@ -36,7 +39,7 @@ export default function CustomerAuthPage() {
   async function handleLogin(e) {
     e.preventDefault();
     setError('');
-    if (!loginEmail.trim() || !loginPwd) { setError('Email et mot de passe requis'); return; }
+    if (!loginEmail.trim() || !loginPwd) { setError(t('auth.errors.emailPasswordRequired')); return; }
     setLoading(true);
     try {
       const res  = await fetch(API('/auth/login'), {
@@ -45,20 +48,30 @@ export default function CustomerAuthPage() {
         body: JSON.stringify({ matricule: loginEmail.trim().toLowerCase(), password: loginPwd }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Identifiants invalides'); setLoading(false); return; }
+      if (!res.ok) { setError(data.error || t('auth.errors.invalidCredentials')); setLoading(false); return; }
       loginCustomer(data.token, data.user);
       navigate(from, { replace: true });
-    } catch { setError('Erreur réseau'); }
+    } catch { setError(t('auth.errors.network')); }
     setLoading(false);
+  }
+
+  function handleGoogleSuccess(data) {
+    setError('');
+    loginCustomer(data.token, data.user);
+    navigate(from, { replace: true });
+  }
+
+  function handleGoogleError(message) {
+    setError(message);
   }
 
   async function handleRegister(e) {
     e.preventDefault();
     setError('');
-    if (!regNom.trim())  { setError('Votre nom est requis'); return; }
-    if (!regEmail.trim()) { setError('Email requis'); return; }
-    if (regPwd.length < 6) { setError('Mot de passe minimum 6 caractères'); return; }
-    if (regPwd !== regPwd2) { setError('Les mots de passe ne correspondent pas'); return; }
+    if (!regNom.trim())  { setError(t('auth.errors.nameRequired')); return; }
+    if (!regEmail.trim()) { setError(t('auth.errors.emailRequired')); return; }
+    if (regPwd.length < 6) { setError(t('auth.errors.passwordMin')); return; }
+    if (regPwd !== regPwd2) { setError(t('auth.password_mismatch')); return; }
     setLoading(true);
     try {
       const res  = await fetch(API('/auth/customer-register'), {
@@ -67,10 +80,10 @@ export default function CustomerAuthPage() {
         body: JSON.stringify({ nom: regNom.trim(), email: regEmail.trim().toLowerCase(), phone: regPhone.trim() || undefined, password: regPwd }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Erreur inscription'); setLoading(false); return; }
+      if (!res.ok) { setError(data.error || t('auth.errors.registerFailed')); setLoading(false); return; }
       loginCustomer(data.token, data.user);
       navigate(from, { replace: true });
-    } catch { setError('Erreur réseau'); }
+    } catch { setError(t('auth.errors.network')); }
     setLoading(false);
   }
 
@@ -81,7 +94,7 @@ export default function CustomerAuthPage() {
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <BrandLogo variant="full" theme="light" size="lg"
           style={{ height:120, margin: '0 auto 10px', filter: 'drop-shadow(0 4px 12px rgba(255,138,0,.25))' }} />
-        <p style={{ margin: 0, fontSize: 14, color: '#6B7280' }}>Commandez facilement, partout</p>
+        <p style={{ margin: 0, fontSize: 14, color: '#6B7280' }}>{t('auth.customer.tagline')}</p>
       </div>
 
       {/* Card */}
@@ -89,7 +102,7 @@ export default function CustomerAuthPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '2px solid #F3F4F6' }}>
-          {[['login','Connexion'],['register','Créer un compte']].map(([key, label]) => (
+          {[['login', t('auth.tabs.login')], ['register', t('auth.tabs.register')]].map(([key, label]) => (
             <button key={key} onClick={() => { setTab(key); setError(''); }} style={{
               flex: 1, padding: '16px 0', border: 'none', background: 'none',
               fontSize: 14, fontWeight: tab === key ? 700 : 500, cursor: 'pointer',
@@ -111,12 +124,12 @@ export default function CustomerAuthPage() {
           {tab === 'login' && (
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={labelStyle}>Email ou identifiant</label>
+                <label style={labelStyle}>{t('auth.fields.emailOrIdentifier')}</label>
                 <input type="text" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
                   placeholder="vous@example.com" style={inputStyle} autoComplete="email" />
               </div>
               <div>
-                <label style={labelStyle}>Mot de passe</label>
+                <label style={labelStyle}>{t('auth.fields.password')}</label>
                 <input type="password" value={loginPwd} onChange={e => setLoginPwd(e.target.value)}
                   placeholder="••••••••" style={inputStyle} autoComplete="current-password" />
               </div>
@@ -125,13 +138,13 @@ export default function CustomerAuthPage() {
                 color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700,
                 cursor: loading ? 'default' : 'pointer', marginTop: 4,
               }}>
-                {loading ? 'Connexion…' : 'Se connecter'}
+                {loading ? t('auth.actions.signingIn') : t('auth.actions.signIn')}
               </button>
               <div style={{ textAlign: 'center', fontSize: 13, color: '#6B7280' }}>
-                Pas encore de compte ?{' '}
+                {t('auth.customer.noAccount')} 
                 <button type="button" onClick={() => { setTab('register'); setError(''); }} style={{
                   background: 'none', border: 'none', color: 'var(--rb-orange,#FF8A00)', fontWeight: 600, cursor: 'pointer', padding: 0
-                }}>Créer un compte</button>
+                }}>{t('auth.actions.createAccount')}</button>
               </div>
             </form>
           )}
@@ -140,48 +153,55 @@ export default function CustomerAuthPage() {
           {tab === 'register' && (
             <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={labelStyle}>Prénom & Nom *</label>
+                <label style={labelStyle}>{t('auth.fields.fullNameRequired')}</label>
                 <input type="text" value={regNom} onChange={e => setRegNom(e.target.value)}
                   placeholder="Mohammed Alami" style={inputStyle} autoComplete="name" />
               </div>
               <div>
-                <label style={labelStyle}>Email *</label>
+                <label style={labelStyle}>{t('auth.fields.emailRequired')}</label>
                 <input type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)}
                   placeholder="vous@example.com" style={inputStyle} autoComplete="email" />
               </div>
               <div>
-                <label style={labelStyle}>Téléphone (optionnel)</label>
+                <label style={labelStyle}>{t('auth.fields.phoneOptional')}</label>
                 <input type="tel" value={regPhone} onChange={e => setRegPhone(e.target.value)}
                   placeholder="+212 6 00 00 00 00" style={inputStyle} autoComplete="tel" />
               </div>
               <div>
-                <label style={labelStyle}>Mot de passe *</label>
+                <label style={labelStyle}>{t('auth.fields.passwordRequired')}</label>
                 <input type="password" value={regPwd} onChange={e => setRegPwd(e.target.value)}
-                  placeholder="Minimum 6 caractères" style={inputStyle} autoComplete="new-password" />
+                  placeholder={t('auth.placeholders.passwordMin')} style={inputStyle} autoComplete="new-password" />
               </div>
               <div>
-                <label style={labelStyle}>Confirmer le mot de passe *</label>
+                <label style={labelStyle}>{t('auth.fields.confirmPasswordRequired')}</label>
                 <input type="password" value={regPwd2} onChange={e => setRegPwd2(e.target.value)}
                   placeholder="••••••••" style={inputStyle} autoComplete="new-password" />
               </div>
               <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF', lineHeight: 1.5 }}>
-                En créant un compte, vous acceptez nos conditions d'utilisation.
+                {t('auth.customer.terms')}
               </p>
               <button type="submit" disabled={loading} style={{
                 padding: '14px', background: loading ? '#9CA3AF' : 'linear-gradient(135deg, var(--rb-orange,#FF8A00), var(--rb-deep-orange,#FF5D00))',
                 color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700,
                 cursor: loading ? 'default' : 'pointer',
               }}>
-                {loading ? 'Création…' : 'Créer mon compte'}
+                {loading ? t('auth.actions.creating') : t('auth.actions.createMyAccount')}
               </button>
               <div style={{ textAlign: 'center', fontSize: 13, color: '#6B7280' }}>
-                Déjà un compte ?{' '}
+                {t('auth.customer.hasAccount')} 
                 <button type="button" onClick={() => { setTab('login'); setError(''); }} style={{
                   background: 'none', border: 'none', color: 'var(--rb-orange,#FF8A00)', fontWeight: 600, cursor: 'pointer', padding: 0
-                }}>Se connecter</button>
+                }}>{t('auth.actions.signIn')}</button>
               </div>
             </form>
           )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px' }}>
+            <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
+            <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{t('common.or')}</span>
+            <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
+          </div>
+          <GoogleAuthButton roleIntent="consumer" onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
         </div>
       </div>
 
@@ -189,7 +209,7 @@ export default function CustomerAuthPage() {
       <button onClick={() => navigate(from, { replace: true })} style={{
         marginTop: 20, background: 'none', border: 'none', color: '#9CA3AF', fontSize: 14, cursor: 'pointer', textDecoration: 'underline'
       }}>
-        Continuer sans compte →
+        {t('auth.actions.continueWithoutAccount')}
       </button>
     </div>
   );

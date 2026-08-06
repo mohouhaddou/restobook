@@ -1,0 +1,2 @@
+import{createHash}from"node:crypto";import{AlreadyExistsError}from"./PublishErrors";import type{PublishRepository}from"./PublishTransaction";import type{PublishModule}from"./PublishConfig";
+export class DuplicateDetector{checksum(markdown:string){return createHash("sha256").update(markdown).digest("hex");}async assertUnique(repository:PublishRepository,module:PublishModule,slug:string,title:string,markdown:string,language?:string){if(await repository.exists(module,{slug,title,checksum:this.checksum(markdown),markdown,language}))throw new AlreadyExistsError();}}

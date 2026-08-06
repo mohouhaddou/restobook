@@ -1,0 +1,94 @@
+{
+  "id": "gaming-2026-001",
+  "editor": "gaming",
+  "category": "guide",
+  "language": "fr",
+  "createdAt": "2026-07-23T13:00:00.000Z",
+  "updatedAt": "2026-07-23T13:15:00.000Z",
+  "articleMarkdown": "# Bien débuter dans un jeu de stratégie\n\n## Observer avant d'agir\n\nComprendre les ressources disponibles aide à préparer chaque décision.",
+  "sections": [
+    {
+      "heading": "Observer avant d'agir",
+      "level": 2,
+      "content": "Comprendre les ressources disponibles aide à préparer chaque décision.",
+      "imageReference": "gaming-cover"
+    }
+  ],
+  "metadata": {
+    "title": "Bien débuter dans un jeu de stratégie",
+    "slug": "bien-debuter-dans-un-jeu-de-strategie",
+    "excerpt": "Quelques repères généraux pour découvrir les jeux de stratégie.",
+    "description": "Guide introductif fictif destiné à illustrer le contrat GamingHub.",
+    "keywords": ["jeu de stratégie", "guide débutant"],
+    "tags": ["gaming", "guide"],
+    "author": {
+      "name": "Rédaction iFilino GamingHub",
+      "type": "ai-editor",
+      "id": "gaming"
+    },
+    "category": "guide",
+    "language": "fr",
+    "readingTime": 5,
+    "difficulty": "beginner",
+    "sources": [
+      {
+        "title": "Source documentaire fictive GamingHub",
+        "url": "https://example.invalid/gaming-source",
+        "publisher": "Exemple documentaire",
+        "accessedAt": "2026-07-23T12:30:00.000Z"
+      }
+    ],
+    "license": {
+      "name": "Tous droits réservés",
+      "attribution": "iFilino GamingHub"
+    }
+  },
+  "images": [
+    {
+      "id": "gaming-cover",
+      "filename": "gaming-strategie-cover.avif",
+      "alt": "Plateau abstrait représentant un jeu de stratégie",
+      "caption": "Observer le terrain avant de prendre une décision.",
+      "role": "cover",
+      "width": 1600,
+      "height": 900,
+      "format": "avif",
+      "relativePath": "gaming/2026/gaming-strategie-cover.avif",
+      "generated": false
+    }
+  ],
+  "seo": {
+    "title": "Bien débuter dans un jeu de stratégie | GamingHub",
+    "description": "Guide introductif aux grands principes des jeux de stratégie.",
+    "canonical": "https://www.ifilino.com/gaming/articles/bien-debuter-dans-un-jeu-de-strategie",
+    "robots": "noindex,follow",
+    "openGraph": {
+      "title": "Bien débuter dans un jeu de stratégie",
+      "description": "Guide introductif aux grands principes des jeux de stratégie.",
+      "type": "article",
+      "image": "gaming/2026/gaming-strategie-cover.avif",
+      "siteName": "iFilino GamingHub"
+    },
+    "twitter": {
+      "card": "summary_large_image",
+      "title": "Bien débuter dans un jeu de stratégie",
+      "description": "Guide introductif aux grands principes des jeux de stratégie.",
+      "image": "gaming/2026/gaming-strategie-cover.avif"
+    }
+  },
+  "workflow": {
+    "editor": "gaming",
+    "steps": [
+      {
+        "id": "gaming-review",
+        "name": "Revue du guide",
+        "order": 1,
+        "status": "completed",
+        "requiresHumanReview": true
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "version": "1.0.0",
+  "status": "review"
+}

@@ -1,0 +1,13 @@
+/* Boutons de partage — theme-aware via les tokens --il-* (fonctionne à
+   l'identique dans iFilino Play et le Gaming Hub, tous deux scopés .play-chrome). */
+.share-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--il-border); background: var(--il-card); color: var(--il-text); font-size: 12.5px; font-weight: 750; cursor: pointer; text-decoration: none; transition: border-color .15s ease, color .15s ease; }
+.share-btn:hover { border-color: var(--il-primary); color: var(--il-primary); }
+.share-btn:focus-visible { outline: 3px solid var(--il-primary); outline-offset: 2px; }
+.share-btn.copied { border-color: #22c55e; color: #22c55e; }
+
+.share-buttons.compact .share-btn { min-height: 36px; padding: 0 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .share-btn { transition: none; }
+}

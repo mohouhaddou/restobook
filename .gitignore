@@ -21,6 +21,13 @@ frontend/public/brand/*.psd
 *.tar
 *.tar.gz
 
+# Sauvegardes locales (contiennent des dumps DB + env_files avec secrets réels —
+# ne jamais versionner, voir backups/*/env_files)
+backups/
+
+# Python bytecode cache (skills tooling)
+__pycache__/
+
 # OS/IDE
 .DS_Store
 Thumbs.db

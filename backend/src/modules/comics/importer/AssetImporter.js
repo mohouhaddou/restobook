@@ -1,0 +1,4 @@
+'use strict';const fs=require('fs');const path=require('path');
+const clean=value=>String(value||'').replace(/\\/g,'/').replace(/^\.\//,'');
+class AssetImporter{static entry(entries,name){const wanted=clean(name).toLowerCase();return entries.find(e=>clean(e.entryName).toLowerCase()===wanted)}static references(manifest){const raw=Array.isArray(manifest.assets)?manifest.assets:[];return raw.map(x=>typeof x==='string'?x:x.path||x.file||x.src).filter(Boolean)}static copy(entries,refs,dir){const saved=[];for(const ref of refs){const entry=this.entry(entries,ref);if(!entry){const e=new Error(`Asset missing: ${ref}`);e.status=422;throw e}const name=path.basename(clean(ref));fs.writeFileSync(path.join(dir,name),entry.getData());saved.push(name)}return saved}}
+module.exports=AssetImporter;

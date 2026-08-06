@@ -1,0 +1,2 @@
+import assert from"node:assert/strict";import test from"node:test";import{AIImportEventBus}from"../AIImportEvents";
+test("websocket reçoit les événements publics",async()=>{const bus=new AIImportEventBus(),received:string[]=[];bus.on(event=>{received.push(event.name);});await bus.emit({name:"upload-progress",importId:"1",timestamp:"x",record:{}as never});assert.deepEqual(received,["upload-progress"]);});
