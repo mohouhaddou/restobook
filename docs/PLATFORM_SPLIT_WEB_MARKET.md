@@ -219,9 +219,25 @@ HTTP 200 à son nouveau chemin, `App.jsx` transformé sans erreur, les 11
 nouveaux chemins d'import présents dans la sortie compilée). Dev server
 arrêté après vérification, aucun process resté actif.
 
+**Phase 4 — faite** (2026-08-06) : DNS (`admin.ifilino.com` et
+`market-admin.ifilino.com` → 91.98.138.100), certificat Let's Encrypt étendu
+(`certbot --nginx --cert-name ifilino.com --expand`, SAN couvrant les 4
+domaines), nginx rechargé. Vérifié : `dig` résout bien les deux nouveaux
+noms, HTTPS répond 200 sur les deux, le cert présente bien les 4 SAN, et
+`GET https://market-admin.ifilino.com/api/` répond (même backend Node que
+`ifilino.com`, aucun nouveau process). `nginx/ifilino.conf` du dépôt
+resynchronisé avec le fichier déployé (Certbot l'a modifié automatiquement).
+
+**Limite connue, pas encore adressée** : ces deux sous-domaines pointent
+vers exactement le même build SPA — la Sidebar affiche encore les deux
+sections "Administration Web" et "Administration Marketplace" quel que soit
+le sous-domaine (filtrage par permissions, pas par host). Un filtrage par
+`window.location.hostname` dans `Sidebar.jsx` (+ éventuellement une route
+d'atterrissage par défaut différente) serait nécessaire pour une vraie
+séparation UX par domaine — chantier frontend séparé, pas fait.
+
 **Non fait (hors scope de cette session, décision produit à part)** :
-Phase 4 (sous-domaines `admin.ifilino.com`/`market-admin.ifilino.com`,
-DNS/certbot), Phase 5 (dépôts physiquement séparés).
+Phase 5 (dépôts physiquement séparés `ifilino-web`/`ifilino-market`).
 
 Correction post-vérification : `acquisition` reclassé WEB→MARKET après
 lecture du code (voir tableau ci-dessus) — c'est du sourcing de commerces,
