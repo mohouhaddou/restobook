@@ -1,10 +1,19 @@
 'use strict';
 
-// PERMISSIONS vit maintenant dans @ifilino/shared (packages/shared/permissions.js)
+// PERMISSIONS vit maintenant dans @ifilino/shared (packages/shared/permissions.json)
 // — source canonique unique, aussi consommée par le frontend. Avant ce
 // changement, les deux copies avaient dérivé (12 permissions manquantes côté
-// frontend). Voir docs/PLATFORM_SPLIT_WEB_MARKET.md, Phase 5a.
-const { PERMISSIONS } = require('@ifilino/shared');
+// frontend). Voir docs/PLATFORM_SPLIT_WEB_MARKET.md, Phase 5a. JSON plutôt
+// que CommonJS : Rollup (utilisé par `vite build`, contrairement au serveur
+// de dev qui passe par esbuild) ne détectait pas les exports nommés d'un
+// module CJS derrière le symlink `file:` du package — le build de prod
+// échouait alors que `vite dev` fonctionnait. Le JSON est importé
+// nativement et identiquement par require() et par le plugin JSON intégré
+// de Vite/Rollup, sans aucune détection CJS/ESM à faire.
+// require() ne fige pas l'objet JSON parsé — Object.freeze ici recrée la
+// même garantie défensive que l'ancienne version avait via Object.freeze()
+// directement dans packages/shared.
+const PERMISSIONS = Object.freeze(require('@ifilino/shared').PERMISSIONS);
 
 const ALL_PERMISSIONS = Object.values(PERMISSIONS);
 
