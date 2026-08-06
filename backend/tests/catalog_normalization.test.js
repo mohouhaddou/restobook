@@ -8,7 +8,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const { sequelize, GlobalProduct, ProductBrand } = require('../models');
-const { normalizeProductName, findDuplicateCandidates } = require('../src/modules/catalog/productNormalizationService');
+const { normalizeProductName, findDuplicateCandidates } = require('../src/market/catalog/productNormalizationService');
 const { generateUniqueSlug } = require('../src/shared/utils/slug');
 
 let pass = 0, fail = 0;

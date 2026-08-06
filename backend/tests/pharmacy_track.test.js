@@ -23,7 +23,7 @@ function assert(condition, message) {
 function startServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/marketplace', require('../src/modules/marketplace/routes'));
+  app.use('/api/marketplace', require('../src/market/marketplace/routes'));
   app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' }));
   return new Promise((resolve) => {
     const server = app.listen(0, () => {

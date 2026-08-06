@@ -50,9 +50,9 @@ function createApp({ allowedOrigins = true } = {}) {
   // ── Routes ─────────────────────────────────────────────────────────────────
   app.get('/api/health', (req, res) => res.json({ ok: true, version: '3.0.0' }));
   app.use('/api', require('../routes'));
-  app.use('/api/notifications', require('./modules/notifications/routes'));
-  app.use('/api/subscriptions', require('./modules/admin/subscriptionsRoutes'));
-  app.use('/api', require('./modules/marketplace/publicRoutes'));
+  app.use('/api/notifications', require('./shared/notifications/routes'));
+  app.use('/api/subscriptions', require('./shared/admin/subscriptionsRoutes'));
+  app.use('/api', require('./market/marketplace/publicRoutes'));
 
   // ── Error handler ──────────────────────────────────────────────────────────
   app.use(require('./middleware/errorHandler'));

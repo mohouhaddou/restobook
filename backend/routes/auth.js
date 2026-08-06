@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/auth/routes');
+module.exports = require('../src/shared/auth/routes');

@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/resto/nutritionRoutes');
+module.exports = require('../src/market/resto/nutritionRoutes');

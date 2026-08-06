@@ -7,10 +7,10 @@ const {
   categoriesForQuery,
   normalizedCategoryFromTags,
   subdividePlan,
-} = require('../src/modules/acquisition/services/overpassQueryPlanner');
-const { parseElements } = require('../src/modules/acquisition/services/osmBatchConnector');
-const endpointManager = require('../src/modules/acquisition/services/overpassEndpointManager');
-const { findCellForPoint, isInsideRadius } = require('../src/modules/acquisition/services/utils');
+} = require('../src/market/acquisition/services/overpassQueryPlanner');
+const { parseElements } = require('../src/market/acquisition/services/osmBatchConnector');
+const endpointManager = require('../src/market/acquisition/services/overpassEndpointManager');
+const { findCellForPoint, isInsideRadius } = require('../src/market/acquisition/services/utils');
 
 function run() {
   const bbox = { south: 33.82, west: -7.06, north: 33.87, east: -7.00 };

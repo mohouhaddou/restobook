@@ -25,7 +25,7 @@ async function runCheck() {
       where: { expires_at: { [Op.not]: null }, status: { [Op.in]: ['pending', 'verified'] } },
       include: [{ model: DeliveryPerson, as: 'deliveryPerson' }],
     });
-    const NotificationService = require('../../notifications/NotificationService');
+    const NotificationService = require('../../../shared/notifications/NotificationService');
 
     for (const doc of docs) {
       const days = daysUntil(doc.expires_at);

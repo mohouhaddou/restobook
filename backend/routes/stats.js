@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/cantine/statsRoutes');
+module.exports = require('../src/market/cantine/statsRoutes');

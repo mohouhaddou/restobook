@@ -28,7 +28,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const express = require('express');
 const { sequelize, User, Organization, Business, DeliveryPerson } = require('../models');
-const googleAuth = require('../src/modules/auth/googleAuth');
+const googleAuth = require('../src/shared/auth/googleAuth');
 
 let pass = 0, fail = 0;
 function assert(condition, message) {
@@ -39,7 +39,7 @@ function assert(condition, message) {
 function startServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/auth', require('../src/modules/auth/routes'));
+  app.use('/api/auth', require('../src/shared/auth/routes'));
   app.use((err, req, res, next) => {
     res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' });
   });

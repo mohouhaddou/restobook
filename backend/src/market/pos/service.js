@@ -28,7 +28,7 @@ const { computeEligibleAmount } = require('../loyalty/eligibility');
 const { generateTicketNumber } = require('./ticketNumber');
 const { normalizeBarcode } = require('../../shared/utils/barcode');
 const { getTier } = require('../../shared/config/loyaltyTiers');
-const NotificationService = require('../notifications/NotificationService');
+const NotificationService = require('../../shared/notifications/NotificationService');
 
 class PosError extends Error {
   constructor(code, status = 400) {

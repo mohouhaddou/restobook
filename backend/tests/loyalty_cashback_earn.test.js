@@ -9,7 +9,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const crypto = require('crypto');
 const { sequelize, User, LoyaltyRule, CashbackAccount, CashbackTransaction } = require('../models');
-const { creditOrderCashback } = require('../src/modules/loyalty/cashbackEarnService');
+const { creditOrderCashback } = require('../src/market/loyalty/cashbackEarnService');
 const fx = require('./helpers/posFixtures');
 
 let pass = 0, fail = 0;

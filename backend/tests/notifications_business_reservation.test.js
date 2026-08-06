@@ -17,7 +17,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const crypto = require('crypto');
 const { sequelize, User, Organization, Business, Notification, TableReservation } = require('../models');
-const NotificationService = require('../src/modules/notifications/NotificationService');
+const NotificationService = require('../src/shared/notifications/NotificationService');
 
 let pass = 0, fail = 0;
 function assert(condition, message) {

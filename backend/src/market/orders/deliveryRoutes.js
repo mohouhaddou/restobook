@@ -144,7 +144,7 @@ router.post('/accept/:deliveryId',
         global.io.to(`org:${order.organization_id}`).emit('order:status', payload);
       }
       if (order) {
-        require('../notifications/NotificationService').create({
+        require('../../shared/notifications/NotificationService').create({
           type: 'DELIVERY_ACCEPTED',
           organization_id: order.organization_id,
           recipient_id: null, // broadcast à tout le staff de l'org

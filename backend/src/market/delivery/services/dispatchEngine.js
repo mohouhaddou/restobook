@@ -88,7 +88,7 @@ async function notifyPool(delivery, order, org) {
   });
   if (!candidates.length) return;
 
-  const NotificationService = require('../../notifications/NotificationService');
+  const NotificationService = require('../../../shared/notifications/NotificationService');
   for (const dp of candidates) {
     NotificationService.create({
       type: 'DELIVERY_AVAILABLE',
@@ -158,7 +158,7 @@ async function proposeToCandidate(delivery, order, candidate, org) {
   };
   if (global.io) global.io.to(`courier:${candidate.id}`).emit('dispatch:offer', payload);
 
-  require('../../notifications/NotificationService').create({
+  require('../../../shared/notifications/NotificationService').create({
     type: 'COURIER_OFFER',
     recipient_id: candidate.user_id,
     title: '🛵 Nouvelle proposition de livraison',
@@ -242,7 +242,7 @@ async function respondToOffer(deliveryId, user, action) {
       global.io.to(`org:${order.organization_id}`).emit('order:status', payload);
     }
     if (order) {
-      require('../../notifications/NotificationService').create({
+      require('../../../shared/notifications/NotificationService').create({
         type: 'DELIVERY_ACCEPTED',
         organization_id: order.organization_id,
         recipient_id: null, // broadcast à tout le staff de l'org

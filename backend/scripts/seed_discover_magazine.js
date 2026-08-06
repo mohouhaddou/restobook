@@ -17,7 +17,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const { Article, City } = require('../models');
 const { slugify } = require('../src/shared/utils/slug');
-const aiDraftService = require('../src/modules/discover/aiDraftService');
+const aiDraftService = require('../src/web/discover/aiDraftService');
 
 const TOPICS = [
   { topic: 'Les meilleures pizzas à Rabat', category: 'guide', rubrique: 'restaurants_food', vertical: 'restaurant', city: 'Rabat' },

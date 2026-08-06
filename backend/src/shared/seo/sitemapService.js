@@ -15,8 +15,8 @@ const { Organization, MenuItem, HanoutProduct, PharmacyMedicine, City, Category,
 const { absoluteUrl } = require('./metaGenerator');
 const { listCitiesWithCounts, MARKETPLACE_TYPES } = require('./publicDataService');
 const { VERTICALS } = require('./verticals');
-const articleService = require('../discover/articleService');
-const { SUPPORTED_LANGUAGES } = require('../discover/i18n');
+const articleService = require('../../web/discover/articleService');
+const { SUPPORTED_LANGUAGES } = require('../../web/discover/i18n');
 
 const MAX_URLS_PER_SITEMAP = 45000; // marge sous la limite protocole de 50 000
 const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 min

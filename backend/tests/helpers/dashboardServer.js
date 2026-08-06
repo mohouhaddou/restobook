@@ -15,10 +15,10 @@ const jwt = require('jsonwebtoken');
 function startServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/dashboard', require('../../src/modules/dashboard/routes'));
-  app.use('/api/marketplace', require('../../src/modules/marketplace/routes'));
-  app.use('/api/loyalty', require('../../src/modules/marketplace/loyaltyRoutes'));
-  app.use('/api/superadmin/loyalty', require('../../src/modules/admin/loyaltyProgramRoutes'));
+  app.use('/api/dashboard', require('../../src/market/dashboard/routes'));
+  app.use('/api/marketplace', require('../../src/market/marketplace/routes'));
+  app.use('/api/loyalty', require('../../src/market/marketplace/loyaltyRoutes'));
+  app.use('/api/superadmin/loyalty', require('../../src/shared/admin/loyaltyProgramRoutes'));
   app.use((err, req, res, next) => {
     res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' });
   });

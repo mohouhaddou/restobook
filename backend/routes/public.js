@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/marketplace/publicRoutes');
+module.exports = require('../src/market/marketplace/publicRoutes');

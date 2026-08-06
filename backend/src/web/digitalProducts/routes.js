@@ -23,7 +23,7 @@ const { resolveReader } = require('../portals/middleware/resolveReader');
 const { DigitalProduct, Purchase, GeneratedFile, PortalContent } = require('../../../models');
 const { computeEffectiveState } = require('./effectiveState');
 const { ensureGeneratedFile, getStatus } = require('./generationService');
-const { getProvider } = require('../payments/registry');
+const { getProvider } = require('../../shared/payments/registry');
 const { getStorageProvider } = require('./storage');
 
 const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);

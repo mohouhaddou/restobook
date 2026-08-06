@@ -12,7 +12,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const crypto = require('crypto');
 const { sequelize, User, HanoutOrder } = require('../models');
-const svc = require('../src/modules/pos/service');
+const svc = require('../src/market/pos/service');
 const fx = require('./helpers/posFixtures');
 const { startServer, tokenFor, api } = require('./helpers/dashboardServer');
 

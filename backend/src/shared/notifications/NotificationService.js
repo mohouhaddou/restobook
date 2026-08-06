@@ -14,9 +14,9 @@ const { APP_NAME } = require('../../../config/branding');
  */
 
 const { Notification, User, Business, DeliveryPerson } = require('../../../models');
-const EmailService = require('../../shared/services/EmailService');
-const NotificationRouter = require('../../shared/services/NotificationRouter');
-const { pushRoleFor } = require('../../shared/utils/pushRole');
+const EmailService = require('../services/EmailService');
+const NotificationRouter = require('../services/NotificationRouter');
+const { pushRoleFor } = require('../utils/pushRole');
 
 // ── Icônes par type ──────────────────────────────────────────────────────────
 const TYPE_CONFIG = {

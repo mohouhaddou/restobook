@@ -12,7 +12,7 @@
  */
 
 const SITE_NAME = 'Ifilino';
-const { DEFAULT_LANGUAGE, normalizeLanguage, isRtlLanguage, SUPPORTED_LANGUAGES, ogLocaleForLanguage } = require('../discover/i18n');
+const { DEFAULT_LANGUAGE, normalizeLanguage, isRtlLanguage, SUPPORTED_LANGUAGES, ogLocaleForLanguage } = require('../../web/discover/i18n');
 const BASE_URL = (process.env.PUBLIC_BASE_URL || 'https://ifilino.com').replace(/\/+$/, '');
 const DEFAULT_OG_IMAGE = `${BASE_URL}/brand/ifilino_light.png`;
 

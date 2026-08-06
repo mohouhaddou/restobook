@@ -1,8 +1,8 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { authorizePublication, applyPublicationAccess } = require('../src/modules/portals/freemium/accessPolicy');
-const { serializeContent } = require('../src/modules/portals/serializer');
+const { authorizePublication, applyPublicationAccess } = require('../src/web/portals/freemium/accessPolicy');
+const { serializeContent } = require('../src/web/portals/serializer');
 
 const premium = { id: 1, portal: 'kids', content_type: 'stories', slug: 'story', isPremium: true, previewLength: 12, premiumBadge: 'Club', metadata: {}, featured: false, view_count: 0 };
 const translation = { language: 'en', slug: 'story', title: 'Story', excerpt: 'Summary', body: '12345678901234567890' };

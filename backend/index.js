@@ -81,7 +81,7 @@ app.use('/brand',   express.static(path.join(__dirname, 'public', 'brand')));
 // Sitemaps dynamiques — montés AVANT express.static ci-dessous : sinon un
 // fichier sitemap*.xml resté sur disque (ancien statique) serait servi en
 // priorité et la génération dynamique ne serait jamais atteinte.
-app.use(require('./src/modules/seo/sitemapRoutes'));
+app.use(require('./src/shared/seo/sitemapRoutes'));
 // SEO — robots & sitemap servis à la racine du sous-chemin Nginx
 // redirect:false — sinon un dossier statique portant le même nom qu'une route
 // SEO (ex: public/play/ads.txt) fait rediriger express.static vers l'URL avec
@@ -112,7 +112,7 @@ app.use('/api', require('./routes/public'));
 // next() et retombe donc sur exactement le même comportement qu'avant cette
 // fonctionnalité (index.html) — le back-office authentifié n'est jamais
 // concerné. Voir backend/src/modules/seo/.
-app.use(require('./src/modules/seo/ssrRouter'));
+app.use(require('./src/shared/seo/ssrRouter'));
 
 // ── Fallback SPA — remplace l'ancien `try_files ... /index.html` de nginx
 // (voir nginx/ifilino.conf) pour toute page non gérée par le SSR ci-dessus :
@@ -216,8 +216,8 @@ io.on('connection', (socket) => {
       const dp = await DeliveryPerson.findByPk(socket.data.deliveryPersonId);
       if (!dp) return;
 
-      const { recordPing, buildPositionPayload } = require('./src/modules/delivery/services/locationService');
-      const { trackingCode } = require('./src/modules/delivery/services/orderEngine');
+      const { recordPing, buildPositionPayload } = require('./src/market/delivery/services/locationService');
+      const { trackingCode } = require('./src/market/delivery/services/orderEngine');
       const { activeAssignment } = await recordPing(dp, {
         lat, lng,
         speed_kmh: position?.speed_kmh, heading_deg: position?.heading_deg, accuracy_m: position?.accuracy_m,
@@ -241,29 +241,29 @@ io.on('connection', (socket) => {
 
 // Collecte centralisée Infrastructure — un seul poller pour tous les
 // SuperAdmin connectés, voir src/modules/infra/poller.js.
-require('./src/modules/infra/poller').start(io);
+require('./src/shared/infra/poller').start(io);
 
 // Régénération périodique des sitemaps SEO (30 min) — même logique de poller
 // in-process que les jobs ci-dessous, pas de nouvelle dépendance cron.
-require('./src/modules/seo/sitemapService').startPeriodicRefresh();
+require('./src/shared/seo/sitemapService').startPeriodicRefresh();
 
 // Planification des articles Gaming Hub (draft -> published à scheduled_at) —
 // même logique de poller in-process, vérifié toutes les 60s.
-require('./src/modules/gaminghub/schedulerJob').start();
-require('./src/modules/comics/schedulerJob').start();
+require('./src/web/gaminghub/schedulerJob').start();
+require('./src/web/comics/schedulerJob').start();
 
 // Balayage périodique des offres de dispatch expirées (Phase 3) — pas de
 // timer par offre : plus simple et auto-réparant si le process redémarre
 // pendant qu'une offre est en attente (voir dispatchEngine.js).
-require('./src/modules/delivery/services/dispatchEngine').startSweep();
+require('./src/market/delivery/services/dispatchEngine').startSweep();
 
 // Alertes d'expiration des documents livreur (Phase 6) — même logique de
 // poller in-process, pas de nouvelle dépendance cron/queue.
-require('./src/modules/delivery/services/documentExpiryJob').start();
+require('./src/market/delivery/services/documentExpiryJob').start();
 
 // Purge des notifications expirées (Notification Center Phase 1) — même
 // logique de poller in-process.
-require('./src/modules/notifications/expiryJob').start();
+require('./src/shared/notifications/expiryJob').start();
 
 // ── Démarrage ─────────────────────────────────────────────────────────────────
 async function waitDb(maxRetries = 10) {
@@ -290,7 +290,7 @@ async function start() {
       console.log(`[${new Date().toISOString()}] DB synced (dev only)`);
     }
     await seed();
-    require('./src/modules/media/mediaMaintenanceJob').start();
+    require('./src/shared/media/mediaMaintenanceJob').start();
   }
 
   const port = Number(process.env.PORT || 3001);

@@ -1,9 +1,9 @@
 'use strict';
 
 const assert = require('assert');
-const { SUPPORTED_LANGUAGES, normalizeLanguage, isRtlLanguage, ogLocaleForLanguage } = require('../src/modules/discover/i18n');
-const { rubriqueLabel } = require('../src/modules/discover/rubriques');
-const meta = require('../src/modules/seo/metaGenerator');
+const { SUPPORTED_LANGUAGES, normalizeLanguage, isRtlLanguage, ogLocaleForLanguage } = require('../src/web/discover/i18n');
+const { rubriqueLabel } = require('../src/web/discover/rubriques');
+const meta = require('../src/shared/seo/metaGenerator');
 
 assert.deepStrictEqual(SUPPORTED_LANGUAGES, ['ar', 'fr', 'en']);
 assert.strictEqual(normalizeLanguage('en-US'), 'en');

@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/resto/tablesRoutes');
+module.exports = require('../src/market/resto/tablesRoutes');

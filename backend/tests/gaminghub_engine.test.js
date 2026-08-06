@@ -19,7 +19,7 @@ async function run() {
   console.log('\nTests — Gaming Hub (moteur de similarité + IA)\n');
 
   // ── 1. similarityService.scoreMatch — fonction pure ──────────────────────
-  const similarityService = require('../src/modules/gaminghub/similarityService');
+  const similarityService = require('../src/web/gaminghub/similarityService');
 
   const dofusLike = { genre: 'MMORPG', tags: ['fantasy', 'tactical', 'strategy'], universe: 'Fantasy médiéval', mechanics: ['turn-based', 'pvp'], view_mode: 'isometric', difficulty: 'medium' };
 
@@ -57,7 +57,7 @@ async function run() {
   }
 
   // ── 3. gameService.listGames — jamais un brouillon visible publiquement ──
-  const gameService = require('../src/modules/gaminghub/gameService');
+  const gameService = require('../src/web/gaminghub/gameService');
   const originalGameFindAndCountAll = models.GamingGame.findAndCountAll;
   let capturedGameWhere = null;
   models.GamingGame.findAndCountAll = async (opts) => { capturedGameWhere = opts.where; return { count: 0, rows: [] }; };
@@ -69,7 +69,7 @@ async function run() {
   }
 
   // ── 4. aiDraftService — garde-fous légaux structurels ────────────────────
-  const aiDraftService = require('../src/modules/gaminghub/aiDraftService');
+  const aiDraftService = require('../src/web/gaminghub/aiDraftService');
 
   const gameSchemaKeys = Object.keys(aiDraftService.DRAFT_JSON_SCHEMA.properties);
   assert(!gameSchemaKeys.includes('release_date'), 'release_date jamais demande a l\'IA (fiche jeu)');

@@ -8,8 +8,8 @@ const { requireAuth } = require('../../../middleware/auth');
 const { Notification, User, Business, DeliveryPerson } = require('../../../models');
 const validate = require('../../../middleware/validate');
 const NotificationService = require('../../../services/NotificationService');
-const NotificationRouter = require('../../shared/services/NotificationRouter');
-const { pushRoleFor } = require('../../shared/utils/pushRole');
+const NotificationRouter = require('../services/NotificationRouter');
+const { pushRoleFor } = require('../utils/pushRole');
 
 router.use(requireAuth);
 

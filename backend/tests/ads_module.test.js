@@ -21,9 +21,9 @@ function assert(condition, message) {
 function startServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/superadmin/ads', require('../src/modules/ads/adminRoutes'));
-  app.use('/api/superadmin/ad-placements', require('../src/modules/ads/placementRoutes'));
-  app.use('/api/ads', require('../src/modules/ads/publicRoutes'));
+  app.use('/api/superadmin/ads', require('../src/web/ads/adminRoutes'));
+  app.use('/api/superadmin/ad-placements', require('../src/web/ads/placementRoutes'));
+  app.use('/api/ads', require('../src/web/ads/publicRoutes'));
   app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' }));
   return new Promise((resolve) => {
     const server = app.listen(0, () => {

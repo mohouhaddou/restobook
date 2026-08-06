@@ -29,7 +29,7 @@ const {
   Organization, Business,
 } = require('../../../models');
 const NotificationService = require('../../../services/NotificationService');
-const { logRuleAudit } = require('../loyalty/ruleAuditService');
+const { logRuleAudit } = require('../../market/loyalty/ruleAuditService');
 
 const BUSINESS_TYPES = ['restaurant', 'cafe', 'cantine', 'hanout', 'boulangerie', 'patisserie', 'boucherie', 'pharmacie', 'autre'];
 

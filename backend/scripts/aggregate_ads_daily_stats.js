@@ -9,7 +9,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const { sequelize } = require('../models');
-const { aggregateDay } = require('../src/modules/ads/services/adAggregationService');
+const { aggregateDay } = require('../src/web/ads/services/adAggregationService');
 
 function yesterday() {
   const d = new Date();

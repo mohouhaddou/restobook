@@ -9,7 +9,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const { sequelize } = require('../models');
-const svc = require('../src/modules/pos/service');
+const svc = require('../src/market/pos/service');
 const { resolveBarcodeAssignment } = require('../src/shared/utils/barcode');
 const { HanoutProduct } = require('../models');
 const { Op } = require('sequelize');

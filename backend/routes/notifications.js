@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/notifications/routes');
+module.exports = require('../src/shared/notifications/routes');

@@ -22,9 +22,9 @@ async function run() {
   assert(!!pkg.dependencies.zod, 'zod present pour validation structuree');
   assert(!pkg.dependencies['@anthropic-ai/sdk'], 'SDK Anthropic supprime des dependances directes');
 
-  const service = require('../src/modules/discover/aiDraftService');
+  const service = require('../src/web/discover/aiDraftService');
   const models = require('../models');
-  const publicDataService = require('../src/modules/seo/publicDataService');
+  const publicDataService = require('../src/shared/seo/publicDataService');
 
   const oldKey = process.env.OPENAI_API_KEY;
   delete process.env.OPENAI_API_KEY;

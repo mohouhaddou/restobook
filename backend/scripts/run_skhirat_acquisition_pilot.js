@@ -14,13 +14,13 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const fs = require('fs');
 const path = require('path');
 const sequelize = require('../models/db');
-const campaignService = require('../src/modules/acquisition/services/campaignService');
-const { runCampaign } = require('../src/modules/acquisition/services/discoveryEngine');
-const { seedOpenStreetMapSource } = require('../src/modules/acquisition/services/sourceRegistry');
-const { generateGridCells } = require('../src/modules/acquisition/services/utils');
-const { buildGroupedQuery, initialPlan } = require('../src/modules/acquisition/services/overpassQueryPlanner');
-const { executePlan } = require('../src/modules/acquisition/services/osmBatchConnector');
-const endpointManager = require('../src/modules/acquisition/services/overpassEndpointManager');
+const campaignService = require('../src/market/acquisition/services/campaignService');
+const { runCampaign } = require('../src/market/acquisition/services/discoveryEngine');
+const { seedOpenStreetMapSource } = require('../src/market/acquisition/services/sourceRegistry');
+const { generateGridCells } = require('../src/market/acquisition/services/utils');
+const { buildGroupedQuery, initialPlan } = require('../src/market/acquisition/services/overpassQueryPlanner');
+const { executePlan } = require('../src/market/acquisition/services/osmBatchConnector');
+const endpointManager = require('../src/market/acquisition/services/overpassEndpointManager');
 
 const pilot = {
   name: 'Pilote commerces Skhirat centre',

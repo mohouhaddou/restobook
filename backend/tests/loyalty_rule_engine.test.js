@@ -8,7 +8,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const { sequelize, LoyaltyRule, BusinessLoyaltySettings } = require('../models');
-const { resolveLoyaltyRule } = require('../src/modules/loyalty/ruleEngine');
+const { resolveLoyaltyRule } = require('../src/market/loyalty/ruleEngine');
 const fx = require('./helpers/posFixtures');
 
 let pass = 0, fail = 0;

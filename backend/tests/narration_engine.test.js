@@ -11,14 +11,14 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const cache = require('../src/modules/narration/cache');
-const KokoroProvider = require('../src/modules/narration/providers/KokoroProvider');
-const PiperProvider = require('../src/modules/narration/providers/PiperProvider');
-const SherpaOnnxProvider = require('../src/modules/narration/providers/SherpaOnnxProvider');
-const CoquiXttsProvider = require('../src/modules/narration/providers/CoquiXttsProvider');
-const providerManager = require('../src/modules/narration/ProviderManager');
-const service = require('../src/modules/narration/service');
-const { readWavDurationMs } = require('../src/modules/narration/wav');
+const cache = require('../src/web/narration/cache');
+const KokoroProvider = require('../src/web/narration/providers/KokoroProvider');
+const PiperProvider = require('../src/web/narration/providers/PiperProvider');
+const SherpaOnnxProvider = require('../src/web/narration/providers/SherpaOnnxProvider');
+const CoquiXttsProvider = require('../src/web/narration/providers/CoquiXttsProvider');
+const providerManager = require('../src/web/narration/ProviderManager');
+const service = require('../src/web/narration/service');
+const { readWavDurationMs } = require('../src/web/narration/wav');
 
 let pass = 0, fail = 0;
 function assert(condition, message) {

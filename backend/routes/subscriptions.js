@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/admin/subscriptionsRoutes');
+module.exports = require('../src/shared/admin/subscriptionsRoutes');

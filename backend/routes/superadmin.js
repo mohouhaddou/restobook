@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/admin/superadminRoutes');
+module.exports = require('../src/shared/admin/superadminRoutes');

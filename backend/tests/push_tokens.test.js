@@ -41,7 +41,7 @@ function tokenFor(user, sessionId) {
 function startServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/notifications', require('../src/modules/notifications/routes'));
+  app.use('/api/notifications', require('../src/shared/notifications/routes'));
   app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' }));
   return new Promise((resolve) => {
     const server = app.listen(0, () => {

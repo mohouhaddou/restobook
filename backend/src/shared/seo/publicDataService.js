@@ -152,7 +152,7 @@ async function getRestaurantBySlug(slug) {
   // (backend/src/modules/discover/articleService.js) importe lui-même
   // publicDataService — un require() en tête de fichier ici créerait une
   // dépendance circulaire résolue à un objet vide au chargement.
-  const { listArticlesForBusiness } = require('../discover/articleService');
+  const { listArticlesForBusiness } = require('../../web/discover/articleService');
   const businessProfile = await Business.findOne({ where: { organization_id: org.id }, attributes: ['id'] });
 
   return {
@@ -257,7 +257,7 @@ async function getBusinessBySlug(vertical, slug) {
     }));
   }
 
-  const { listArticlesForBusiness } = require('../discover/articleService');
+  const { listArticlesForBusiness } = require('../../web/discover/articleService');
   const businessProfile = await Business.findOne({ where: { organization_id: org.id }, attributes: ['id'] });
 
   return {

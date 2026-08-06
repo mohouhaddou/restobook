@@ -10,7 +10,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { sequelize, GlobalProduct, ProductBrand } = require('../models');
-const { normalizeProductName } = require('../src/modules/catalog/productNormalizationService');
+const { normalizeProductName } = require('../src/market/catalog/productNormalizationService');
 const fx = require('./helpers/posFixtures');
 
 let pass = 0, fail = 0;
@@ -26,7 +26,7 @@ function tokenFor(user, org) {
 function startServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/catalog', require('../src/modules/catalog/routes'));
+  app.use('/api/catalog', require('../src/market/catalog/routes'));
   app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' }));
   return new Promise((resolve) => {
     const server = app.listen(0, () => {

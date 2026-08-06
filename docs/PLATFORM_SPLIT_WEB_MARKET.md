@@ -293,10 +293,69 @@ Vérifié : `node --check` sur tous les fichiers touchés, rechargement complet
 de `backend/routes/index.js` (128 routes, aucune erreur), et les deux
 services fonctionnels via `require('./src/shared/services')`.
 
-**Non fait (reste de la Phase 5b, décision produit à part)** : déplacement
-physique des 35 modules backend et des dizaines de dossiers frontend dans
-des arbres `apps/web/`/`apps/market/` complets, clarification du statut réel
-de `render.yaml`.
+**Phase 5b — regroupement physique backend fait** (2026-08-06). Le frein
+Render est considéré levé : `/srv/restobook/` (checkout séparé, ~11 mois
+sans activité, aucun process PM2, aucune référence nginx, `backend/.env`
+réel sans `CORS_ORIGIN`/`ASSET_BASE` Render renseignés, `render.yaml`
+jamais retouché depuis le tout premier commit) — faisceau d'indices fort
+que ce n'est pas un déploiement actif (pas une certitude à 100%, dashboard
+Render non consulté directement).
+
+Les 38 modules de `backend/src/modules/` sont déplacés vers
+`backend/src/{web,market,shared}/<module>` — **même profondeur** qu'avant
+(`web/X` remplace `modules/X`, pas `web/modules/X`), ce qui préserve tel
+quel l'immense majorité des imports existants (`../../models`,
+`../../middleware/auth`, imports internes à un module). Fait via
+`scripts/migrate-backend-module-tree.mjs`, un codemod dry-run-by-default :
+scanne tout `backend/` (pas seulement `src/modules/`), ne réécrit que les
+imports relatifs qui résolvent effectivement vers un module déplacé, puis
+déplace les dossiers. 88 fichiers / 264 imports réécrits, 38 dossiers
+déplacés. Toujours un seul process Node/PM2, un seul `backend/index.js`,
+un seul `package.json` — aucun changement de topologie de déploiement.
+
+Classification finale (37→38 en comptant `marketplace` et `reservations`,
+absents de la liste MARKET_MODULES utilisée par le script de garde-fou en
+Phase 5a — corrigé ici) :
+- WEB (12) : discover, comics, gaminghub, play, portals, study, digitalProducts, narration, ai-import, ai-publisher, ads, portalHero
+- MARKET (17) : resto, cantine, hanout, pharmacy, pos, delivery, loyalty, orders, catalog, businesses, marketplaceHero, storeHero, reviews, dashboard, acquisition, marketplace, reservations
+- SHARED (9) : auth, users, organizations, notifications, media, seo, payments, admin, infra
+
+Vérifié avant commit : recherche de requires dynamiques (aucun trouvé —
+condition nécessaire à la fiabilité du codemod), dry-run relancé après
+application (0 changement restant = migration stable/idempotente), check
+de syntaxe sur les 334 fichiers touchés (333 OK + le script de migration
+lui-même en `.mjs`, non concerné), chargement réel de `backend/routes/index.js`
+(128 routes, identique à avant), boot-check des 15 requires directs de
+`backend/index.js` (schedulers, shims `routes/notifications.js`/
+`subscriptions.js`/`public.js`), et `scripts/check-web-market-boundaries.mjs`
+réécrit pour la nouvelle arborescence (plus besoin de mapper des noms de
+dossier à un groupe — un `require('../../market/...')` depuis `src/web/`
+est directement une violation).
+
+**Deuxième exception réelle trouvée** (invisible à l'ancienne version du
+script à cause de l'oubli `marketplace`/`reservations` ci-dessus) :
+`discover/articleService.js` (WEB) consomme la vraie logique métier
+marketplace (`productDetailService`, `productSearchService`) pour permettre
+aux articles du magazine de référencer des produits réels — contrairement
+au moteur hero, ce n'est pas un utilitaire mal rangé mais un couplage
+produit intentionnel. Documenté comme exception connue dans le script ;
+décider de le découpler (ex: appel API interne) est une décision produit,
+pas prise ici.
+
+Fichiers surprises découverts et vérifiés non-impactants pendant
+l'investigation : `backend/src/app.js`/`backend/src/index.js` (code mort,
+jamais requis nulle part, PM2 démarre uniquement `backend/index.js` à la
+racine — un test lit `src/app.js` comme texte brut pour une assertion, sans
+jamais l'exécuter) ; `backend/services/*.js` (shims légers vers
+`src/shared/services/`, même famille que `backend/routes/*.js` et
+`backend/auth/permissions.js`, déjà gérés correctement par le codemod).
+
+**Non lancé** : les suites `npm run test:*` qui touchent la vraie DB de
+prod via `require('../models')` — pas exécutées sans confirmation séparée.
+
+**Non fait (reste de la Phase 5b, décision produit à part)** : regroupement
+physique du frontend (`frontend/src/modules/*`/`pages/*`/`shared/*` —
+structure différente, mérite son propre plan dédié).
 
 Correction post-vérification : `acquisition` reclassé WEB→MARKET après
 lecture du code (voir tableau ci-dessus) — c'est du sourcing de commerces,

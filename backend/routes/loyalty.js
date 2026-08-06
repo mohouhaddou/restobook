@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/marketplace/loyaltyRoutes');
+module.exports = require('../src/market/marketplace/loyaltyRoutes');

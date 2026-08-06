@@ -9,7 +9,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const { sequelize, Order } = require('../models');
-const svc = require('../src/modules/pos/service');
+const svc = require('../src/market/pos/service');
 const fx = require('./helpers/posFixtures');
 
 let pass = 0, fail = 0;

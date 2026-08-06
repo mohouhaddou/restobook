@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/organizations/routes');
+module.exports = require('../src/shared/organizations/routes');

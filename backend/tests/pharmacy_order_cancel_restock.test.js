@@ -29,7 +29,7 @@ function tokenFor(user, org) {
 function startPublicServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/pharmacy', require('../src/modules/pharmacy/publicRoutes'));
+  app.use('/api/pharmacy', require('../src/market/pharmacy/publicRoutes'));
   app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' }));
   return new Promise((resolve) => {
     const server = app.listen(0, () => {
@@ -41,7 +41,7 @@ function startPublicServer() {
 function startProServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/pharmacy-pro', require('../src/modules/pharmacy/proRoutes'));
+  app.use('/api/pharmacy-pro', require('../src/market/pharmacy/proRoutes'));
   app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' }));
   return new Promise((resolve) => {
     const server = app.listen(0, () => {

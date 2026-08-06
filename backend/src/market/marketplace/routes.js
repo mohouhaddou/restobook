@@ -644,14 +644,14 @@ router.get('/categories', [
 // ════════════════════════════════════════════════════════════════════════════
 router.get('/cities', async (req, res, next) => {
   try {
-    const { listCitiesWithCounts } = require('../seo/publicDataService');
+    const { listCitiesWithCounts } = require('../../shared/seo/publicDataService');
     res.json({ cities: await listCitiesWithCounts() });
   } catch (e) { next(e); }
 });
 
 router.get('/categories/restaurant', async (req, res, next) => {
   try {
-    const { listRestaurantCategories } = require('../seo/publicDataService');
+    const { listRestaurantCategories } = require('../../shared/seo/publicDataService');
     res.json({ categories: await listRestaurantCategories() });
   } catch (e) { next(e); }
 });

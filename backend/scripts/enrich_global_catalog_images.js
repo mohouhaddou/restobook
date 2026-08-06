@@ -26,9 +26,9 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const { Op } = require('sequelize');
 const { sequelize, GlobalProduct, ProductBrand, ProductCategory } = require('../models');
-const { normalizeProductName } = require('../src/modules/catalog/productNormalizationService');
+const { normalizeProductName } = require('../src/market/catalog/productNormalizationService');
 const { normalizeBarcode, detectBarcodeType } = require('../src/shared/utils/barcode');
-const off = require('../src/modules/catalog/openFoodFactsConnector');
+const off = require('../src/market/catalog/openFoodFactsConnector');
 
 // Débit volontairement prudent — les deux projets limitent les utilisateurs
 // anonymes en rafale (503 observé en pratique lors du développement).

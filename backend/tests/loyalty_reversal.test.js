@@ -11,8 +11,8 @@ const crypto = require('crypto');
 const {
   sequelize, User, LoyaltyPoints, CashbackAccount, CashbackTransaction,
 } = require('../models');
-const { reverseOrderLoyalty } = require('../src/modules/loyalty/reversalService');
-const svc = require('../src/modules/pos/service');
+const { reverseOrderLoyalty } = require('../src/market/loyalty/reversalService');
+const svc = require('../src/market/pos/service');
 const fx = require('./helpers/posFixtures');
 
 let pass = 0, fail = 0;

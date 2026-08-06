@@ -1,6 +1,6 @@
 'use strict';
 
-const { normalizeRole } = require('../../modules/auth/permissions');
+const { normalizeRole } = require('../auth/permissions');
 
 const DRIVER_ROLES = new Set(['delivery', 'pharmacy_delivery_manager']);
 

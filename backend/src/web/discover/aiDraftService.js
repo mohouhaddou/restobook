@@ -16,8 +16,8 @@ const { Op } = require('sequelize');
 const { Article, City, Coupon } = require('../../../models');
 const { generateUniqueSlug } = require('../../shared/utils/slug');
 const { createAIProvider, getAiPublicStatus, AIProviderError, aiConfig } = require('../../services/ai/openaiProvider');
-const publicDataService = require('../seo/publicDataService');
-const { VERTICALS } = require('../seo/verticals');
+const publicDataService = require('../../shared/seo/publicDataService');
+const { VERTICALS } = require('../../shared/seo/verticals');
 const { RUBRIQUES, RUBRIQUE_KEYS } = require('./rubriques');
 
 const ARTICLE_CATEGORIES = [

@@ -1,2 +1,2 @@
 'use strict';
-module.exports = require('../src/modules/reservations/routes');
+module.exports = require('../src/market/reservations/routes');

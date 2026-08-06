@@ -15,11 +15,11 @@ const {
 } = require('../../../models');
 const { slugify } = require('../../shared/utils/slug');
 const { parseMarkdown, computeReadingTime } = require('../../shared/markdown/markdownEngine');
-const productDetailService = require('../marketplace/productDetailService');
-const productSearchService = require('../marketplace/productSearchService');
+const productDetailService = require('../../market/marketplace/productDetailService');
+const productSearchService = require('../../market/marketplace/productSearchService');
 const { isOpenNow } = require('../../utils/openingHours');
-const publicDataService = require('../seo/publicDataService');
-const { VERTICALS } = require('../seo/verticals');
+const publicDataService = require('../../shared/seo/publicDataService');
+const { VERTICALS } = require('../../shared/seo/verticals');
 const { RUBRIQUES } = require('./rubriques');
 const { DEFAULT_LANGUAGE, normalizeLanguage } = require('./i18n');
 

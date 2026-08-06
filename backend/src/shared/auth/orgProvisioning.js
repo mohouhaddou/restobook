@@ -1,7 +1,7 @@
 'use strict';
 
 const { Organization, SubscriptionPlan, UserSubscription, Business, User } = require('../../../models');
-const { slugify, generateUniqueSlug: genUniqueSlug } = require('../../shared/utils/slug');
+const { slugify, generateUniqueSlug: genUniqueSlug } = require('../utils/slug');
 
 async function generateUniqueSlug(name) {
   return genUniqueSlug(Organization, name, { where: {}, maxLen: 60 });

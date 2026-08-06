@@ -18,7 +18,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const { sequelize, GlobalProduct, ProductBrand, ProductCategory } = require('../models');
 const { generateUniqueSlug, slugify } = require('../src/shared/utils/slug');
-const { normalizeProductName } = require('../src/modules/catalog/productNormalizationService');
+const { normalizeProductName } = require('../src/market/catalog/productNormalizationService');
 
 // { name, brand, category (slug), unit }
 const PRODUCTS = [
