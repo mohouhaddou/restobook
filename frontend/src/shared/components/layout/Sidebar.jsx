@@ -300,6 +300,18 @@ const SECTIONS_ADMIN_MARKET = [
   },
 ];
 
+// ── Filtrage par sous-domaine (Phase 4, docs/PLATFORM_SPLIT_WEB_MARKET.md) ──
+// admin.ifilino.com / market-admin.ifilino.com pointent vers le même build —
+// on n'affiche que la moitié pertinente de la nav sur ces deux domaines.
+// Sur ifilino.com (et en dev/localhost), on garde tout affiché : pas de
+// régression pour les accès existants tant que ce n'est pas leur domaine dédié.
+function getAdminDomainScope() {
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  if (host === 'admin.ifilino.com') return 'web';
+  if (host === 'market-admin.ifilino.com') return 'market';
+  return null;
+}
+
 function hasAccess(user, permissions, hasAnyPermission) {
   if (!permissions) return true;
   return !!user && hasAnyPermission(permissions);
@@ -338,7 +350,15 @@ function buildSections(user, hasAnyPermission) {
     domainSections = [...SECTIONS_CANTEEN, ...SECTIONS_RESTAURANT, ...SECTIONS_LOYALTY_COMMON];
   }
 
-  const allSections = [...SECTIONS_COMMON, ...domainSections, ...SECTIONS_ADMIN, ...SECTIONS_INFRA, ...SECTIONS_ADMIN_WEB, ...SECTIONS_ADMIN_MARKET];
+  const adminScope = getAdminDomainScope();
+  const allSections = [
+    ...SECTIONS_COMMON,
+    ...domainSections,
+    ...SECTIONS_ADMIN,
+    ...SECTIONS_INFRA,
+    ...(adminScope === 'market' ? [] : SECTIONS_ADMIN_WEB),
+    ...(adminScope === 'web' ? [] : SECTIONS_ADMIN_MARKET),
+  ];
 
   return allSections.map(s => ({
     ...s,
