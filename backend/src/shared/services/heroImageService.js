@@ -6,6 +6,11 @@ const sharp = require('sharp');
 // (décision Phase 1 : évite le double stockage). Le fit:'cover' fait un centre-crop
 // automatique côté serveur — aucun outil de recadrage interactif en Phase 1
 // (aucune librairie de crop dans ce codebase).
+//
+// Déplacé depuis modules/marketplaceHero/services/ (Phase 5b,
+// docs/PLATFORM_SPLIT_WEB_MARKET.md) : moteur volontairement partagé entre
+// marketplace, store et portails (kids/sports) — vivait dans un module
+// MARKET alors que WEB (portalHero) en dépendait aussi.
 async function toDesktopWebp(buffer) {
   return sharp(buffer).resize(1920, 1080, { fit: 'cover' }).webp({ quality: 80 }).toBuffer();
 }

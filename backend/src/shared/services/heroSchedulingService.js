@@ -4,6 +4,11 @@
 // séparément (le Hero programme des plages horaires en plus des dates —
 // ex: visible seulement 8h-22h). Source unique de vérité, utilisée à la fois
 // par la liste admin (badge "actif maintenant") et l'endpoint public.
+//
+// Déplacé depuis modules/marketplaceHero/services/ (Phase 5b,
+// docs/PLATFORM_SPLIT_WEB_MARKET.md) : moteur volontairement partagé entre
+// marketplace, store et portails (kids/sports) — vivait dans un module
+// MARKET alors que WEB (portalHero) en dépendait aussi.
 function isSlideActiveNow(slide, now = new Date()) {
   if (!slide || slide.status !== 'active') return false;
 

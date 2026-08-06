@@ -24,8 +24,8 @@ const { body, param } = require('express-validator');
 const { requireAuth, requireSuperAdmin } = require('../../../middleware/auth');
 const validate = require('../../../middleware/validate');
 const { MarketplaceHeroSlide } = require('../../../models');
-const { isSlideActiveNow } = require('./services/heroSchedulingService');
-const { toDesktopWebp, toMobileWebp, toIllustrationWebp } = require('./services/heroImageService');
+const { isSlideActiveNow } = require('../../shared/services/heroSchedulingService');
+const { toDesktopWebp, toMobileWebp, toIllustrationWebp } = require('../../shared/services/heroImageService');
 const { getSlideStats, computeAbRecommendation } = require('./services/heroStatsService');
 const { logHeroAudit } = require('./services/heroAuditService');
 

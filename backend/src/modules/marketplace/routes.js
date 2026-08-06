@@ -2350,7 +2350,7 @@ router.get('/restaurants/:slug/daily-menu', async (req, res, next) => {
 // HERO MANAGER — carousel marketing public (voir backend/src/modules/marketplaceHero/)
 // ════════════════════════════════════════════════════════════════════════════
 
-const { isSlideActiveNow } = require('../marketplaceHero/services/heroSchedulingService');
+const { isSlideActiveNow } = require('../../shared/services/heroSchedulingService');
 
 const PUBLIC_SLIDE_FIELDS = [
   'id', 'title', 'subtitle', 'badge', 'discount_badge', 'discount_label',

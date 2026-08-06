@@ -28,8 +28,8 @@ const { body, param } = require('express-validator');
 const { requireAuth, requireOrganizationAccess } = require('../../../middleware/auth');
 const validate = require('../../../middleware/validate');
 const { StoreHeroSlide, StoreHeroSlideEvent } = require('../../../models');
-const { isSlideActiveNow } = require('../marketplaceHero/services/heroSchedulingService');
-const { toDesktopWebp, toMobileWebp, toIllustrationWebp } = require('../marketplaceHero/services/heroImageService');
+const { isSlideActiveNow } = require('../../shared/services/heroSchedulingService');
+const { toDesktopWebp, toMobileWebp, toIllustrationWebp } = require('../../shared/services/heroImageService');
 
 const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 

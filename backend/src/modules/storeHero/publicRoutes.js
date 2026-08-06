@@ -14,7 +14,7 @@ const router = express.Router();
 const { param } = require('express-validator');
 const validate = require('../../../middleware/validate');
 const { StoreHeroSlide, StoreHeroSlideEvent } = require('../../../models');
-const { isSlideActiveNow } = require('../marketplaceHero/services/heroSchedulingService');
+const { isSlideActiveNow } = require('../../shared/services/heroSchedulingService');
 
 const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 

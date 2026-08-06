@@ -31,20 +31,13 @@ const MARKET_MODULES = [
   'reviews', 'dashboard', 'acquisition',
 ];
 
-// Exceptions connues et documentées — pas des bugs de ce script, mais de la
-// dette technique déjà identifiée : le moteur de scheduling/traitement
-// d'image des hero carousels est volontairement partagé entre marketplace,
-// store et portails (voir docs/PLATFORM_SPLIT_WEB_MARKET.md), mais vit
-// physiquement dans marketplaceHero/services/ au lieu d'un module partagé
-// dédié. À corriger en Phase 5b (extraction physique) ; en attendant, ces
-// imports précis sont tolérés pour que ce script reste un vrai signal "0 =
-// propre" plutôt qu'un bruit permanent. Toute AUTRE violation continue de
-// faire échouer le check.
-const KNOWN_EXCEPTIONS = new Set([
-  'backend/src/modules/portalHero/adminRoutes.js:../marketplaceHero/services/heroSchedulingService',
-  'backend/src/modules/portalHero/adminRoutes.js:../marketplaceHero/services/heroImageService',
-  'backend/src/modules/portalHero/publicRoutes.js:../marketplaceHero/services/heroSchedulingService',
-]);
+// Exceptions connues et documentées — mécanisme gardé pour de futures dettes
+// similaires, mais vide depuis Phase 5b : le moteur de scheduling/traitement
+// d'image des hero carousels (heroSchedulingService/heroImageService), seule
+// exception trouvée au premier lancement, a été extrait vers
+// backend/src/shared/services/ (hors de backend/src/modules/, donc plus
+// jamais détecté par ce scanner). Voir docs/PLATFORM_SPLIT_WEB_MARKET.md.
+const KNOWN_EXCEPTIONS = new Set([]);
 
 const CODE_EXT = new Set(['.js', '.ts', '.mjs', '.cjs']);
 // require('...') ou import/export ... from '...' — capture uniquement les

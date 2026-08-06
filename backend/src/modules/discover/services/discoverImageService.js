@@ -2,7 +2,7 @@
 
 const sharp = require('sharp');
 
-// Même logique que marketplaceHero/services/heroImageService.js — conversion
+// Même logique que shared/services/heroImageService.js — conversion
 // systématique en WebP, pas de conservation de l'original.
 async function toCoverWebp(buffer) {
   return sharp(buffer).resize(1200, 630, { fit: 'cover' }).webp({ quality: 80 }).toBuffer();

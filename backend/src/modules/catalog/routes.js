@@ -26,7 +26,7 @@ const { PERMISSIONS } = require('../../../auth/permissions');
 const validate = require('../../../middleware/validate');
 const { generateUniqueSlug } = require('../../shared/utils/slug');
 const { normalizeBarcode, detectBarcodeType } = require('../../shared/utils/barcode');
-const { toIllustrationWebp } = require('../marketplaceHero/services/heroImageService');
+const { toIllustrationWebp } = require('../../shared/services/heroImageService');
 const { normalizeProductName, findDuplicateCandidates } = require('./productNormalizationService');
 
 const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);

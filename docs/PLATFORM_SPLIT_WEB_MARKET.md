@@ -278,10 +278,25 @@ volontairement partagé entre marketplace/store/portails (voir
 exception connue dans le script plutôt que corrigé ici (extraction physique
 = Phase 5b) ; le script reste donc un vrai signal "0 violation = propre".
 
-**Non fait (Phase 5b, décision produit à part)** : déplacement physique des
-35 modules backend et des dizaines de dossiers frontend dans des arbres
-`apps/web/`/`apps/market/` complets, extraction du moteur hero partagé hors
-de `marketplaceHero/`, clarification du statut réel de `render.yaml`.
+**Phase 5b — un morceau fait** (2026-08-06) : extraction du moteur hero
+partagé. `heroSchedulingService.js` et `heroImageService.js` déplacés de
+`backend/src/modules/marketplaceHero/services/` vers
+`backend/src/shared/services/` (qui existait déjà — `AIService`,
+`EmailService`, etc.) et ajoutés à son `index.js`. 7 fichiers consommateurs
+mis à jour (`catalog`, `portalHero` ×2, `storeHero` ×2, `marketplace`,
+`marketplaceHero` lui-même). `heroAuditService.js`/`heroStatsService.js`
+restent dans `marketplaceHero/` — vérifié qu'ils ne sont utilisés que là,
+pas partagés. Les exceptions du script de garde-fou (Phase 5a) sont
+devenues inutiles et ont été retirées : `check-web-market-boundaries.mjs`
+passe maintenant à **zéro exception**, plus seulement zéro violation.
+Vérifié : `node --check` sur tous les fichiers touchés, rechargement complet
+de `backend/routes/index.js` (128 routes, aucune erreur), et les deux
+services fonctionnels via `require('./src/shared/services')`.
+
+**Non fait (reste de la Phase 5b, décision produit à part)** : déplacement
+physique des 35 modules backend et des dizaines de dossiers frontend dans
+des arbres `apps/web/`/`apps/market/` complets, clarification du statut réel
+de `render.yaml`.
 
 Correction post-vérification : `acquisition` reclassé WEB→MARKET après
 lecture du code (voir tableau ci-dessus) — c'est du sourcing de commerces,

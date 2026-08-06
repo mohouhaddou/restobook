@@ -27,8 +27,8 @@ const { body, param } = require('express-validator');
 const { requireAuth, requireSuperAdmin } = require('../../../middleware/auth');
 const validate = require('../../../middleware/validate');
 const { PortalHeroSlide, PortalHeroSlideEvent } = require('../../../models');
-const { isSlideActiveNow } = require('../marketplaceHero/services/heroSchedulingService');
-const { toDesktopWebp, toMobileWebp } = require('../marketplaceHero/services/heroImageService');
+const { isSlideActiveNow } = require('../../shared/services/heroSchedulingService');
+const { toDesktopWebp, toMobileWebp } = require('../../shared/services/heroImageService');
 
 const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
