@@ -238,8 +238,50 @@ les accès existants). Vérifié par parsing esbuild + transform réel via
 compilée). Pas de route d'atterrissage par défaut différente par domaine
 pour l'instant (hors scope, pas demandé) — seule la nav est filtrée.
 
-**Non fait (hors scope de cette session, décision produit à part)** :
-Phase 5 (dépôts physiquement séparés `ifilino-web`/`ifilino-market`).
+**Phase 5a — faite** (2026-08-06) : `packages/shared/` (`@ifilino/shared`,
+CommonJS, zéro dépendance) créé pour `PERMISSIONS`/`ROLE_LABELS`/
+`ASSIGNABLE_ROLES` — jusqu'ici dupliquées à la main entre
+`backend/src/modules/auth/permissions.js` et
+`frontend/src/modules/core/permissions.js`, et déjà dérivées : le frontend
+avait **12 permissions manquantes** (`COMICS_READ/PUBLISH/MODERATE/ADMIN`,
+`MEDIA_VIEW/CREATE/UPDATE/DELETE/PUBLISH/RESTORE/ADMIN`,
+`PHARMACY_ORDER_MANAGE`), maintenant corrigé. Branché en dépendance locale
+`file:../packages/shared` (pas de champ `workspaces` npm à la racine —
+`render.yaml` déploie `backend/` et `frontend/` comme deux services
+indépendants avec leur propre `package-lock.json`/`npm ci`, statut actif
+non confirmé, donc option la plus prudente retenue).
+
+Piège rencontré et corrigé : `packages/shared/index.js` faisait d'abord
+`module.exports = { ...require('./permissions') }` — le spread empêche
+l'analyse statique CJS de Vite/esbuild (cjs-module-lexer) de détecter les
+exports nommés, donc `import { PERMISSIONS } from '@ifilino/shared'` échouait
+silencieusement côté frontend (export default vide). Corrigé en exports
+nommés statiques. Deuxième piège : Vite résout le symlink `file:` vers son
+chemin réel (hors `node_modules/`) et ne le pré-bundle pas par défaut —
+ajout de `optimizeDeps.include: ['@ifilino/shared']` dans
+`frontend/vite.config.js`. Les deux ont été détectés et vérifiés en
+conditions réelles (`vite dev` + Playwright, exécution navigateur, pas
+juste un parse statique) — sans cette vérification runtime, le premier
+piège en particulier serait passé inaperçu (aucune erreur au build/parse).
+
+`scripts/check-web-market-boundaries.mjs` : garde-fou anti-dérive, scanne
+tous les `require()`/`import` relatifs dans `backend/src/modules/*` et
+échoue si un module WEB importe un module MARKET ou vice versa. Lancement
+manuel (`npm run check:boundaries` depuis `backend/`, ou directement depuis
+la racine) — pas de CI existante à brancher automatiquement. A trouvé 3
+imports croisés réels au premier lancement : `portalHero` (WEB) réutilise
+`marketplaceHero/services/heroSchedulingService.js` et `heroImageService.js`
+(MARKET) — le moteur de scheduling/image des hero carousels est
+volontairement partagé entre marketplace/store/portails (voir
+[[project_hero_premium_animation]]) mais vit physiquement dans
+`marketplaceHero/` au lieu d'un module partagé dédié. Documenté comme
+exception connue dans le script plutôt que corrigé ici (extraction physique
+= Phase 5b) ; le script reste donc un vrai signal "0 violation = propre".
+
+**Non fait (Phase 5b, décision produit à part)** : déplacement physique des
+35 modules backend et des dizaines de dossiers frontend dans des arbres
+`apps/web/`/`apps/market/` complets, extraction du moteur hero partagé hors
+de `marketplaceHero/`, clarification du statut réel de `render.yaml`.
 
 Correction post-vérification : `acquisition` reclassé WEB→MARKET après
 lecture du code (voir tableau ci-dessus) — c'est du sourcing de commerces,

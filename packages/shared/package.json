@@ -1,0 +1,7 @@
+{
+  "name": "@ifilino/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Code partagé backend/frontend (permissions, etc.) — voir docs/PLATFORM_SPLIT_WEB_MARKET.md, Phase 5a.",
+  "main": "index.js"
+}

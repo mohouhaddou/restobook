@@ -18,6 +18,7 @@
     "test:markdown": "vitest run --config vitest.config.js"
   },
   "dependencies": {
+    "@ifilino/shared": "file:../packages/shared",
     "bootstrap": "^5.3.8",
     "firebase": "^12.15.0",
     "framer-motion": "^12.42.0",

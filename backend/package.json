@@ -78,9 +78,11 @@
     "test:ads": "node tests/ads_module.test.js",
     "test:markdown-engine": "node tests/markdown_engine.test.js",
     "migrate:comics-package-v2": "node scripts/migrate_comics_package_v2.js",
-    "test:comics-importer": "node tests/comics_importer_v2.test.js"
+    "test:comics-importer": "node tests/comics_importer_v2.test.js",
+    "check:boundaries": "node ../scripts/check-web-market-boundaries.mjs"
   },
   "dependencies": {
+    "@ifilino/shared": "file:../packages/shared",
     "adm-zip": "^0.6.0",
     "bcryptjs": "^2.4.3",
     "busboy": "^1.6.0",
