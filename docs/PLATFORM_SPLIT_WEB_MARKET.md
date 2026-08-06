@@ -228,13 +228,15 @@ noms, HTTPS répond 200 sur les deux, le cert présente bien les 4 SAN, et
 `ifilino.com`, aucun nouveau process). `nginx/ifilino.conf` du dépôt
 resynchronisé avec le fichier déployé (Certbot l'a modifié automatiquement).
 
-**Limite connue, pas encore adressée** : ces deux sous-domaines pointent
-vers exactement le même build SPA — la Sidebar affiche encore les deux
-sections "Administration Web" et "Administration Marketplace" quel que soit
-le sous-domaine (filtrage par permissions, pas par host). Un filtrage par
-`window.location.hostname` dans `Sidebar.jsx` (+ éventuellement une route
-d'atterrissage par défaut différente) serait nécessaire pour une vraie
-séparation UX par domaine — chantier frontend séparé, pas fait.
+**Limite connue — résolue** (2026-08-06) : `Sidebar.jsx` filtre maintenant
+la nav par `window.location.hostname` via `getAdminDomainScope()` —
+`admin.ifilino.com` ne montre plus "Administration Marketplace",
+`market-admin.ifilino.com` ne montre plus "Administration Web". `ifilino.com`
+et le dev local continuent d'afficher les deux (comportement inchangé pour
+les accès existants). Vérifié par parsing esbuild + transform réel via
+`vite dev` (module servi en HTTP 200, logique présente dans la sortie
+compilée). Pas de route d'atterrissage par défaut différente par domaine
+pour l'instant (hors scope, pas demandé) — seule la nav est filtrée.
 
 **Non fait (hors scope de cette session, décision produit à part)** :
 Phase 5 (dépôts physiquement séparés `ifilino-web`/`ifilino-market`).
