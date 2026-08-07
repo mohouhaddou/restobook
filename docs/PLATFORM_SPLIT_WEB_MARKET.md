@@ -353,10 +353,107 @@ jamais l'exécuter) ; `backend/services/*.js` (shims légers vers
 **Non lancé** : les suites `npm run test:*` qui touchent la vraie DB de
 prod via `require('../models')` — pas exécutées sans confirmation séparée.
 
-**Non fait (reste de la Phase 5b, décision produit à part)** : regroupement
-physique du frontend (`frontend/src/modules/*`/`pages/*`/`shared/*` —
-structure différente, mérite son propre plan dédié).
-
 Correction post-vérification : `acquisition` reclassé WEB→MARKET après
 lecture du code (voir tableau ci-dessus) — c'est du sourcing de commerces,
 pas de contenu éditorial.
+
+---
+
+## Phase 6a — regroupement physique frontend (fait)
+
+Suite du chantier : `frontend/src/{modules,pages,shared/components,config}/*`
+déplacé vers `frontend/src/{web,market,shared}/*`. Contrairement au backend,
+`modules/` et `pages/` ont **6 collisions de noms** (`gaminghub`, `hanout`,
+`marketplace`, `play`, `portals`, `study` existent des deux côtés) — `modules/`
+et `pages/` sont donc préservés comme sous-niveaux (`web/modules/X`,
+`web/pages/X`) plutôt que fusionnés à plat, ce qui ajoute un niveau de
+profondeur pour ce qui en dépendait (donc plus de réécritures que le backend :
+251 fichiers, 790 imports, contre 88/264 côté backend).
+
+**Classification** :
+- **WEB** : `modules/{ai-command-center,ai-package-import,comics,
+  comics-dashboard,gaminghub,gamification,kids-profile,kids-taxonomy,media,
+  play,portals,subscriptions}`, `pages/{ads,discover,gaminghub,kids,play,
+  portals,study}`, `shared/components/portalHero/` → `web/components/`,
+  `shared/markdown/` → `web/markdown/`.
+- **MARKET** : `modules/{cantine,hanout,marketplace,resto}`,
+  `pages/{dashboard,delivery,hanout,marketplace,marketplaceHero,pharmacy,pos,
+  restaurant}` + 27 pages plates (`RestaurantPage`, `CheckoutPage`,
+  `OrdersPage`...), `shared/components/{marketplace,storeHero,shopping-list,
+  catalog,dashboard,geo}/` → `market/components/`, `config/
+  {needCategories,shoppingCategories,businessConfig}.js` → `market/config/`.
+- **SHARED** : `modules/{admin,auth,core,notifications}` (admin et
+  notifications confirmés morts, voir plus bas), 10 pages plates
+  (`LoginPage`, `OrgsPage`, `SubscriptionPage`...), `CustomerAuthContext.jsx`
+  extrait de `modules/marketplace/` (session générique, zéro logique panier,
+  ~25 importeurs WEB qui le consommaient à travers un module MARKET).
+- **`pages/seo/`** éclaté fichier par fichier (7 vues + composants MARKET,
+  6 vues WEB, `Breadcrumbs`/`StarRating` → `shared/seo/components/`, seuls
+  composants réellement utilisés des deux côtés).
+
+**Outillage** : `scripts/migrate-frontend-module-tree.mjs`, même principe
+dry-run/apply que le backend, mais avec une table de correspondance
+`[ancien chemin, nouveau chemin]` explicite (fichiers ET dossiers) plutôt
+qu'une liste de noms de module — nécessaire pour découper `pages/seo/` fichier
+par fichier et extraire `CustomerAuthContext.jsx` isolément.
+
+**Trois bugs réels trouvés en vérifiant en conditions réelles** (aucun
+n'était visible au simple parse/dry-run) :
+1. Les imports à effet de bord sans liaison (`import "./chemin";`, ex.
+   `main.jsx` import du thème markdown) n'étaient pas détectés par la regex
+   d'origine (seulement `require(`/`from `/`import(`) — trouvé via `vite dev`
+   (500 au chargement).
+2. Les déplacements de **fichier isolé** (pages plates, `CustomerAuthContext.jsx`,
+   vues SEO) changent la profondeur du fichier lui-même, mais le calcul du
+   nouveau dossier ne remappait que le dossier du fichier — jamais le cas
+   pour un déplacement de fichier seul. Résultat : ~56 fichiers avec leurs
+   propres imports sortants (`../api`, `../hooks/useApi`...) cassés d'un cran.
+   Trouvé via `vite dev` (erreurs de résolution en cascade au démarrage).
+3. Plusieurs fichiers du repo sont minifiés sans espace
+   (`from'../../shared/services/api'`) — la regex exigeait `from\s+` (un
+   espace minimum), ratant ces imports. **Ce dernier n'a été trouvé qu'au
+   `npm run build` (Rollup)** — ni le dry-run, ni `vite dev` sur les pages
+   testées manuellement ne l'avaient révélé, parce que la page cassée
+   (`ComicsAccount.jsx`) n'était simplement pas dans l'échantillon testé.
+   Confirme la règle ajoutée au plan : un vrai build complet est
+   obligatoire, pas seulement le serveur de dev.
+
+Après chaque correction, retour à l'état git propre (`git checkout HEAD --
+frontend/` + nettoyage des dossiers orphelins créés par le rename) et
+recommencement complet du cycle dry-run→apply→vérification — plus fiable
+que rafistoler un état partiellement appliqué avec un bug déjà "cuit" dans
+le contenu des fichiers.
+
+**Quatrième exception réelle trouvée en construisant le garde-fou** (en plus
+des deux déjà connues côté backend) : `HeroDots.jsx` (indicateurs de slide)
+vivait dans `market/components/marketplace/` mais était consommé aussi par
+`web/components/portalHero/PortalHeroCarousel.jsx` — même famille que le
+moteur hero déjà extrait côté backend. **Extrait vers
+`shared/components/hero/HeroDots.jsx`** plutôt que documenté comme
+exception, cohérent avec la décision prise sur `heroSchedulingService`/
+`heroImageService`.
+
+**Exceptions documentées** (couplages produit intentionnels, pas des
+utilitaires mal rangés) dans `scripts/check-web-market-boundaries-frontend.mjs` :
+- `discover/ArticlePage.jsx` (WEB) affiche des produits marketplace réels
+  liés à l'article (`ProductCard`, MARKET).
+- `MarketplacePage.jsx` (MARKET) fait une promo croisée vers Gaming Hub
+  (`GamingHubPromoCard`, WEB).
+- `BusinessSeoView.jsx` et `RestaurantSeoView.jsx` (MARKET, SEO commerce)
+  réutilisent `MagazineArticleCard` du magazine Discover (WEB) pour du
+  contenu éditorial lié.
+
+**Vérifié avant commit** : recherche de requires dynamiques (aucun trouvé),
+syntaxe sur les 471 fichiers touchés (esbuild), `vite dev` + Playwright sur
+plusieurs pages des 3 domaines (0 erreur JS — le seul "problème" observé
+était un vrai 400 d'API backend sans rapport), **`npm run build` complet**
+(succès, 23.9s), **`npm run build:ssr`** (succès, 6.9s),
+`check-web-market-boundaries-frontend.mjs` (0 violation hors les 4
+exceptions documentées), `check-web-market-boundaries.mjs` backend relancé
+(toujours 0, non affecté).
+
+**Non fait** : `market.ifilino.com` + redirections (Phase 6b, décision
+produit à part nécessitant DNS/SSL — voir clarification obtenue en amont de
+cette phase), déploiement en prod de ce changement (pas de `npm run build`
+suivi de `deploy-frontend.sh` exécuté pour ce lot — à faire séparément,
+comme pour toutes les phases précédentes).

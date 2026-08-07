@@ -1,20 +1,20 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 
-import HomeSeoView from './pages/seo/HomeSeoView';
-import RestaurantsIndexSeoView from './pages/seo/RestaurantsIndexSeoView';
-import RestaurantSeoView from './pages/seo/RestaurantSeoView';
-import BusinessIndexSeoView from './pages/seo/BusinessIndexSeoView';
-import BusinessSeoView from './pages/seo/BusinessSeoView';
-import ProductSeoView from './pages/seo/ProductSeoView';
-import CitySeoView from './pages/seo/CitySeoView';
-import CityCategorySeoView from './pages/seo/CityCategorySeoView';
-import DiscoverHomeSeoView from './pages/seo/DiscoverHomeSeoView';
-import DiscoverRubriqueSeoView from './pages/seo/DiscoverRubriqueSeoView';
-import ArticleSeoView from './pages/seo/ArticleSeoView';
-import GameSeoView from './pages/seo/GameSeoView';
-import PlayGameSeoView from './pages/seo/PlayGameSeoView';
-import KidsSeoView from './pages/seo/KidsSeoView';
+import HomeSeoView from './market/pages/seo/HomeSeoView';
+import RestaurantsIndexSeoView from './market/pages/seo/RestaurantsIndexSeoView';
+import RestaurantSeoView from './market/pages/seo/RestaurantSeoView';
+import BusinessIndexSeoView from './market/pages/seo/BusinessIndexSeoView';
+import BusinessSeoView from './market/pages/seo/BusinessSeoView';
+import ProductSeoView from './market/pages/seo/ProductSeoView';
+import CitySeoView from './market/pages/seo/CitySeoView';
+import CityCategorySeoView from './market/pages/seo/CityCategorySeoView';
+import DiscoverHomeSeoView from './web/pages/seo/DiscoverHomeSeoView';
+import DiscoverRubriqueSeoView from './web/pages/seo/DiscoverRubriqueSeoView';
+import ArticleSeoView from './web/pages/seo/ArticleSeoView';
+import GameSeoView from './web/pages/seo/GameSeoView';
+import PlayGameSeoView from './web/pages/seo/PlayGameSeoView';
+import KidsSeoView from './web/pages/seo/KidsSeoView';
 
 // Point d'entrée SSR minimal et isolé — n'importe QUE des composants de
 // présentation purs (frontend/src/pages/seo/*), jamais AuthProvider/

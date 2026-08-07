@@ -12,7 +12,7 @@ import './styles/theme-dark.css';
 import './styles/pos-receipt.css';
 
 /* Moteur Markdown partagé (Discover/Sports/Kids/Stories) — enregistrement des thèmes */
-import './shared/markdown/registerThemes';
+import './web/markdown/registerThemes';
 
 import App from './App';
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);

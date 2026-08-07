@@ -1,1 +1,1 @@
-export { CustomerAuthProvider, useCustomerAuth } from '../modules/marketplace/CustomerAuthContext';
+export { CustomerAuthProvider, useCustomerAuth } from '../shared/context/CustomerAuthContext';

@@ -1,1 +1,1 @@
-export { PERMISSIONS, ROLE_LABELS, ASSIGNABLE_ROLES } from '../modules/core/permissions';
+export { PERMISSIONS, ROLE_LABELS, ASSIGNABLE_ROLES } from '../shared/modules/core/permissions';

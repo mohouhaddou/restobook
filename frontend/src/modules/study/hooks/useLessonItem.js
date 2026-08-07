@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API } from '../../../shared/services/api';
-import { useCustomerAuth } from '../../marketplace/CustomerAuthContext';
+import { useCustomerAuth } from '../../../shared/context/CustomerAuthContext';
 
 /**
  * Récupère une leçon Study par slug — mirroring usePortalItem (même contrat 404

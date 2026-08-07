@@ -1,1 +1,1 @@
-export { AuthProvider, useAuth } from '../modules/auth/AuthContext';
+export { AuthProvider, useAuth } from '../shared/modules/auth/AuthContext';

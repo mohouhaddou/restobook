@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { API } from '../../../shared/services/api';
-import { useCustomerAuth } from '../../marketplace/CustomerAuthContext';
-import { notifyKidsProfileChanged } from '../../kids-profile';
+import { useCustomerAuth } from '../../../shared/context/CustomerAuthContext';
+import { notifyKidsProfileChanged } from '../../../web/modules/kids-profile';
 
 const FAVORITES_KEY = 'ifilino-study-lesson-favorites';
 

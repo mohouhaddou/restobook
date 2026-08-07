@@ -7,17 +7,6 @@ export default defineConfig(({ mode }) => {
     : '/restobook/';
   return {
     base,
-    // @ifilino/shared (packages/shared/) est lié en dépendance locale `file:`
-    // — Vite résout ce symlink vers son vrai chemin (hors node_modules/) et,
-    // sans ce forçage, le sert comme module source brut plutôt que de le
-    // pré-bundler avec l'interop CJS→ESM habituel : `module.exports` n'est
-    // alors plus reconnu et les imports nommés échouent silencieusement à
-    // l'exécution (piège Vite+monorepo classique, vérifié en conditions
-    // réelles). `optimizeDeps.include` force le pré-bundling esbuild malgré
-    // le symlink.
-    optimizeDeps: {
-      include: ['@ifilino/shared'],
-    },
     server: {
       // En dev, le backend tourne sur un port séparé (voir .env.development) —
       // ASSET() suppose la même origine (vrai en prod, reverse-proxifié), donc

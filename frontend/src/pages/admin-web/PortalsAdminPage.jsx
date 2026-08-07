@@ -3,7 +3,7 @@ import { BarChart3, Eye, FileEdit, Plus, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useApi } from '../../shared/hooks/useApi';
 import { RankBarChart } from '../../shared/components/stats/AdminCharts';
-import { PortalHeroManagerTab } from '../../shared/components/portalHero/PortalHeroManagerTab';
+import { PortalHeroManagerTab } from '../../web/components/portalHero/PortalHeroManagerTab';
 import AdminContentTable, { AccessBadge, ArticleIdentity } from './AdminContentTable';
 
 const TYPES = {

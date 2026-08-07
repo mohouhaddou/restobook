@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApi } from '../../hooks/useApi';
-import { AreaRadiusPicker } from '../../shared/components/geo/AreaRadiusPicker';
+import { AreaRadiusPicker } from '../../market/components/geo/AreaRadiusPicker';
 
 const STATUS_TABS = [
   { value: 'eligible', label: 'Eligibles' },
